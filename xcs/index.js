@@ -15,8 +15,6 @@ const routeMatcher = require('route-matcher').routeMatcher;
 const { ab2ip6, str2ip} = require('./utils/networking'); 
 const {Route, RestRoute, WSRoute} = require('./pods');
 
-require('./pods/messaging/apn');
-
 const port = Number(process.env.PORT || 9001);
 const sockets = new Set();
 const idle = new Set();
