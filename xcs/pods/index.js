@@ -60,12 +60,16 @@ class Route {
             case "rest":
                 if (!this.comms.res.aborted) {
                     if (this.comms.error) {
-                        this.comms.res.writeStatus(this.comms.error.code || httpCodes.INTERNAL_SERVER_ERROR);
-                        this.comms.res.end(JSON.stringify(this.comms.error));
+                        this.comms.res.cork(() => {
+                            this.comms.res.writeStatus(this.comms.error.code || httpCodes.INTERNAL_SERVER_ERROR);
+                            this.comms.res.end(JSON.stringify(this.comms.error));
+                        });                        
                     } else {
-                        this.comms.res.writeStatus(httpCodes.OK);
-                        this.comms.res.writeHeader("Content-Type", this.comms.contentType || "application/json")
-                        this.comms.res.end(this.comms.contentType ? obj : JSON.stringify(obj));
+                        this.comms.res.cork(() => {
+                            this.comms.res.writeStatus(httpCodes.OK);
+                            this.comms.res.writeHeader("Content-Type", this.comms.contentType || "application/json")
+                            this.comms.res.end(this.comms.contentType ? obj : JSON.stringify(obj));
+                        });                        
                     }
                 }
                 break;

@@ -52,7 +52,7 @@
     "ramda": "^0.26.0",
     "route-matcher": "^0.1.0",
     "twilio": "^3.36.0",
-    "uWebSockets.js": "github:uNetworking/uWebSockets.js",
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v17.0.0",
     "uuid": "^3.3.3"
   },
   "devDependencies": {
@@ -67,7 +67,7 @@
     "supertest": "^4.0.0"
   },
   "engines": {
-    "node": "^10.15.0"
+    "node": "^12.0.0"
   },
   "eslintConfig": {
     "env": {
