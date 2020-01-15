@@ -15,6 +15,7 @@ const routeMatcher = require('route-matcher').routeMatcher;
 const { ab2ip6, str2ip} = require('./utils/networking'); 
 const {Route, RestRoute, WSRoute} = require('./pods');
 
+require('./pods/messaging/apn');
 
 const port = Number(process.env.PORT || 9001);
 const sockets = new Set();
@@ -30,8 +31,8 @@ const router = {
   subscribe: routeMatcher(`${process.env.V1_PREFIX}/sub/:action`),
 }
 const app = uApp({
-  key_file_name: `./.setup/keys/${process.env.SITE_KEY}`,
-  cert_file_name: `./.setup/keys/${process.env.SITE_CERT}`,
+  key_file_name: process.env.SITE_KEY,
+  cert_file_name: process.env.SITE_CERT,
   passphrase: process.env.SITE_PWD,
   ssl_prefer_low_memory_usage: true
 }).ws('/*', {

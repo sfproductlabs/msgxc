@@ -9,8 +9,8 @@ const fs = require('fs');
 var path = require("path");
 const R = require('ramda');
 
-const pubKey = fs.readFileSync(path.join(__dirname, '../.setup/keys/') + process.env.AJWT_CERT, 'utf8');
-const privKey = fs.readFileSync(path.join(__dirname, '../.setup/keys/') + process.env.AJWT_KEY, 'utf8');
+const pubKey = fs.readFileSync(process.env.AJWT_CERT, 'utf8');
+const privKey = fs.readFileSync(process.env.AJWT_KEY, 'utf8');
 
 
 //// Claims are stored with lz compression in cookie

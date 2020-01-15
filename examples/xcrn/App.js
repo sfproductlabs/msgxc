@@ -7,6 +7,9 @@
  */
 
 import React from 'react';
+
+import Push from './push';
+
 import {
   SafeAreaView,
   StyleSheet,
@@ -27,6 +30,7 @@ import {
 const App: () => React$Node = () => {
   return (
     <>
+      <Push/>
       <StatusBar barStyle="dark-content" />
       <SafeAreaView>
         <ScrollView
