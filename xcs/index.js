@@ -30,9 +30,9 @@ const router = {
   subscribe: routeMatcher(`${process.env.V1_PREFIX}/sub/:action`),
 }
 const app = uApp({
-  key_file_name: './.setup/keys/key.pem',
-  cert_file_name: './.setup/keys/cert.pem',
-  //passphrase: '1234',
+  key_file_name: `./.setup/keys/${process.env.SITE_KEY}`,
+  cert_file_name: `./.setup/keys/${process.env.SITE_CERT}`,
+  passphrase: process.env.SITE_PWD,
   ssl_prefer_low_memory_usage: true
 }).ws('/*', {
   /* Options */

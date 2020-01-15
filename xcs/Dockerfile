@@ -45,7 +45,7 @@ RUN npm install --production
 ####################################################################################
 
 # copy files to other locations
-COPY .setup/awscacert.pem /app
+COPY .setup/keys/awscacert.pem /app
 COPY .setup/supervisor.conf /etc/supervisor.conf
 #COPY .setup/nginx.xcs.conf /etc/nginx/conf.d/nginx.xcs.conf
 #COPY .setup/nginx.conf /etc/nginx/nginx.conf

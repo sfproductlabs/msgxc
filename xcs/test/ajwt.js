@@ -3,10 +3,10 @@ const fs = require('fs');
 var path = require("path");
 const compression = require('../utils/compression')
 const crypt = require('../utils/crypt')
-const pubKey = fs.readFileSync(path.join(__dirname, '../keys') + '/pub.key', 'utf8');
-const privKey = fs.readFileSync(path.join(__dirname, '../keys') + '/priv.key', 'utf8');
-const f = require('./f.json');
-console.log(f.d);
+const pubKey = fs.readFileSync(path.join(__dirname, '../.setup/keys/') + 'staging/pub.key', 'utf8');
+const privKey = fs.readFileSync(path.join(__dirname, '../.setup/keys/') + 'staging/priv.key', 'utf8');
+const crypto = require('../crypt.json');
+console.log(crypto);
 //Claims are stored with lz compression in cookie
 const claims = {
 	sso : {
@@ -30,7 +30,7 @@ const claims = {
 };
 const signature = jws.sign({
 	  header: { alg: 'RS256' },
-	  payload: 'h. jon benjamin',
+	  payload: JSON.stringify(claims),
 	  secret: privKey,
 });
 console.log(signature);
