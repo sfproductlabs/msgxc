@@ -1,0 +1,146 @@
+{
+  "name": "msgxc",
+  "version": "0.0.2",
+  "description": "Messaging exchange for real communications. SMS, Websockets, Email, Native-Messaging etc.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sfproductlabs/msgxc.git"
+  },
+  "keywords": [
+    "sms",
+    "email",
+    "native",
+    "messaging",
+    "bus",
+    "events"
+  ],
+  "author": "Andrew Grosser",
+  "license": "SFPL-1.0",
+  "bugs": {
+    "url": "https://github.com/sfproductlabs/msgxc/issues"
+  },
+  "homepage": "https://github.com/sfproductlabs/msgxc#readme",
+  "scripts": {
+    "start": "forever --minUptime 1000 --spinSleepTime 1000 index.js",
+    "start-dev": "DEBUG=* nodemon -e js,json,html index.js",
+    "start-devtools": "DEBUG=* nodemon --inspect -e js,json,html index.js",
+    "test": "mocha --timeout 15000 test/ajwt.js",
+    "lint": "eslint --ignore-pattern app-api/apidoc .",
+    "apidoc": "apidoc -i app-api -o app-api/apidoc/apidoc",
+    "gencerts": "openssl req -x509 -newkey rsa:2048 -keyout .setup/keys/key.pem -out .setup/keys/cert.pem -days 999 -nodes",
+    "debug": "DEBUG=* node index.js",
+    "adebug": "DEBUG=* LD_PRELOAD=/usr/lib/llvm-7/lib/clang/7.0.1/lib/linux/libclang_rt.asan-x86_64.so npm run debug",
+    "cdebug": "LD_PRELOAD=/usr/lib/llvm-7/lib/clang/7.0.1/lib/linux/libclang_rt.asan-x86_64.so gdb node"
+  },
+  "dependencies": {
+    "@sendgrid/mail": "^6.3.1",
+    "apn": "^2.2.0",
+    "aws-sdk": "^2.553.0",
+    "cassandra-driver": "^4.0.0",
+    "debug": "^4.1.1",
+    "dotenv": "^8.0.0",
+    "dotenv-utils": "^0.2.0",
+    "extend": "^3.0.2",
+    "forever": "^1.0.0",
+    "jws": "^3.1.5",
+    "kafka-node": "^4.1.3",
+    "nano-seconds": "^1.2.2",
+    "nats": "^1.3.2",
+    "node-gcm": "^1.0.2",
+    "node-machine-id": "^1.1.10",
+    "ramda": "^0.26.0",
+    "route-matcher": "^0.1.0",
+    "twilio": "^3.36.0",
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#binaries",
+    "uuid": "^3.3.3"
+  },
+  "devDependencies": {
+    "apidoc": "^0.17.5",
+    "chai": "^4.0.0",
+    "eslint": "^6.0.0",
+    "mime": "^2.2.0",
+    "mocha": "^6.2.2",
+    "nodemon": "^1.19.4",
+    "npm-check": "^5.5.2",
+    "npm-check-updates": "^3.1.24",
+    "supertest": "^4.0.0"
+  },
+  "engines": {
+    "node": "^10.15.0"
+  },
+  "eslintConfig": {
+    "env": {
+      "node": true,
+      "es6": true,
+      "mocha": true
+    },
+    "parserOptions": {
+      "ecmaVersion": 2017
+    },
+    "extends": "eslint:recommended",
+    "rules": {
+      "array-bracket-spacing": [
+        "error",
+        "always",
+        {
+          "singleValue": false
+        }
+      ],
+      "comma-dangle": [
+        "error",
+        "always-multiline"
+      ],
+      "curly": [
+        "error",
+        "multi-line"
+      ],
+      "indent": [
+        "error",
+        4,
+        {
+          "SwitchCase": 1
+        }
+      ],
+      "key-spacing": [
+        "error",
+        {
+          "align": "value"
+        }
+      ],
+      "no-case-declarations": "off",
+      "no-console": [
+        "warn",
+        {
+          "allow": [
+            "error",
+            "info"
+          ]
+        }
+      ],
+      "no-redeclare": "warn",
+      "no-shadow": "warn",
+      "no-unused-vars": "warn",
+      "no-var": "error",
+      "object-curly-spacing": [
+        "error",
+        "always"
+      ],
+      "prefer-const": "error",
+      "quotes": [
+        "error",
+        "single",
+        "avoid-escape"
+      ],
+      "require-await": "error",
+      "semi": [
+        "error",
+        "always"
+      ],
+      "strict": [
+        "error",
+        "global"
+      ]
+    }
+  }
+}

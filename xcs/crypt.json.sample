@@ -1,0 +1,17 @@
+{
+    "server" : {
+        "keys" : [ 
+            { "priv" : "DSFSDFSDFDSFSDF", "pub" : "VVCVBCVBCVBCBVCVBCVB"}
+        ]
+    },
+    "clients" : {
+        "keys" : [ 
+             { "priv" : "DSFSDFSDFDSFSDF", "pub" : "VVCVBCVBCVBCBVCVBCVB"}
+        ]
+    },
+    "services" : {
+        "keys" : [ 
+            { "id": "test-service", "pub" : "VVCVBCVBCVBCBVCVBCVB"}
+       ]
+    }
+}
