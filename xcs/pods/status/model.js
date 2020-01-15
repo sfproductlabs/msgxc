@@ -6,19 +6,21 @@
 
 'use strict';
 
-const db = require('../../utils/cassandra');
+const cxn = require('../../utils/cassandra');
 
 class Status {
 
     static async getDbVersion() {
+        const db = new cxn();
         try {
-            return (await cxn.client.execute(
-                `select next_seq as version from sequences where name=?`, [
+            return (await db.client.execute(
+                `select seq as version from sequences where name=?`, [
                     'DB_VER'
                 ], {
                     prepare: true
                 })).first()
         } catch (ex) {
+            console.error(ex)
             return null;
         }
     }  
