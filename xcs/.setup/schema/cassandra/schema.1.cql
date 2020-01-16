@@ -65,7 +65,7 @@ insert into sequences (name, seq) values('MSGXC_VER',1);
 
 --INTERNAL & EXTERNAL SERVICES
 create table services (
-  name    text,
+  svc    text,
   secret  text, --secret hash
   roles   set<text>,
   expiry date,
@@ -73,13 +73,14 @@ create table services (
   owner uuid,
   updated timestamp,
   updater uuid,
-  primary key       (name)
+  primary key       (svc)
 );
 
 --EVENTING
 create table queues (
-  id timeuuid,
-  src text, --source action Ex. sms
+  svc text, --service origin
+  qid timeuuid,
+  qtype text, --source action/type Ex. sms
   sid timeuuid, --source id Ex. sms-id
   skey text, --source key (if not a uuid) like for cohorts: "name"
   ip text, --Requestor IP
@@ -91,55 +92,25 @@ create table queues (
   updater uuid,
   created timestamp,  
   owner uuid,
-  PRIMARY KEY ((id))
-);
-CREATE INDEX queues_type_idx ON queues ( src );
+  PRIMARY KEY ((qid))
+)
+WITH default_time_to_live = 1209600; --2 week Tombstones
+CREATE INDEX queues_svc_idx ON queues ( svc );
+CREATE INDEX queues_qtype_idx ON queues ( qtype );
 CREATE INDEX queues_completed_idx ON queues ( completed );
 CREATE INDEX queues_started_idx ON queues ( started );
 
 
-create table action_names (
-  name text,
-  PRIMARY KEY ((name))
-);
-
-
-create table actions (
-  sid timeuuid, --source id Ex. message-id
-  src text, --source action Ex. message, queues
-  did uuid, --unique id differentiator (Ex uid)
-  dsrc text, --Ex diffentiator source ex. uid
-  meta map<text,text>, --METADATA, SPLIT etc.
-  exqid timeuuid, --executing queue id
-  created timestamp,  
-  started timestamp,
-  completed timestamp,
-  PRIMARY KEY (sid,did)
-);
-
---external actions
-create table actions_ext (
-  sid text, --source id, audit id, inc. external Ex. SES message-id
-  svc text, --Ex. SES, 'message', 'sms, 'action'
-  iid timeuuid, --internal id (Esp. action id)
-  uid uuid, --optional user id
-  created timestamp,
-  updated timestamp,
-  meta map<text,text>, --METADATA Ex. Clean to ehash *not* email:xxx.x.com, bounce:true, etc.
-  PRIMARY KEY ((sid),svc)
-)
-WITH default_time_to_live = 1209600; --2 weeks
-
 --should never be updated
 create table cohorts (
-  name text,
+  cohort text,
   uids_url text,
   imported int, --successful imports (count)
   started timestamp,
   completed timestamp,
   created timestamp,
   owner uuid,
-  PRIMARY KEY ((name))
+  PRIMARY KEY ((cohort))
 );
 
 
@@ -227,7 +198,6 @@ create table mxctriage (
   data text,
   template text, --use a url for now 
   certid text, --public key for encryption
-  app text, --app 
   rel text, 
   ver int, --version
   schedule timestamp,
@@ -252,6 +222,13 @@ create table mxctriage (
   ref uuid, --referrer uid (Select)
   aff text, --affiliate uname or code (Select)
   repl map<text,text>, --text to replace ex Hi {{fn}} -> becomes -> Hi Andrew, Prepend "text." to use Raw text instead of the user record Ex. {{text.msg}}. Only start off with one "text." message body in Admin UI (text.msg)
+  --REQUEST OWNER
+  app text, --app 
+  svc text, --Ex. SES, 'message', 'sms, 'action'
+  qid timeuuid, --executing queue id -- IMPORTANT !!!!
+  srcid timeuuid, --source id Ex. message-id
+  srckey text, --source id, audit id, inc. external Ex. SES message-id
+  meta map<text,text>, --METADATA, SPLIT etc.
   keep boolean, --keep this message on the server
   org         uuid,
   created timestamp,
@@ -259,8 +236,8 @@ create table mxctriage (
   updated timestamp,
   updater uuid,
   PRIMARY KEY ((mxctid))
-);
--- CREATE INDEX mxctriage_completing_idx ON mxctriage ( completing ); --use elastic (elassandra)
+)
+WITH default_time_to_live = 1209600; --Tombstones after 2 weeks
 
 create type mxcdevice (
   mtype text,
