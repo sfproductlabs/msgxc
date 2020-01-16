@@ -67,16 +67,18 @@ class Messaging {
           if (user.mdevices) {
             const apns = user.mdevices.filter(device => device.mtype === 'apn');
             apns.map(async mdevice => {
-              const results = await APN.send(mdevice.did, comms.obj.msg, comms.obj.opts);              
+              const results = await APN.send(mdevice.did, comms.obj.msg, comms.obj.opts); 
+              //TODO: AG Manage Failures, Triage             
             });
 
             const fcms = user.mdevices.filter(device => device.mtype === 'fcm');
             fcms.map(async mdevice => {
-              const results = await FCM.send(mdevice.did, comms.obj.msg, comms.obj.opts);              
+              const results = await FCM.send(mdevice.did, comms.obj.msg, comms.obj.opts); 
+              //TODO: AG Manage Failures, Triage            
             });
           }
 
-          //console.log('user %s', JSON.stringify(row));
+          
           
       } catch (ex) {
           console.warn(ex);
