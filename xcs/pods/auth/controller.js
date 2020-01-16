@@ -30,6 +30,7 @@ class AuthController {
             }
         }
         comms.user = R.path(['pub'], jwt)
+        
     }
 
 

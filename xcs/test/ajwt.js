@@ -53,4 +53,4 @@ const decoded = jws.decode(signature,{
 // let x = crypt.encrypt(f.d,'faraway')
 // fs.writeFile('ff.json', x , 'utf8',console.log);
 
-console.log(JSON.stringify(ajwt.generateClaim(null, {roles : ['msgxc_admin'], method : 'svc', dt: Date.now(), by: 'manual'}, Date.now() + (1000 * 60 * 60 * 999))))
+console.log(JSON.stringify(ajwt.generateClaim(null, {uid : '14fb0860-b4bf-11e9-8971-7b80435315ac', roles : ['msgxc_admin'], method : 'svc', dt: Date.now(), by: 'manual'}, Date.now() + (1000 * 60 * 60 * 999))))

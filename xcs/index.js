@@ -119,6 +119,14 @@ const app = uApp({
     Route.abort(res, ex);
   }
 })
+.post(`${process.env.V1_PREFIX}/native/subscribe`, async (res, req) => {
+  try {
+    new RestRoute({res, req}).authorizeUser().subscribe()
+  } catch (ex) {
+    debugHTTP(ex)
+    Route.abort(res, ex);
+  }
+})
 //STATUS
 .get(`${process.env.V1_PREFIX}/status/dbver`, async (res, req) => {
   try {

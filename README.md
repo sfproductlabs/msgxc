@@ -63,7 +63,7 @@ Checks whether the server is up.
 
 Broadcasts a message to every user on the platform.
 
-**body:**
+**Request body:**
 ```
 {"msg":"the message to broadcast"}
 ```
@@ -79,7 +79,7 @@ Broadcasts a message to every user on the platform.
 
 Sends a message to an individual.
 
-**body:**
+**Request body:**
 ```
 {"msg":"the message to send", "uid":"14fb0860-b4bf-11e9-8971-7b80435315ac"}
 ```
@@ -90,12 +90,12 @@ Sends a message to an individual.
 ##### SUBSCRIBE-NATIVE
 
 ```
-/api/v1/subscribe/native
+/api/v1/native/subscribe
 ```
 
 Subscribes a user to native messaging using their current device.
 
-**body:**
+**Request body:**
 ```
 {"os": "ios", "token": "ad62ea6ea23d6974871cf59a06cbdb2783b85adbafe3355c0007362249d3e75c"}
 

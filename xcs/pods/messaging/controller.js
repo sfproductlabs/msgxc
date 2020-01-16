@@ -34,6 +34,20 @@ class MessageController {
         }
     }
 
+    static async subscribe(comms) {
+        try {
+            await Messaging.subscribe(comms);            
+            return true;
+        } catch (ex) {
+            console.warn(ex);
+            comms.error = {
+                code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                msg: ex.msg || "Unknown server error subscribing."
+            };
+            throw comms.error;
+        }
+    }
+
 
 }
 
