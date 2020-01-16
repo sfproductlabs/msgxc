@@ -7,21 +7,70 @@ const ajwt = require('../../utils/ajwt')
 const R = require('ramda');
 const httpCodes = require('../../utils/httpStatusCodes')
 const clientKey = process.env.CLIENT_SECRET || 'secret';
-
+const ojwt = require('jsonwebtoken'); // JSON Web Token implementation
 
 class AuthController {
 
 
     static authorizeUser(comms, jwt, level) {
-        if (!ajwt.validateClaim(jwt)) {
+        //basic jwt test
+        if (typeof jwt !== 'string') {
             comms.error = {
                 code: httpCodes.UNAUTHORIZED,
-                msg: 'Authorization Failed (Claim)'
+                msg: 'Authorization Failed (jwt)'
             };
             throw comms.error;
         }
+
+        //Check for old jwt implementation
+        let encrypted = false;
+        try {
+            jwt = JSON.parse(jwt);
+        } catch {
+            encrypted = true;
+        }
+
+        if (encrypted) {
+            try {
+                const payload = ojwt.verify(jwt, process.env.APP_SECRET);
+                AuthController.checkUserLevel(R.defaultTo([])(R.path(['roles'], payload)), level)
+                comms.user = payload;
+                return;
+            } catch (e) {
+                switch (e.name) {
+                    case ojwt.JsonWebTokenError.name:
+                    case ojwt.NotBeforeError.name:
+                    case ojwt.TokenExpiredError.name:
+                        comms.error = {
+                            code: httpCodes.UNAUTHORIZED,
+                            msg: e.message
+                        };
+                        throw comms.error;
+                    default:
+                        comms.error = {
+                            code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                            msg: ex.msg || "Unknown server error authorizing."
+                        };
+                        throw comms.error;
+                }
+            }
+        } else {
+            // New jwt implementation
+            if (!ajwt.validateClaim(jwt)) {
+                comms.error = {
+                    code: httpCodes.UNAUTHORIZED,
+                    msg: 'Authorization Failed (Claim)'
+                };
+                throw comms.error;
+            }
+            AuthController.checkUserLevel(R.defaultTo([])(R.path(['pub', 'roles'], jwt)), level)
+            comms.user = R.path(['pub'], jwt)
+        }
+    }
+
+    static checkUserLevel(roles, level) {
         if (level) {
-            if (!R.defaultTo([])(R.path(['pub', 'roles'], jwt)).some((f) => (f === level))) {
+            if (!(roles || []).some((f) => (f === level))) {
                 comms.error = {
                     code: httpCodes.UNAUTHORIZED,
                     msg: 'Authorization Failed (Role)'
@@ -29,10 +78,7 @@ class AuthController {
                 throw comms.error;
             }
         }
-        comms.user = R.path(['pub'], jwt)
-        
     }
-
 
     static showClaims(claimsString) {
         return compression.decompress(crypt.decrypt(claimsString), clientKey);

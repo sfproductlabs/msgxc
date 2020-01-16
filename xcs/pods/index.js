@@ -109,16 +109,16 @@ class Route {
                 };
                 throw this.comms.error;
             }
-            jwt = JSON.parse(tokenSplit[1]);
+            AuthController.authorizeUser(this.comms, tokenSplit[1], level);
         }
-        if (!jwt) {
+        if (!this.comms.user) {
             this.comms.error = {
                 code: httpCodes.UNAUTHORIZED,
                 msg: 'Authorization Failed (3)'
             };
             throw this.comms.error;
         }
-        AuthController.authorizeUser(this.comms, jwt, level)
+        
         return this;
     }
 
