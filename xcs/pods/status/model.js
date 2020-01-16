@@ -15,7 +15,7 @@ class Status {
         try {
             return (await db.client.execute(
                 `select seq as version from sequences where name=?`, [
-                    'DB_VER'
+                    'MSGXC_VER'
                 ], {
                     prepare: true
                 })).first()
