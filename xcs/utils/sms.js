@@ -1,23 +1,27 @@
 'use strict';
 
 // Load the twilio module
-var twilio = require('twilio');
+const twi = require('twilio');
 const debug = require('debug')('sms')
 const httpCodes = require('./httpStatusCodes')
 
+let twilio = null;
+if (process.env.TWILIO_SID && process.env.TWILIO_AUTH) {
+    twilio = new twi(process.env.TWILIO_SID, process.env.TWILIO_AUTH);
+}
 class SMS {
-    constructor() {
-        this.client = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH);
-    }
 
-    send(to, msg) {
+    static async send(to, msg) {
         // Create a new REST API client to make authenticated requests against the
         // twilio back end
         // Pass in parameters to the REST API using an object literal notation. The
         // REST client will handle authentication and response serialzation for you.
-        let that = this;
-        return new Promise(function (resolve, reject) {
-            that.client.messages.create({
+        if (!twilio) {
+            return null;
+        }
+
+        return await new Promise(function (resolve, reject) {
+            twilio.messages.create({
                 to: to,
                 from: process.env.TWILIO_SENDER_NUMBER,
                 body: msg

@@ -102,6 +102,15 @@ const app = uApp({
     debugWS('WebSocket closed, sockets open:', sockets.size);
   }
 })
+//MESSAGING
+.post(`${process.env.V1_PREFIX}/broadcast`, async (res, req) => {
+  try {
+    new RestRoute({res, req}).authorizeUser().broadcast()
+  } catch (ex) {
+    debugHTTP(ex)
+    Route.abort(res, ex);
+  }
+})
 //STATUS
 .get(`${process.env.V1_PREFIX}/status/dbver`, async (res, req) => {
   try {

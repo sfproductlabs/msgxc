@@ -11,7 +11,7 @@ const {
 } = require('../utils/ajwt')
 
 
-
+const MessagingController = require('./messaging/controller');
 const AuthController = require('./auth/controller');
 const StatusController = require('./status/controller');
 
@@ -248,6 +248,23 @@ class RestRoute extends Route {
         return this;
     }
 
+    async broadcast() {
+        let result = null;
+        try {            
+            await this.processPayload();    
+            result = await MessagingController.broadcast(this.comms);
+        } catch (ex) {
+            let errMsg = "Unknown error broadcasting";
+            console.warn(errMsg, ex);
+            if (!this.comms.error) {
+                this.comms.error = {
+                    code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                    msg: ex.msg || errMsg
+                };
+            }
+        }
+        this.respond(result);
+    }
 }
 
 class WSRoute extends Route {

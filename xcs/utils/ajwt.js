@@ -81,7 +81,7 @@ const generateClaim = (privateInfo, publicInfo, expiry) => {
     let claim = {};
     claim.priv = (R.isNil(privateInfo) || R.isEmpty(privateInfo)) ? null :  sign(privateInfo);
     claim.pub = publicInfo;
-    claim.exp = expiry || Date.now() + 1000 * 60 * 60 * 24; //Default is 24h
+    claim.exp = expiry || Date.now() + (1000 * 60 * 60 * 24); //Default is 24h
     claim.sigs = { _: { hash : hash(claim) } }; //We can verify ourselves only at this point
     claim.sigs._.sig = sign(claim.sigs._.hash);
     return claim;

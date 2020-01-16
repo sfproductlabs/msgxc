@@ -3,35 +3,47 @@ var gcm = require('node-gcm');
 // Set up the sender with your GCM/FCM API key (declare this once for multiple messages)
 var sender = new gcm.Sender(process.env.GOOGLE_FIREBASE_API_KEY);
 
-// ... or some given values
-var message = new gcm.Message({
-	collapseKey: 'demo',
-	priority: 'high',
-	contentAvailable: true,
-	delayWhileIdle: true,
-	timeToLive: 15,
-	//restrictedPackageName: "somePackageName",
-	dryRun: false,
-	data: {
-		key1: 'message1',
-		key2: 'message2'
-	},
-	//actions: '["Accept", "Reject"]',
-	notification: {
-		title: "Hello, World",
-		icon: "ic_launcher",
-		body: "This is a notification that will be displayed if your app is in the background."
+class FCM {
+
+	static async send(to, msg, options = {}) {
+		// ... or some given values
+		var message = new gcm.Message({
+			collapseKey: 'demo',
+			priority: 'high',
+			contentAvailable: true,
+			delayWhileIdle: true,
+			timeToLive: 15,
+			//restrictedPackageName: "somePackageName",
+			dryRun: false,
+			data: options.data || options.payload || {},
+			//actions: '["Accept", "Reject"]',
+			notification: {
+				title: "",
+				icon: "ic_launcher",
+				body: msg
+			}
+		});
+
+		// Specify which registration IDs to deliver the message to
+		var regTokens = [to];
+
+		// Actually send the message
+		sender.send(message, { registrationTokens: regTokens }, function (err, response) {
+		    if (err) console.error("[ERROR]:", err);
+		    else console.log(response);
+		});
+
 	}
-});
- 
-// Specify which registration IDs to deliver the message to
-var regTokens = ['e_nslPZejyM:APA91bHR-znf4EuSIKeY9dzlX4cupXA5cdsW1SzOHUFRrsteaL5WDuzsh_cnpVpQC3IPcewl_v3N0kbArC67UTEW_ENt5Ej5Sn0qi1RoRHv5beLNi9y4OzZ__T3SH3tW5gwqxn2Hap01'];
- 
-// Actually send the message
-sender.send(message, { registrationTokens: regTokens }, function (err, response) {
-    if (err) console.error("[ERROR]:", err);
-    else console.log(response);
-});
+}
+
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
+
+module.exports = FCM;
+
+
+
+
 
 
 
