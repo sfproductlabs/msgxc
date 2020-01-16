@@ -22,5 +22,5 @@ services:
     volumes: 
       - ./xcs/.setup:/tmp/.csetup
     command: >
-              bash -c "((sleep 90s && sed -e 's/msgxc/msgxc/' '/tmp/.csetup/schema/cassandra/schema.1.cql' > '/tmp/schema.1.cql' && cqlsh --ssl -f '/tmp/schema.1.cql' &) && (/docker-entrypoint.sh cassandra -f))"
+              bash -c "((sleep 90s && sed -e 's/msgxc/msgxc/' '/tmp/.csetup/schema/cassandra/schema.1.cql' > '/tmp/schema.1.cql' && cqlsh --ssl -f '/tmp/schema.1.cql' && sed -e 's/msgxca/msgxca/' '/tmp/.csetup/schema/cassandra/elastic.1.sh' > '/tmp/elastic.1.sh' && /tmp/elastic.1.sh &) && (/docker-entrypoint.sh cassandra -f))"
   

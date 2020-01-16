@@ -53,13 +53,23 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:92
     }
 }'
 
+# OPTIONAL MERGE INDEXES
+curl -w "\n" -k -H 'Content-Type: application/json'  -XPOST  "http://localhost:9200/_reindex" -d '{
+  "source": {
+    "index": ["mxctriage", "mxcfailures"]
+  },
+  "dest": {
+    "index": "msgxca"
+  }
+}'
+
+
 nodetool rebuild_index msgxc mxctriage elastic_mxctriage_idx
 #nodetool rebuild_index msgxc mxccerts elastic_mxccerts_idx
 nodetool rebuild_index msgxc mxcfailures elastic_mxcfailures_idx
 
 # Test
-#curl -XGET -H -k http://localhost:9200/mxctriage/mxctriage/_search?pretty=true&q=*:*
-
+curl -XGET -H -k http://localhost:9200/msgxca/_search?pretty=true&q=*:*
 
 curl -XGET -H 'Content-Type: application/json' "http://localhost:9200/mxctriage/_search?pretty" -d '
 {
@@ -91,5 +101,9 @@ curl -XGET -H 'Content-Type: application/json' "http://localhost:9200/mxcfailure
     }
   }
 }'
+
+
+
+
 
 
