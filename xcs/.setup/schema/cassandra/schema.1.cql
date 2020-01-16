@@ -1,6 +1,6 @@
 -- To run:
 -- cqlsh --ssl -f schema.1.cql 
--- Licensed under AGPL v3.  Copyright (c) 2018 SF Product Labs. All Rights Reserved.
+-- Licensed under Apache-2.0.  Copyright (c) 2018 SF Product Labs. All Rights Reserved.
 -- See LICENSE
 
 -- SF Product Labs MSGXC Schema
