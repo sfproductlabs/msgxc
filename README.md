@@ -87,7 +87,23 @@ Sends a message to an individual.
 **Correct Response:**
 ```true```
 
+##### SUBSCRIBE-NATIVE
 
+```
+/api/v1/subscribe/native
+```
 
+Subscribes a user to native messaging using their current device.
 
+**body:**
+```
+{"os": "ios", "token": "ad62ea6ea23d6974871cf59a06cbdb2783b85adbafe3355c0007362249d3e75c"}
+
+or
+
+{"os": "android", "token": "e_nslPZejyM:APA91bHR-znf4EuSIKeY9dzlX4cupXA5cdsW1SzOHUFRrsteaL5WDuzsh_cnpVpQC3IPcewl_v3N0kbArC67UTEW_ENt5Ej5Sn0qi1RoRHv5beLNi9y4OzZ__T3SH3tW5gwqxn2Hap01"}
+```
+
+**Correct Response:**
+```true```
 
