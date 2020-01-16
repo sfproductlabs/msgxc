@@ -265,6 +265,24 @@ class RestRoute extends Route {
         }
         this.respond(result);
     }
+
+    async send() {
+        let result = null;
+        try {            
+            await this.processPayload();    
+            result = await MessagingController.send(this.comms);
+        } catch (ex) {
+            let errMsg = "Unknown error sending";
+            console.warn(errMsg, ex);
+            if (!this.comms.error) {
+                this.comms.error = {
+                    code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                    msg: ex.msg || errMsg
+                };
+            }
+        }
+        this.respond(result);
+    }
 }
 
 class WSRoute extends Route {

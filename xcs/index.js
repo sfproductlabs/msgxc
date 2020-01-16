@@ -105,6 +105,14 @@ const app = uApp({
 //MESSAGING
 .post(`${process.env.V1_PREFIX}/broadcast`, async (res, req) => {
   try {
+    new RestRoute({res, req}).authorizeUser('msgxc_admin').broadcast()
+  } catch (ex) {
+    debugHTTP(ex)
+    Route.abort(res, ex);
+  }
+})
+.post(`${process.env.V1_PREFIX}/send`, async (res, req) => {
+  try {
     new RestRoute({res, req}).authorizeUser().broadcast()
   } catch (ex) {
     debugHTTP(ex)

@@ -41,6 +41,8 @@ Run ```docker-compose up``` in the root of this project to get elassandra (cassa
 
 #### GETs
 
+##### PING
+
 ```
 /api/v1/ping
 ```
@@ -49,6 +51,43 @@ Checks whether the server is up.
 
 **Correct Response:**
 ```200```
+
+
+#### POSTs
+
+##### BROADCAST
+
+```
+/api/v1/broadcast
+```
+
+Broadcasts a message to every user on the platform.
+
+**body:**
+```
+{"msg":"the message to broadcast"}
+```
+
+**Correct Response:**
+```true```
+
+##### SEND
+
+```
+/api/v1/send
+```
+
+Sends a message to an individual.
+
+**body:**
+```
+{"msg":"the message to send", "uid":"14fb0860-b4bf-11e9-8971-7b80435315ac"}
+```
+
+**Correct Response:**
+```true```
+
+
 
 
 
