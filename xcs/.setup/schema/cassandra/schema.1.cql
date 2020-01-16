@@ -191,7 +191,7 @@ create table group_certs (
 CREATE INDEX group_certs_gid_idx ON group_certs ( gid );
 
 create table mxctriage (
-  mxctid timeuuid,
+  mxcid timeuuid,
   mtype text, --message type (ws - websocket,apn - apple push ios,fcm - firebase/android,webn - web notification,sms,em - email,emw - email weekly,emd - email daily, emm - email monthly)
   subject text,
   msg text,
@@ -231,11 +231,12 @@ create table mxctriage (
   meta map<text,text>, --METADATA, SPLIT etc.
   keep boolean, --keep this message on the server
   org         uuid,
+  createdms bigint,
   created timestamp,
   owner uuid,
   updated timestamp,
   updater uuid,
-  PRIMARY KEY ((mxctid))
+  PRIMARY KEY ((mxcid))
 )
 WITH default_time_to_live = 1209600; --Tombstones after 2 weeks
 
@@ -246,7 +247,7 @@ create type mxcdevice (
 );
 
 create table mxcfailures (
- mxctid timeuuid, --mxctriageid
+ mxcid timeuuid, --mxctriageid
  uid uuid,
  mtype text,
  mdevice frozen<mxcdevice>,
@@ -257,11 +258,12 @@ create table mxcfailures (
  owner uuid,
  updated timestamp,
  updater uuid,
- PRIMARY KEY ((mxctid), uid, mtype, mdevice)
+ PRIMARY KEY ((mxcid), uid, mtype, mdevice)
 );
 
 alter table users add mdevices frozen<list<mxcdevice>>; --prioritized list of devices
 alter table users add mtypes list<text>; --[mtype] prioritized list of preferences
+alter table users add mlast bigint; --last updated/looked at a mxc message
 alter table users add cell text; 
 alter table users add chash text; --cell hash 
 

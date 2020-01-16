@@ -2,8 +2,11 @@
 
 # setup
 # 
+
+curl -w "\n" -k -XDELETE "http://localhost:9200/msgxca"
+curl -XPUT -H 'Content-Type: application/json' http://localhost:9200/msgxca -d'{}'
+
 curl -w "\n" -k -XDELETE "http://localhost:9200/mxctriage"
-#curl -w "\n" -k -XDELETE "http://localhost:9200/mxccerts"
 curl -w "\n" -k -XDELETE "http://localhost:9200/mxcfailures"
 
 # mxctriage - completed
@@ -12,9 +15,10 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:92
     "mappings": {
         "mxctriage": {
             "properties" : {
-                "mxctid": { "type": "keyword", "index": true, "cql_collection": "singleton" },
+                "mxcid": { "type": "keyword", "index": true, "cql_collection": "singleton" },
                 "completed": { "type": "date", "index": true, "cql_collection": "singleton" },
-                "data": { "type": "keyword", "index": true, "cql_collection": "singleton" }
+                "data": { "type": "keyword", "index": true, "cql_collection": "singleton" },
+                "createdms": { "type": "long", "index": true, "cql_collection": "singleton" }
             }
         }
     }
@@ -33,7 +37,7 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:92
     "mappings": {
         "mxcfailures": {
             "properties" : {
-                "mxctid": { "type": "keyword", "index": true, "cql_collection": "singleton" },
+                "mxcid": { "type": "keyword", "index": true, "cql_collection": "singleton" },
                 "died": { "type": "date", "index": true, "cql_collection": "singleton" },
                 "retries": { "type": "integer", "index": true, "cql_collection": "singleton" },
                 "mdevice": {
@@ -53,6 +57,10 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:92
     }
 }'
 
+
+nodetool rebuild_index msgxc mxctriage elastic_mxctriage_idx
+nodetool rebuild_index msgxc mxcfailures elastic_mxcfailures_idx
+
 # OPTIONAL MERGE INDEXES
 curl -w "\n" -k -H 'Content-Type: application/json'  -XPOST  "http://localhost:9200/_reindex" -d '{
   "source": {
@@ -64,9 +72,6 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPOST  "http://localhost:9
 }'
 
 
-nodetool rebuild_index msgxc mxctriage elastic_mxctriage_idx
-#nodetool rebuild_index msgxc mxccerts elastic_mxccerts_idx
-nodetool rebuild_index msgxc mxcfailures elastic_mxcfailures_idx
 
 # Test
 curl -XGET -H -k http://localhost:9200/msgxca/_search?pretty=true&q=*:*
