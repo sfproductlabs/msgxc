@@ -97,6 +97,10 @@ class Messaging {
         prepare: true
       })).first()
 
+      if (!user) {
+        return false;
+      }
+
       if (!user.mdevices) user.mdevices = [];
       user.mdevices = user.mdevices.filter(device => device.did !== comms.obj.token);
       if (comms.obj.os === "ios") user.mdevices.splice(0, 0, { mtype: 'apn', did: comms.obj.token, updated: Date.now() })

@@ -36,8 +36,7 @@ class MessageController {
 
     static async subscribe(comms) {
         try {
-            await Messaging.subscribe(comms);            
-            return true;
+            return await Messaging.subscribe(comms);            
         } catch (ex) {
             console.warn(ex);
             comms.error = {
