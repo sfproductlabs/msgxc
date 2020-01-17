@@ -8,8 +8,7 @@ class MessageController {
 
     static async broadcast(comms) {
         try {
-            await Messaging.broadcast(comms);            
-            return true;
+            return await Messaging.broadcast(comms);            
         } catch (ex) {
             console.warn(ex);
             comms.error = {
@@ -22,8 +21,7 @@ class MessageController {
 
     static async send(comms) {
         try {
-            await Messaging.send(comms);            
-            return true;
+            return await Messaging.send(comms);            
         } catch (ex) {
             console.warn(ex);
             comms.error = {

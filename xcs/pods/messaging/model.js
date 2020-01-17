@@ -30,9 +30,11 @@ class Messaging {
         })
         .on('end', function () {
           // Stream ended, there aren't any more rows
+          return true;
         })
         .on('error', function (err) {
           // Something went wrong: err is a response error from Cassandra
+          return false;
         });
     } catch (ex) {
       console.warn(ex);
@@ -85,6 +87,7 @@ class Messaging {
           throw ex; // Internal Server Error for uncaught exception
       }
     }
+    return true;
   }
 
   static async subscribe(comms) {

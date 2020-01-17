@@ -33,20 +33,22 @@ class AuthController {
         if (encrypted) {
             try {
                 const payload = ojwt.verify(jwt, process.env.APP_SECRET);
-                AuthController.checkUserLevel(R.defaultTo([])(R.path(['roles'], payload)), level)
+                console.log(comms)
+                AuthController.checkUserLevel(comms, R.defaultTo([])(R.path(['roles'], payload)), level)
                 comms.user = payload;
                 return;
-            } catch (e) {
-                switch (e.name) {
+            } catch (ex) {
+                switch (ex.name) {
                     case ojwt.JsonWebTokenError.name:
                     case ojwt.NotBeforeError.name:
                     case ojwt.TokenExpiredError.name:
                         comms.error = {
                             code: httpCodes.UNAUTHORIZED,
-                            msg: e.message
+                            msg: ex.message
                         };
                         throw comms.error;
                     default:
+                        throw ex;
                         comms.error = {
                             code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
                             msg: ex.msg || "Unknown server error authorizing."
@@ -63,20 +65,29 @@ class AuthController {
                 };
                 throw comms.error;
             }
-            AuthController.checkUserLevel(R.defaultTo([])(R.path(['pub', 'roles'], jwt)), level)
+            AuthController.checkUserLevel(comms, R.defaultTo([])(R.path(['pub', 'roles'], jwt)), level)
             comms.user = R.path(['pub'], jwt)
         }
     }
 
-    static checkUserLevel(roles, level) {
+    static checkUserLevel(comms, roles, level) {
         if (level) {
-            if (!(roles || []).some((f) => (f === level))) {
+            let found = false;
+            const ls = level.toLowerCase().replace(/\s/g, '').split(',')
+            for (let i = 0; i < ls.length; i ++) {
+                if ((roles || []).some((f) => (f === ls[i]))) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
                 comms.error = {
                     code: httpCodes.UNAUTHORIZED,
                     msg: 'Authorization Failed (Role)'
                 };
                 throw comms.error;
             }
+            
         }
     }
 

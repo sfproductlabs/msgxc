@@ -105,7 +105,7 @@ const app = uApp({
 //MESSAGING
 .post(`${process.env.V1_PREFIX}/broadcast`, async (res, req) => {
   try {
-    new RestRoute({res, req}).authorizeUser('msgxc_admin').broadcast()
+    new RestRoute({res, req}).authorizeUser('msgxc_admin,admin').broadcast()
   } catch (ex) {
     debugHTTP(ex)
     Route.abort(res, ex);
