@@ -19,23 +19,26 @@ class Messaging {
   static async broadcast(comms) {
     const db = new cxn();
     try {
-      db.client.stream('SELECT * FROM users')
-        .on('readable', function () {
-          let row;
-          // 'readable' is emitted as soon a row is received and parsed
-          while (row = this.read()) {
-            //TODO: AG MOVE TO BATCHING
-            Messaging.send(comms, row)
-          }
-        })
-        .on('end', function () {
-          // Stream ended, there aren't any more rows
-          return true;
-        })
-        .on('error', function (err) {
-          // Something went wrong: err is a response error from Cassandra
-          return false;
-        });
+      return new Promise((resolve, reject) => {
+        db.client.stream('SELECT * FROM users')
+          .on('readable', function () {
+            let row;
+            // 'readable' is emitted as soon a row is received and parsed
+            while (row = this.read()) {
+              //TODO: AG MOVE TO BATCHING
+              Messaging.send(comms, row)
+            }
+          })
+          .on('end', function () {
+            // Stream ended, there aren't any more rows
+            resolve(true);
+          })
+          .on('error', function (err) {
+            // Something went wrong: err is a response error from Cassandra
+            resolve(false);
+          });
+      });
+
     } catch (ex) {
       console.warn(ex);
       switch (ex.code) {
@@ -51,6 +54,9 @@ class Messaging {
     try {
       let sent = false;
       if (!user) {
+        if (!comms.obj.uid) {
+          return false;
+        }
         user = (await db.client.execute(
           `select * from users where uid=?`, [
           comms.obj.uid

@@ -30,10 +30,9 @@ class AuthController {
             encrypted = true;
         }
 
-        if (encrypted) {
+        if (encrypted && process.env.APP_SECRET && process.env.APP_SECRET.length > 0) {
             try {
                 const payload = ojwt.verify(jwt, process.env.APP_SECRET);
-                console.log(comms)
                 AuthController.checkUserLevel(comms, R.defaultTo([])(R.path(['roles'], payload)), level)
                 comms.user = payload;
                 return;
