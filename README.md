@@ -1,6 +1,6 @@
 # Messaging Exchange and Event Bus for Node.js & Python
 
-## &#x1F534; Important &#x1F534;
+### &#x1F534; Important &#x1F534;
 ```diff
 - This project is a work in progress. Please come back shortly.
 ```
@@ -111,3 +111,6 @@ or
 **Correct Response:**
 ```true```
 
+## TODO
+
+- [ ] Processing in batches
