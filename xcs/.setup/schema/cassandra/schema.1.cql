@@ -261,7 +261,7 @@ create table mxcfailures (
  PRIMARY KEY ((mxcid), uid, mtype, mdevice)
 );
 
-alter table users add mdevices frozen<list<frozen<mxcdevice>>>; --prioritized list of devices
+alter table users add mdevices list<frozen<mxcdevice>>; --prioritized list of devices
 alter table users add mtypes list<text>; --[mtype] prioritized list of preferences ~ => disabled
 alter table users add mlast bigint; --last updated/looked at a mxc message
 alter table users add cell text; 
