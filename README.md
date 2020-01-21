@@ -60,7 +60,7 @@ Checks whether the server is up.
 #### POSTs
 
 ##### BROADCAST
-
+_Requires Admin JWT_
 ```
 /api/v1/broadcast
 ```
@@ -75,8 +75,24 @@ Broadcasts a message to every user on the platform.
 **Correct Response:**
 ```true```
 
-##### SEND
+##### MULTICAST
+_Requires Admin JWT_
+```
+/api/v1/multicast
+```
 
+Sends messages to selected UIDs (user-ids) on the platform.
+
+**Request body:**
+```
+{"msg":"the message to broadcast", "uids":["00000000-0000-0000-0000-000000000000"]}
+```
+
+**Correct Response:**
+```true```
+
+##### SEND
+_Requires Any JWT_
 ```
 /api/v1/send
 ```
@@ -92,7 +108,7 @@ Sends a message to an individual.
 ```true```
 
 ##### SUBSCRIBE-NATIVE
-
+_Requires Any JWT_
 ```
 /api/v1/native/subscribe
 ```
