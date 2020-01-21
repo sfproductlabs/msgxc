@@ -8,6 +8,7 @@ curl -XPUT -H 'Content-Type: application/json' http://localhost:9200/msgxca -d'{
 
 curl -w "\n" -k -XDELETE "http://localhost:9200/mxctriage"
 curl -w "\n" -k -XDELETE "http://localhost:9200/mxcfailures"
+curl -w "\n" -k -XDELETE "http://localhost:9200/mxcusers"
 
 # mxctriage - completed
 curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:9200/mxctriage/" -d '{
@@ -19,6 +20,30 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:92
                 "completed": { "type": "date", "index": true, "cql_collection": "singleton" },
                 "data": { "type": "keyword", "index": true, "cql_collection": "singleton" },
                 "createdms": { "type": "long", "index": true, "cql_collection": "singleton" }
+            }
+        }
+    }
+}'
+
+
+curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:9200/mxcusers/" -d '{
+    "settings" : { "keyspace" : "msgxc" },
+    "mappings": {
+        "users": {
+            "properties" : {
+                "uid": { "type": "keyword", "index": true, "cql_collection": "singleton" },
+                "mtypes": { "type": "keyword", "index": true, "cql_collection": "list" },
+                "mdevices": {    
+                    "type": "nested",       
+                    "cql_collection" : "list",
+                    "cql_struct" : "map",             
+                    "properties": {
+                        "mtype":    { "type": "keyword", "index": false,  "cql_collection": "singleton" },
+                        "did":      { "type": "keyword", "index": false,  "cql_collection": "singleton" },
+                        "updated":  { "type": "date", "index": false, "cql_collection": "singleton" }
+                    }
+                }
+                
             }
         }
     }
@@ -45,7 +70,6 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:92
                     "include_in_parent": true,
                     "dynamic": "false",
                     "cql_collection": "singleton",
-                    "cql_udt_name": "mxcdevice",
                     "properties": {
                         "mtype":    { "type": "keyword", "index": true,  "cql_collection": "singleton" },
                         "did":      { "type": "keyword", "index": true,  "cql_collection": "singleton" },
@@ -57,9 +81,10 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:92
     }
 }'
 
-
+nodetool flush msgxc
 nodetool rebuild_index msgxc mxctriage elastic_mxctriage_idx
 nodetool rebuild_index msgxc mxcfailures elastic_mxcfailures_idx
+nodetool rebuild_index msgxc mxcusers elastic_users_idx
 
 # OPTIONAL MERGE INDEXES
 curl -w "\n" -k -H 'Content-Type: application/json'  -XPOST  "http://localhost:9200/_reindex" -d '{
@@ -107,6 +132,16 @@ curl -XGET -H 'Content-Type: application/json' "http://localhost:9200/mxcfailure
   }
 }'
 
+curl -XGET -H 'Content-Type: application/json' "http://localhost:9200/mxcusers/_search?pretty"
+
+# curl -XGET -H 'Content-Type: application/json' "http://localhost:9200/mxcusers/_search?pretty" -d '
+# {
+#   "query" : {
+#         "terms" : {
+#           "uid" : ["14fb0860-b4bf-11e9-8971-7b80435315ac"]
+#         }
+#   }
+# }'
 
 
 

@@ -266,6 +266,25 @@ class RestRoute extends Route {
         this.respond(result);
     }
 
+    async multicast() {
+        let result = null;
+        try {            
+            await this.processPayload();    
+            result = await MessagingController.multicast(this.comms);
+        } catch (ex) {
+            let errMsg = "Unknown error multicasting";
+            console.warn(errMsg, ex);
+            if (!this.comms.error) {
+                this.comms.error = {
+                    code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                    msg: ex.msg || errMsg
+                };
+            }
+        }
+        this.respond(result);
+    }
+
+
     async send() {
         let result = null;
         try {            

@@ -5,6 +5,18 @@ const httpCodes = require('../../utils/httpStatusCodes')
 
 class MessageController {
 
+    static async multicast(comms) {
+        try {
+            return await Messaging.multicast(comms);            
+        } catch (ex) {
+            console.warn(ex);
+            comms.error = {
+                code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                msg: ex.msg || "Unknown server error multicasting."
+            };
+            throw comms.error;
+        }
+    }
 
     static async broadcast(comms) {
         try {

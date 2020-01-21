@@ -16,6 +16,36 @@ const httpCodes = require('../../utils/httpStatusCodes')
 
 class Messaging {
 
+  static async multicast(comms) {
+    const db = new cxn();
+    try {
+      if (!comms.obj.uids || !Array.isArray(comms.obj.uids)) {
+          return false;
+      }
+      for (let i = 0; i < comms.obj.uids.length; i++) {
+        if (comms.obj.uids[i].length !== 36) {
+          continue;
+        }
+        //TODO: Run an Elassandra query when bug is fixed
+        const user = (await db.client.execute(
+          `select uid,mtypes,mdevices from users where uid=?`, [
+          comms.obj.uids[i]
+        ], {
+          prepare: true
+        })).first()
+        await Messaging.send(comms, user);
+      }
+    } catch {
+      console.warn(ex);
+      switch (ex.code) {
+        case httpCodes.INTERNAL_SERVER_ERROR:
+        default:
+          throw ex; // Internal Server Error for uncaught exception
+      }
+    }    
+    return true;
+  }
+
   static async broadcast(comms) {
     const db = new cxn();
     try {
@@ -26,7 +56,9 @@ class Messaging {
             // 'readable' is emitted as soon a row is received and parsed
             while (row = this.read()) {
               //TODO: AG MOVE TO BATCHING
-              Messaging.send(comms, row)
+              try {
+                (async () => { await Messaging.send(comms, row)})();
+              } catch {} //TODO: AG might want to catch errors here.
             }
           })
           .on('end', function () {
@@ -58,7 +90,7 @@ class Messaging {
           return false;
         }
         user = (await db.client.execute(
-          `select * from users where uid=?`, [
+          `select uid,mtypes,mdevices from users where uid=?`, [
           comms.obj.uid
         ], {
           prepare: true

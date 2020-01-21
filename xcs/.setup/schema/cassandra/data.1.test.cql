@@ -1,6 +1,6 @@
 insert into users (uid,pwd,created,owner,cell,email,mtypes) values (14fb0860-b4bf-11e9-8971-7b80435315ac,'W6ph5Mm5Pz8GgiULbPgzG37mj9g=',toTimestamp(now()),14fb0860-b4bf-11e9-8971-7b80435315ac,'+16503907496','dioptre@gmail.com', []);
 update users set mdevices= [
-    { mtype: 'apn', did: 'ad62ea6ea23d6974871cf59a06cbdb2783b85adbafe3355c0007362249d3e75c', updated: toTimestamp(now()) }
+    { mtype: 'apn', did: 'b41f4c05619a546a52f496f6da25c719ca019bcaff69ed204e72ba173853c1fd', updated: toTimestamp(now()) }
     , { mtype: 'fcm', did: 'e_nslPZejyM:APA91bHR-znf4EuSIKeY9dzlX4cupXA5cdsW1SzOHUFRrsteaL5WDuzsh_cnpVpQC3IPcewl_v3N0kbArC67UTEW_ENt5Ej5Sn0qi1RoRHv5beLNi9y4OzZ__T3SH3tW5gwqxn2Hap01', updated: toTimestamp(now()) }
 ] where uid=14fb0860-b4bf-11e9-8971-7b80435315ac;
 
