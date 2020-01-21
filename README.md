@@ -1,5 +1,9 @@
 # Messaging Exchange and Event Bus for Node.js & Python
 
+### &#x1F534; Important &#x1F534;
+```diff
+- This project is a work in progress. Please come back shortly.
+```
 ## Design
 
 Request -> Prioritization -> Triage (write [messageid/dateuuid, owner]; [owner, msgs], [option Realtime, Nearline, scheduled, failed], [capture,reporting,recall])
@@ -107,3 +111,6 @@ or
 **Correct Response:**
 ```true```
 
+## TODO
+
+- [ ] Processing in batches
