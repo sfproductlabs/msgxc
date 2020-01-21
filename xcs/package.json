@@ -29,7 +29,7 @@
     "lint": "eslint --ignore-pattern app-api/apidoc .",
     "apidoc": "apidoc -i app-api -o app-api/apidoc/apidoc",
     "gencerts": "openssl req -x509 -newkey rsa:2048 -keyout .setup/keys/staging/key.pem -out .setup/keys/staging/cert.pem -days 999 -nodes",
-    "debug": "DEBUG=* node index.js",
+    "debug": "DEBUG=* node --trace-warnings index.js ",
     "adebug": "DEBUG=* LD_PRELOAD=/usr/lib/llvm-7/lib/clang/7.0.1/lib/linux/libclang_rt.asan-x86_64.so npm run debug",
     "cdebug": "LD_PRELOAD=/usr/lib/llvm-7/lib/clang/7.0.1/lib/linux/libclang_rt.asan-x86_64.so gdb node"
   },
