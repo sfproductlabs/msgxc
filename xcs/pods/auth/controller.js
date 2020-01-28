@@ -57,15 +57,23 @@ class AuthController {
             }
         } else {
             // New jwt implementation
-            if (!ajwt.validateClaim(jwt)) {
+            try {
+                if (!ajwt.validateClaim(jwt)) {
+                    comms.error = {
+                        code: httpCodes.UNAUTHORIZED,
+                        msg: 'Authorization Failed (Claim)'
+                    };
+                    throw comms.error;
+                }
+                AuthController.checkUserLevel(comms, R.defaultTo([])(R.path(['pub', 'roles'], jwt)), level)
+                comms.user = R.path(['pub'], jwt)
+            } catch {
                 comms.error = {
                     code: httpCodes.UNAUTHORIZED,
-                    msg: 'Authorization Failed (Claim)'
+                    msg: 'Authorization Failed (Validate)'
                 };
                 throw comms.error;
             }
-            AuthController.checkUserLevel(comms, R.defaultTo([])(R.path(['pub', 'roles'], jwt)), level)
-            comms.user = R.path(['pub'], jwt)
         }
     }
 

@@ -33,61 +33,63 @@ console.log("Connected to NATS");
 const parseObj = (obj) => {
     if (typeof obj === 'string')
         return {msg : obj};
-    if (typeof obj === 'object' && obj.req) {
-        return {
-            username : 'TODO-REQ',
-            msg : 'TODO-REQ',
-            type: 'req'
-        };
+    let ip = null;
+    if (typeof obj === 'object' && obj.res && obj.res.getRemoteAddress) {
+        ip = ab2ip6(obj.res.getRemoteAddress());
     }
-    if (typeof obj === 'object' && obj.res) {
+    if (obj.error) {
         return {
-            ip : obj.getRemoteAddress(),
-            msg : 'TODO-RES',
-            type: 'res'
-        };
-    }
-    if (typeof obj === 'object' && obj.error) {
-        return {
-            msg : 'TODO-ERR',
+            ip : ip,
+            msg : JSON.stringify(obj.error),
             type: 'err'
         };
+    } else {
+        return {
+            ip : ip,
+            msg : JSON.stringify(obj),
+            type: null
+        };
     }
-    return {
-        msg : 'TODO-PARSEOBJ'
-    }
+    
 };
 
 //Default log by fastify...
 //{"level":30,"time":1518588748299,"msg":"Server listening at http://127.0.0.1:3030","pid":28966,"hostname":"gandy","v":1}
 const logNats = (obj, levelType, level, ip) => {
-    if (R.isNil(obj) || R.isEmpty(obj))
-    {
-        console.log("Could not log to nats.")
+    try {
+        if (R.isNil(obj) || R.isEmpty(obj))
+        {
+            console.error("Could not log to nats.", levelType, obj, ip)
+            if (process.env.NODE_ENV !== 'production') 
+                debugger;
+            return;
+        }
+        const now = nano.toISOString();
+        levelType = levelType || LOG_INFO;
+        level = level || LOG_LEVELS[levelType];
+        const nsa = now.match(/.*T(.*)Z/i)[1].split(":").map(Number.parseFloat)
+        const ns = (Number.parseInt(nsa[0])*3600*1e9)+ (Number.parseInt(nsa[1])*60*1e9)+Number.parseInt(nsa[2]*1e9)
+        if (level >= appLogLevel)
+        {
+            let parsed = parseObj(obj);      
+            nats.publish(
+                `${prefixLog}${process.env.APP_NAME}.${levelType}`, 
+                JSON.stringify({ 
+                    level: level,
+                    ltimenss: String(ns), //ltime nanosecond string
+                    ldate: now.match(/(.*)T/i)[1],
+                    id: `${prefixLog}${process.env.APP_NAME}.${parsed.type || levelType}`, 
+                    msg: parsed.msg || null,
+                    hostname : hostname,
+                    ip : ip || parsed.ip || null
+                })
+            );        
+        }
+    } catch (ex) {
+        console.error("Could not log to nats: ", ex, levelType, obj, ip)
         if (process.env.NODE_ENV !== 'production') 
             debugger;
         return;
-    }
-    const now = nano.toISOString();
-    levelType = levelType || LOG_INFO;
-    level = level || LOG_LEVELS[levelType];
-    const nsa = now.match(/.*T(.*)Z/i)[1].split(":").map(Number.parseFloat)
-    const ns = (Number.parseInt(nsa[0])*3600*1e9)+ (Number.parseInt(nsa[1])*60*1e9)+Number.parseInt(nsa[2]*1e9)
-    if (level >= appLogLevel)
-    {
-        let parsed = parseObj(obj);      
-        nats.publish(
-            `${prefixLog}${process.env.APP_NAME}.${levelType}`, 
-            JSON.stringify({ 
-                level: level,
-                ltimenss: String(ns), //ltime nanosecond string
-                ldate: now.match(/(.*)T/i)[1],
-                id: `${prefixLog}${process.env.APP_NAME}.${parsed.type || levelType}`, 
-                msg: parsed.msg || null,
-                hostname : hostname,
-                ip : ip || parsed.ip || null
-            })
-        );        
     }
 };
 

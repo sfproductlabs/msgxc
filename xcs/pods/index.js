@@ -9,7 +9,7 @@ const debugHTTP = require('debug')('http')
 const {
     generateClaim
 } = require('../utils/ajwt')
-
+const nats = require('../utils/nats')
 
 const MessagingController = require('./messaging/controller');
 const AuthController = require('./auth/controller');
@@ -61,6 +61,7 @@ class Route {
                 if (!this.comms.res.aborted) {
                     if (this.comms.error) {
                         this.comms.res.cork(() => {
+                            nats.natsLogger.error(this.comms);
                             this.comms.res.writeStatus(this.comms.error.code || httpCodes.INTERNAL_SERVER_ERROR);
                             this.comms.res.end(JSON.stringify(this.comms.error));
                         });                        

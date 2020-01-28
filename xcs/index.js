@@ -14,6 +14,7 @@ const {decode} = require('./utils/ajwt')
 const routeMatcher = require('route-matcher').routeMatcher;
 const { ab2ip6, str2ip} = require('./utils/networking'); 
 const {Route, RestRoute, WSRoute} = require('./pods');
+const nats = require('./utils/nats')
 
 const port = Number(process.env.PORT || 9001);
 const sockets = new Set();
@@ -65,6 +66,7 @@ const app = uApp({
             }
           } catch (ex) {
             debugHTTP(ex)
+            nats.natsLogger.error(ex);
             Route.abort(ws, ex);
           }            
           return;
@@ -108,6 +110,7 @@ const app = uApp({
     new RestRoute({res, req}).authorizeUser('msgxc_admin,admin').multicast()
   } catch (ex) {
     debugHTTP(ex)
+    nats.natsLogger.error(ex);
     Route.abort(res, ex);
   }
 })
@@ -116,6 +119,7 @@ const app = uApp({
     new RestRoute({res, req}).authorizeUser('msgxc_admin,admin').broadcast()
   } catch (ex) {
     debugHTTP(ex)
+    nats.natsLogger.error(ex);
     Route.abort(res, ex);
   }
 })
@@ -124,6 +128,7 @@ const app = uApp({
     new RestRoute({res, req}).authorizeUser().send()
   } catch (ex) {
     debugHTTP(ex)
+    nats.natsLogger.error(ex);
     Route.abort(res, ex);
   }
 })
@@ -132,6 +137,7 @@ const app = uApp({
     new RestRoute({res, req}).authorizeUser().subscribe()
   } catch (ex) {
     debugHTTP(ex)
+    nats.natsLogger.error(ex);
     Route.abort(res, ex);
   }
 })
@@ -141,6 +147,7 @@ const app = uApp({
     new RestRoute({res, req}).getDbVersion()
   } catch (ex) {
     debugHTTP(ex)
+    nats.natsLogger.error(ex);
     Route.abort(res, ex);
   }
 })
@@ -150,12 +157,16 @@ const app = uApp({
 })
 //CATCH ALL
 .any(`${process.env.V1_PREFIX}/*`, (res, req) => {
-    debugHTTP("UNAUTHORIZED", req.getMethod(), req.getUrl(), 'from IP', str2ip(req.getHeader('x-forwarded-for')), 'to', ab2ip6(res.getRemoteAddress()))
+    const ex = `UNAUTHORIZED ${req.getMethod()}  ${req.getUrl()} from IP ${str2ip(req.getHeader('x-forwarded-for'))} to ${ab2ip6(res.getRemoteAddress())}`;
+    debugHTTP(ex)
+    nats.natsLogger.error(ex);
     res.writeStatus(httpCodes.NOT_IMPLEMENTED);       
     res.end(httpCodes.NOT_IMPLEMENTED);  
 })
 .any('/*', (res, req) => {
-    debugHTTP("UNAUTHORIZED", req.getMethod(), req.getUrl(), 'from IP', str2ip(req.getHeader('x-forwarded-for')), 'to', ab2ip6(res.getRemoteAddress()))
+    const ex = `UNAUTHORIZED ${req.getMethod()}  ${req.getUrl()} from IP ${str2ip(req.getHeader('x-forwarded-for'))} to ${ab2ip6(res.getRemoteAddress())}`;
+    debugHTTP(ex)
+    nats.natsLogger.error(ex);
     res.writeStatus(httpCodes.NOT_FOUND);
     res.end(httpCodes.NOT_FOUND);
 }).listen(port, (token) => {
