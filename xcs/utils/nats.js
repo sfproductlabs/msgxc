@@ -8,6 +8,7 @@ const fs = require('fs');
 const nano = require('nano-seconds');
 const R = require('ramda');
 const Nats = require("nats");
+const { ab2ip6, str2ip} = require('./networking'); 
 
 const hostname = os.hostname();
 
@@ -35,7 +36,7 @@ const parseObj = (obj) => {
         return {msg : obj};
     let ip = null;
     if (typeof obj === 'object' && obj.res && obj.res.getRemoteAddress) {
-        ip = ab2ip6(obj.res.getRemoteAddress());
+        try { ip = ab2ip6(obj.res.getRemoteAddress()) } catch {}
     }
     if (obj.error) {
         return {
