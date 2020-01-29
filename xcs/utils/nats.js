@@ -11,6 +11,19 @@ const Nats = require("nats");
 const { ab2ip6, str2ip} = require('./networking'); 
 
 const hostname = os.hostname();
+let hostip = null;
+const ifaces = os.networkInterfaces();
+if (ifaces) {
+    const ifaces2 = Object.keys(ifaces).map(function(key) {
+        return [Number(key), ifaces[key]];
+    });
+    if (ifaces2) {
+        const iface = R.find(R.whereEq({ internal : false, family: 'IPv4'}))(R.flatten(ifaces2));
+        if (iface && iface.address) {
+            hostip = iface.address;
+        }
+    }
+}
 
 //Setup prefixes so telegraf works
 const prefixLog = process.env.NATS_PREFIX_LOG || ''; //Should be api.log.
@@ -93,6 +106,7 @@ const logNats = (obj, levelType, level, ip) => {
                     id: `${prefixLog}${process.env.APP_NAME}.${parsed.type || levelType}`, 
                     msg: parsed.msg || null,
                     hostname : hostname,
+                    host: hostip,
                     ip : ip || parsed.ip || null,
                     params : parsed.params,
                     owner: parsed.owner
