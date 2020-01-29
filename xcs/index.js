@@ -66,7 +66,7 @@ const app = uApp({
             }
           } catch (ex) {
             debugHTTP(ex)
-            nats.natsLogger.error(ex);
+            nats.natsLogger.error({...comms, error: ex});
             Route.abort(ws, ex);
           }            
           return;
@@ -106,48 +106,53 @@ const app = uApp({
 })
 //MESSAGING
 .post(`${process.env.V1_PREFIX}/multicast`, async (res, req) => {
+  let comms = {res, req};
   try {
-    new RestRoute({res, req}).authorizeUser('msgxc_admin,admin').multicast()
+    new RestRoute(comms).authorizeUser('msgxc_admin,admin').multicast()
   } catch (ex) {
     debugHTTP(ex)
-    nats.natsLogger.error(ex);
+    nats.natsLogger.error({...comms, error: ex});
     Route.abort(res, ex);
   }
 })
 .post(`${process.env.V1_PREFIX}/broadcast`, async (res, req) => {
+  let comms = {res, req};
   try {
-    new RestRoute({res, req}).authorizeUser('msgxc_admin,admin').broadcast()
+    new RestRoute(comms).authorizeUser('msgxc_admin,admin').broadcast()
   } catch (ex) {
     debugHTTP(ex)
-    nats.natsLogger.error(ex);
+    nats.natsLogger.error({...comms, error: ex});
     Route.abort(res, ex);
   }
 })
 .post(`${process.env.V1_PREFIX}/send`, async (res, req) => {
+  let comms = {res, req};
   try {
-    new RestRoute({res, req}).authorizeUser().send()
+    new RestRoute(comms).authorizeUser().send()
   } catch (ex) {
     debugHTTP(ex)
-    nats.natsLogger.error(ex);
+    nats.natsLogger.error({...comms, error: ex});
     Route.abort(res, ex);
   }
 })
 .post(`${process.env.V1_PREFIX}/native/subscribe`, async (res, req) => {
+  let comms = {res, req};
   try {
-    new RestRoute({res, req}).authorizeUser().subscribe()
+    new RestRoute(comms).authorizeUser().subscribe()
   } catch (ex) {
     debugHTTP(ex)
-    nats.natsLogger.error(ex);
+    nats.natsLogger.error({...comms, error: ex});
     Route.abort(res, ex);
   }
 })
 //STATUS
 .get(`${process.env.V1_PREFIX}/status/dbver`, async (res, req) => {
+  let comms = {res, req};
   try {
-    new RestRoute({res, req}).getDbVersion()
+    new RestRoute(comms).getDbVersion()
   } catch (ex) {
     debugHTTP(ex)
-    nats.natsLogger.error(ex);
+    nats.natsLogger.error({...comms, error: ex});
     Route.abort(res, ex);
   }
 })
@@ -157,16 +162,18 @@ const app = uApp({
 })
 //CATCH ALL
 .any(`${process.env.V1_PREFIX}/*`, (res, req) => {
+    let comms = {res, req};
     const ex = `UNAUTHORIZED ${req.getMethod()}  ${req.getUrl()} from IP ${str2ip(req.getHeader('x-forwarded-for'))} to ${ab2ip6(res.getRemoteAddress())}`;
     debugHTTP(ex)
-    nats.natsLogger.error(ex);
+    nats.natsLogger.error({...comms, error: ex});
     res.writeStatus(httpCodes.NOT_IMPLEMENTED);       
     res.end(httpCodes.NOT_IMPLEMENTED);  
 })
 .any('/*', (res, req) => {
+    let comms = {res, req};
     const ex = `UNAUTHORIZED ${req.getMethod()}  ${req.getUrl()} from IP ${str2ip(req.getHeader('x-forwarded-for'))} to ${ab2ip6(res.getRemoteAddress())}`;
     debugHTTP(ex)
-    nats.natsLogger.error(ex);
+    nats.natsLogger.error({...comms, error: ex});
     res.writeStatus(httpCodes.NOT_FOUND);
     res.end(httpCodes.NOT_FOUND);
 }).listen(port, (token) => {

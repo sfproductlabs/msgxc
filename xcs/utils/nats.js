@@ -38,17 +38,28 @@ const parseObj = (obj) => {
     if (typeof obj === 'object' && obj.res && obj.res.getRemoteAddress) {
         try { ip = ab2ip6(obj.res.getRemoteAddress()) } catch {}
     }
+    let params = {};
+    params.protocol = obj.protocol;
+    params.url = obj.url;
+    params.method = obj.method;
     if (obj.error) {
+        if (obj.error.code === typeof 'string') {
+            params.status = obj.error.code.split(' ')[0];
+        }
         return {
+            owner: obj.user ? (obj.user.uid || obj.user.id) : null,
             ip : ip,
-            msg : JSON.stringify(obj.error),
-            type: 'err'
+            msg : JSON.stringify(obj.error.msg || obj.error),
+            type: 'err',
+            params
         };
     } else {
         return {
+            owner: obj.user ? (obj.user.uid || obj.user.id) : null,
             ip : ip,
             msg : JSON.stringify(obj),
-            type: null
+            type: null,
+            params
         };
     }
     
@@ -72,7 +83,7 @@ const logNats = (obj, levelType, level, ip) => {
         const ns = (Number.parseInt(nsa[0])*3600*1e9)+ (Number.parseInt(nsa[1])*60*1e9)+Number.parseInt(nsa[2]*1e9)
         if (level >= appLogLevel)
         {
-            let parsed = parseObj(obj);      
+            let parsed = parseObj(obj);   
             nats.publish(
                 `${prefixLog}${process.env.APP_NAME}.${levelType}`, 
                 JSON.stringify({ 
@@ -82,7 +93,9 @@ const logNats = (obj, levelType, level, ip) => {
                     id: `${prefixLog}${process.env.APP_NAME}.${parsed.type || levelType}`, 
                     msg: parsed.msg || null,
                     hostname : hostname,
-                    ip : ip || parsed.ip || null
+                    ip : ip || parsed.ip || null,
+                    params : parsed.params,
+                    owner: parsed.owner
                 })
             );        
         }
