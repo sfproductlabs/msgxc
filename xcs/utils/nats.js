@@ -86,7 +86,7 @@ const parseObj = (obj) => {
 
 //Default log by fastify...
 //{"level":30,"time":1518588748299,"msg":"Server listening at http://127.0.0.1:3030","pid":28966,"hostname":"gandy","v":1}
-const logNats = (obj, levelType, level, ip, topic='generic') => {
+const logNats = (obj, levelType, level, ip, name='generic') => {
     try {
         if (R.isNil(obj) || R.isEmpty(obj))
         {
@@ -103,10 +103,11 @@ const logNats = (obj, levelType, level, ip, topic='generic') => {
         if (level >= appLogLevel)
         {
             let parsed = parseObj(obj);   
+            let topic = `${prefixLog}${process.env.APP_NAME}.${levelType}`;
             nats.publish(
-                `${prefixLog}${process.env.APP_NAME}.${levelType}`, 
+                topic, 
                 JSON.stringify({
-                    name: 'tic.log.msgxc', //for filtering in admin, fixed value per backend
+                    name: name, //for filtering in admin, fixed value per backend
                     topic: topic,          //for filtering in admin, usually 'generic' unless custom debug logging
                     level: level,
                     ltimenss: String(ns), //ltime nanosecond string
