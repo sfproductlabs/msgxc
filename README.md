@@ -68,10 +68,11 @@ _Requires Admin JWT_
 Broadcasts a message to every user on the platform.
 
 **Request body:**
+msg _Required_
+opts _Optional_
 ```
-{"msg":"the message to broadcast"}
+{"msg":"the message to broadcast", "opts": { "data": { "key": "whatever" }} }
 ```
-
 **Correct Response:**
 ```true```
 
@@ -84,8 +85,11 @@ _Requires Admin JWT_
 Sends messages to selected UIDs (user-ids) on the platform.
 
 **Request body:**
+msg _Required_
+uids _Required_
+opts _Optional_
 ```
-{"msg":"the message to broadcast", "uids":["00000000-0000-0000-0000-000000000000"]}
+{"msg":"the message to broadcast", "uids":["00000000-0000-0000-0000-000000000000"], "opts": { "data": { "key": "whatever" }}}
 ```
 
 **Correct Response:**
@@ -100,8 +104,11 @@ _Requires Any JWT_
 Sends a message to an individual.
 
 **Request body:**
+msg _Required_
+uid _Required_
+opts _Optional_
 ```
-{"msg":"the message to send", "uid":"14fb0860-b4bf-11e9-8971-7b80435315ac"}
+{"msg":"the message to send", "uid":"14fb0860-b4bf-11e9-8971-7b80435315ac", "opts": { "data": { "key": "whatever" }}}
 ```
 
 **Correct Response:**
