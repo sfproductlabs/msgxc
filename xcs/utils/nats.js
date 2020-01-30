@@ -8,7 +8,7 @@ const fs = require('fs');
 const nano = require('nano-seconds');
 const R = require('ramda');
 const Nats = require("nats");
-const { ab2ip6, str2ip} = require('./networking'); 
+const { req2ip } = require('./networking'); 
 
 const hostname = os.hostname();
 let hostip = null;
@@ -48,26 +48,32 @@ const parseObj = (obj) => {
     if (typeof obj === 'string')
         return {msg : obj};
     let ip = null;
-    if (typeof obj === 'object' && obj.res && obj.res.getRemoteAddress) {
-        try { ip = ab2ip6(obj.res.getRemoteAddress()) } catch {}
+    if (typeof obj === 'object' && (obj.res || obj.req)) {
+        ip = req2ip(obj);
     }
     let params = {};
     params.protocol = obj.protocol;
     params.url = obj.url;
     params.method = obj.method;
-    if (obj.error) {
-        if (obj.error.code === typeof 'string') {
+    if (process.env.NATS_LOG_HEADERS && obj && obj.headers && typeof obj.headers === 'object') {
+        params = {...obj.headers, ...params}
+    }
+    if (obj.error) {        
+        if (typeof obj.error.code === 'string') {
             params.status = obj.error.code.split(' ')[0];
+
         }
         return {
+            level: (params.status) ? ((params.status[0] == '4') ? 'warning' : 'error') : 'info',
             owner: obj.user ? (obj.user.uid || obj.user.id) : null,
             ip : ip,
             msg : JSON.stringify(obj.error.msg || obj.error),
             type: 'err',
-            params
+            params 
         };
     } else {
         return {
+            level: (params.status) ? ((params.status[0] == '4') ? 'warning' : 'error') : 'info',
             owner: obj.user ? (obj.user.uid || obj.user.id) : null,
             ip : ip,
             msg : JSON.stringify(obj),
@@ -80,7 +86,7 @@ const parseObj = (obj) => {
 
 //Default log by fastify...
 //{"level":30,"time":1518588748299,"msg":"Server listening at http://127.0.0.1:3030","pid":28966,"hostname":"gandy","v":1}
-const logNats = (obj, levelType, level, ip) => {
+const logNats = (obj, levelType, level, ip, topic='generic') => {
     try {
         if (R.isNil(obj) || R.isEmpty(obj))
         {
@@ -99,7 +105,9 @@ const logNats = (obj, levelType, level, ip) => {
             let parsed = parseObj(obj);   
             nats.publish(
                 `${prefixLog}${process.env.APP_NAME}.${levelType}`, 
-                JSON.stringify({ 
+                JSON.stringify({
+                    name: 'tic.log.msgxc', //for filtering in admin, fixed value per backend
+                    topic: topic,          //for filtering in admin, usually 'generic' unless custom debug logging
                     level: level,
                     ltimenss: String(ns), //ltime nanosecond string
                     ldate: now.match(/(.*)T/i)[1],
@@ -154,12 +162,12 @@ const LOG_NONE = 'none';
 
 
 const LOG_LEVELS = {};
-const LOG_LEVEL_FATAL = LOG_LEVELS[LOG_FATAL] = 32;
-const LOG_LEVEL_ERROR = LOG_LEVELS[LOG_ERROR] = 16;
-const LOG_LEVEL_WARN = LOG_LEVELS[LOG_WARN] = 8;
-const LOG_LEVEL_INFO = LOG_LEVELS[LOG_INFO] = 4;
-const LOG_LEVEL_DEBUG = LOG_LEVELS[LOG_DEBUG] = 2;
-const LOG_LEVEL_TRACE = LOG_LEVELS[LOG_TRACE] = 1;
+const LOG_LEVEL_FATAL = LOG_LEVELS[LOG_FATAL] = 60;
+const LOG_LEVEL_ERROR = LOG_LEVELS[LOG_ERROR] = 50;
+const LOG_LEVEL_WARN = LOG_LEVELS[LOG_WARN] = 40;
+const LOG_LEVEL_INFO = LOG_LEVELS[LOG_INFO] = 30;
+const LOG_LEVEL_DEBUG = LOG_LEVELS[LOG_DEBUG] = 20;
+const LOG_LEVEL_TRACE = LOG_LEVELS[LOG_TRACE] = 10;
 const LOG_LEVEL_NONE = LOG_LEVELS[LOG_NONE] = Number.MAX_SAFE_INTEGER;
 
 //BY DEFAULT WE HAVE LOGGING TURNED OFF

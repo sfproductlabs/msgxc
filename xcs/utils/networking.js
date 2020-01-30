@@ -30,20 +30,20 @@ const ab2ip6 = function(ab) {
 }
 
 const req2ip = function(comms) {
+    let ip = null;
     try {
-        let ip = null;
-
-        CLIENT_HEADERS.some( ( header ) => {
+        for (let header in CLIENT_HEADERS) {
             ip = comms.headers[header];
-            return !!ip;
-        } );
-    
-        if ( !ip ) {
-            //TODO Get IP from request
-        }    
-
-        return ip;
+            if (!!ip) {
+                return ip;
+            } 
+        }
     } catch (ex) {
+        console.warn(ex);
+    }
+    try {
+        return ab2ip6(comms.res.getRemoteAddress());
+    } catch {
         console.warn(ex);
         return null;
     }
