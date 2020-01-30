@@ -61,10 +61,10 @@ const parseObj = (obj) => {
     if (obj.error) {        
         if (typeof obj.error.code === 'string') {
             params.status = obj.error.code.split(' ')[0];
+            params.level = (params.status && params.status.length && params.status.length > 0) ? ((params.status[0] == '4') ? 'warning' : 'error') : 'info';
 
         }
         return {
-            level: (params.status) ? ((params.status[0] == '4') ? 'warning' : 'error') : 'info',
             owner: obj.user ? (obj.user.uid || obj.user.id) : null,
             ip : ip,
             msg : JSON.stringify(obj.error.msg || obj.error),
@@ -73,7 +73,6 @@ const parseObj = (obj) => {
         };
     } else {
         return {
-            level: (params.status) ? ((params.status[0] == '4') ? 'warning' : 'error') : 'info',
             owner: obj.user ? (obj.user.uid || obj.user.id) : null,
             ip : ip,
             msg : JSON.stringify(obj),
