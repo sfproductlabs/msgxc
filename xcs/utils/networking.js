@@ -31,22 +31,27 @@ const ab2ip6 = function(ab) {
 
 const req2ip = function(comms) {
     let ip = null;
-    try {
-        for (const header of CLIENT_HEADERS) {
-            ip = comms.headers[header];
-            if (!!ip) {
-                return ip;
-            } 
+    if (comms && comms.headers) {
+        try {
+            for (const header of CLIENT_HEADERS) {
+                ip = comms.headers[header];
+                if (!!ip) {
+                    return ip;
+                } 
+            }
+        } catch (ex) {
+            console.warn(ex);
         }
-    } catch (ex) {
-        console.warn(ex);
     }
-    try {
-        return ab2ip6(comms.res.getRemoteAddress());
-    } catch {
-        console.warn(ex);
-        return null;
+    if (comms && comms.res) {
+        try {
+            return ab2ip6(comms.res.getRemoteAddress());
+        } catch {
+            console.warn(ex);
+            return null;
+        }
     }
+    return null;
 }
 
 
