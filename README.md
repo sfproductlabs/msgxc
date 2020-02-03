@@ -137,3 +137,9 @@ or
 ## TODO
 
 - [ ] Processing in batches
+- [ ] Multicast using elastic search (instead of slower CQL)
+- [ ] Add web notifications and SMS (Amazon/Twilio)
+- [ ] Add WebSocket
+- [ ] Think about gRPC
+- [ ] Add email fallback w/ templated options (inc. scheduling options)
+- [ ] Add "last read" to each method, and ensure not sent in WebSocket first.
