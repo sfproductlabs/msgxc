@@ -48,7 +48,7 @@ const parseObj = (obj) => {
     if (typeof obj === 'string')
         return {msg : obj};
     let ip = null;
-    if (typeof obj === 'object' && (obj.res || obj.req)) {
+    if (typeof obj === 'object' && (obj.res || obj.headers)) {
         ip = req2ip(obj);
     }
     let params = {};

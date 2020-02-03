@@ -32,7 +32,7 @@ const ab2ip6 = function(ab) {
 const req2ip = function(comms) {
     let ip = null;
     try {
-        for (let header in CLIENT_HEADERS) {
+        for (const header of CLIENT_HEADERS) {
             ip = comms.headers[header];
             if (!!ip) {
                 return ip;
