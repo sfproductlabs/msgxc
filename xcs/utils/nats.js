@@ -111,7 +111,6 @@ const logNats = (obj, levelType, level, ip, name='generic') => {
                     level: level,
                     ltimenss: String(ns), //ltime nanosecond string
                     ldate: now.match(/(.*)T/i)[1],
-                    id: `${prefixLog}${process.env.APP_NAME}.${parsed.type || levelType}`, //this is ignored and replaced by topic
                     msg: parsed.msg || null,
                     hostname : hostname,
                     host: hostip,
