@@ -51,6 +51,7 @@ const parseObj = (obj) => {
     if (typeof obj === 'object' && (obj.res || obj.headers)) {
         ip = req2ip(obj);
     }
+    const owner = obj.user ? (obj.user.uid || obj.user.id) : null;
     let params = {};
     params.protocol = obj.protocol;
     params.url = obj.url;
@@ -62,22 +63,21 @@ const parseObj = (obj) => {
         if (typeof obj.error.code === 'string') {
             params.status = obj.error.code.split(' ')[0];
             params.level = (params.status && params.status.length && params.status.length > 0) ? ((params.status[0] == '4') ? 'warning' : 'error') : 'info';
-
         }
         return {
-            owner: obj.user ? (obj.user.uid || obj.user.id) : null,
             ip : ip,
-            msg : JSON.stringify(obj.error.msg || obj.error),
+            msg : obj.error.msg || JSON.stringify(obj.error),
             type: 'err',
-            params 
+            params,
+            owner
         };
     } else {
-        return {
-            owner: obj.user ? (obj.user.uid || obj.user.id) : null,
+        return {        
             ip : ip,
             msg : JSON.stringify(obj),
             type: null,
-            params
+            params,
+            owner
         };
     }
     
@@ -111,7 +111,7 @@ const logNats = (obj, levelType, level, ip, name='generic') => {
                     level: level,
                     ltimenss: String(ns), //ltime nanosecond string
                     ldate: now.match(/(.*)T/i)[1],
-                    id: `${prefixLog}${process.env.APP_NAME}.${parsed.type || levelType}`, 
+                    id: `${prefixLog}${process.env.APP_NAME}.${parsed.type || levelType}`, //this is ignored and replaced by topic
                     msg: parsed.msg || null,
                     hostname : hostname,
                     host: hostip,
