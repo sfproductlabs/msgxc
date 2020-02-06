@@ -52,6 +52,7 @@ const parseObj = (obj) => {
         ip = req2ip(obj);
     }
     const owner = obj.user ? (obj.user.uid || obj.user.id) : null;
+    let level = null;
     let params = {};
     params.protocol = obj.protocol;
     params.url = obj.url;
@@ -62,14 +63,16 @@ const parseObj = (obj) => {
     if (obj.error) {        
         if (typeof obj.error.code === 'string') {
             params.status = obj.error.code.split(' ')[0];
-            params.level = (params.status && params.status.length && params.status.length > 0) ? ((params.status[0] == '4') ? 'warning' : 'error') : 'info';
+            level = (params.status && params.status.length && params.status.length > 0) ? ((params.status[0] == '4') ? LOG_LEVELS[LOG_WARN] : LOG_LEVELS[LOG_ERROR]) : LOG_LEVELS[LOG_INFO];
+
         }
         return {
             ip : ip,
             msg : obj.error.msg || JSON.stringify(obj.error),
             type: 'err',
             params,
-            owner
+            owner,
+            level
         };
     } else {
         return {        
@@ -108,7 +111,7 @@ const logNats = (obj, levelType, level, ip, name='generic') => {
                 JSON.stringify({
                     name: name, //for filtering in admin, fixed value per backend
                     topic: topic,          //for filtering in admin, usually 'generic' unless custom debug logging
-                    level: level,
+                    level: level || parsed.level,
                     ltimenss: String(ns), //ltime nanosecond string
                     ldate: now.match(/(.*)T/i)[1],
                     msg: parsed.msg || null,
