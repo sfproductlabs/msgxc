@@ -111,7 +111,7 @@ const logNats = (obj, levelType, level, ip, name='generic') => {
                 JSON.stringify({
                     name: name, //for filtering in admin, fixed value per backend
                     topic: topic,          //for filtering in admin, usually 'generic' unless custom debug logging
-                    level: level || parsed.level,
+                    level: parsed.level || level,
                     ltimenss: String(ns), //ltime nanosecond string
                     ldate: now.match(/(.*)T/i)[1],
                     msg: parsed.msg || null,
