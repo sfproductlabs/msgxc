@@ -163,41 +163,46 @@ create table updates (
 
 -------------------START ENTIRELY NEW
 
-create table mxccerts (
-  certid text,
+create type mcert (
+  id uuid,
+  name text,
+  algo text,
+  ser text, serialization type (hex,num,json)
   pub  text, --public key
   priv text, --private key
-  algo text,
-  org         uuid,
   created timestamp,
-  owner uuid, 
-  updated timestamp,
-  updater uuid,
-  PRIMARY KEY ((certid))
+  expires timestamp
 );
 
-create table user_certs (
-  certid       text,
-  uid         uuid,
-  primary key       (certid)
-); 
-CREATE INDEX user_certs_uid_idx ON user_certs ( uid );
+CREATE TABLE mthreads (
+    id uuid,
+    alias text,
+    mcert mcert,
+    mtypes set<text>,  --message type (ws - websocket,apn - apple push ios,fcm - firebase/android,webn - web notification,sms,em - email,emw - email weekly,emd - email daily, emm - email monthly)   
+    admins set<uuid>,
+    users set<uuid>,
+    prefs set<uuid, set<text>>, --msg preferences (user,mtypes) apn,~,webn etc.    
+    cats set<text>, --categories   
+    ephemeral int, --seconds until expiry (-1 == keep)
+    archived boolean,
+    max_users int,
+    approved timestamp,
+    approver uuid,
+    org         uuid,
+    created timestamp,
+    owner uuid,
+    updated timestamp,
+    updater uuid,
+    PRIMARY KEY ((tid))
+)
 
-create table group_certs (
-  certid       text,
-  gid         uuid, --group-id
-  primary key       (certid)
-); 
-CREATE INDEX group_certs_gid_idx ON group_certs ( gid );
-
-create table mxctriage (
-  mxcid timeuuid,
-  mtype text, --message type (ws - websocket,apn - apple push ios,fcm - firebase/android,webn - web notification,sms,em - email,emw - email weekly,emd - email daily, emm - email monthly)
+create table mtriage (
+  tid uuid, --threadid
+  mid timeuuid, --message id
   subject text,
   msg text,
   data text,
   template text, --use a url for now 
-  certid text, --public key for encryption
   rel text, 
   ver int, --version
   schedule timestamp,
@@ -206,9 +211,9 @@ create table mxctriage (
   ptyp text, 
   auth text, --author
   xid text, --experiment id 
-  gid uuid,
-  users set<uuid>,
-  deliveries set<uuid>, --uid delivered
+  mtypes set<text>, --attempted mtypes (update after actually sent)
+  users set<uuid>, --keep this here for pull mid > lastloggedin
+  deliveries set<uuid>, --uid delivered, update after ACK of wsocket
   failures set<uuid>, --uid failures
   cohorts set<text>,
   split decimal, --% random 1=1%
@@ -236,21 +241,21 @@ create table mxctriage (
   owner uuid,
   updated timestamp,
   updater uuid,
-  PRIMARY KEY ((mxcid))
+  PRIMARY KEY (mid)
 )
 WITH default_time_to_live = 1209600; --Tombstones after 2 weeks
 
-create type mxcdevice (
+create type mdevice (
   mtype text,
   did text,
   updated timestamp
 );
 
-create table mxcfailures (
- mxcid timeuuid, --mxctriageid
+create table mfailures (
+ mid timeuuid, --mtriageid
  uid uuid,
  mtype text,
- mdevice frozen<mxcdevice>,
+ mdevice frozen<mdevice>,
  failure text, --failure type (Ex. nopened, noack)
  retries int, 
  created timestamp,
@@ -258,14 +263,14 @@ create table mxcfailures (
  owner uuid,
  updated timestamp,
  updater uuid,
- PRIMARY KEY ((mxcid), uid, mtype, mdevice)
+ PRIMARY KEY ((mid), uid, mtype, mdevice)
 );
 
-alter table users add mdevices list<frozen<mxcdevice>>; --prioritized list of devices
+alter table users add mdevices list<frozen<mdevice>>; --prioritized list of devices
 alter table users add mtypes list<text>; --[mtype] prioritized list of preferences ~ => disabled
 alter table users add mlast bigint; --last updated/looked at a mxc message
 alter table users add cell text; 
 alter table users add chash text; --cell hash 
-
+alter table users add mcerts set<mcert>; 
 
 -------------------END ENTIRELY NEW
