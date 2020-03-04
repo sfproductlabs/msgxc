@@ -164,27 +164,36 @@ create table updates (
 -------------------START ENTIRELY NEW
 
 create type mcert (
-  id uuid,
+  id timeuuid,
   name text,
-  algo text,
-  ser text, serialization type (hex,num,json)
-  pub  text, --public key
-  priv text, --private key
+  algo text, --ex ecc
+  spec text, --ex 192spec2k1
+  sz text, --serialization type (hex,num,json)
+  opub  text, --asymmetric owner public key (der)
+  opriv text, --OPTIONAL STORE asymmetric owner private key (hex)
+  tpub text, --asymmetric thread public key
+  tpriv text, --OPTIONAL STORE asymmetric thread private key
+  sym text, --symmetric enc method (aes,rsa,elgamal)
+  sver text, --version
+  sspec text, --dhpubprivsha256
+  skey text, --symmetric/shared key
+  dhpub text,
+  dhpriv text, 
   created timestamp,
   expires timestamp
 );
 
 CREATE TABLE mthreads (
-    id uuid,
+    tid timeuuid,
     alias text,
     mcert mcert,
     mtypes set<text>,  --message type (ws - websocket,apn - apple push ios,fcm - firebase/android,webn - web notification,sms,em - email,emw - email weekly,emd - email daily, emm - email monthly)   
-    mtemplates set<text, text>, --default template eg. {email,00001} --template text, --use a url for now 
+    mtemplates map<text, text>, --default template eg. {email,00001} --template text, --use a url for now 
     admins set<uuid>,
-    users set<uuid>,
-    prefs set<uuid, set<text>>, --msg preferences (user,mtypes) apn,~,webn etc.    
+    users set<uuid>, --null = broadcast
+    prefs map<uuid, frozen<set<text>>>, --msg preferences (user,mtypes) apn,~,webn etc.    
     cats set<text>, --categories   
-    ephemeral int, --seconds until expiry (-1 == keep)
+    ephemeral int, --seconds until expiry (null == keep)
     archived boolean,
     max_users int,
     approved timestamp,
@@ -195,11 +204,11 @@ CREATE TABLE mthreads (
     updated timestamp,
     updater uuid,
     PRIMARY KEY ((tid))
-)
+);
 
 create table mtriage (
-  tid uuid, --threadid
   mid timeuuid, --message id
+  tid timeuuid, --threadid
   subject text,
   msg text,
   data text,
@@ -269,9 +278,12 @@ create table mfailures (
 
 alter table users add mdevices list<frozen<mdevice>>; --prioritized list of devices
 alter table users add mtypes list<text>; --[mtype] prioritized list of preferences ~ => disabled
-alter table users add mlast bigint; --last updated/looked at a mxc message
+alter table users add mlast bigint; --(ms) last updated/looked at a mxc message
 alter table users add cell text; 
 alter table users add chash text; --cell hash 
-alter table users add mcerts set<mcert>; 
+alter table users add mcerts set<frozen<mcert>>; 
 
 -------------------END ENTIRELY NEW
+
+--TODO
+--marchive
