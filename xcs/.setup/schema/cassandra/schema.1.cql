@@ -179,6 +179,7 @@ CREATE TABLE mthreads (
     alias text,
     mcert mcert,
     mtypes set<text>,  --message type (ws - websocket,apn - apple push ios,fcm - firebase/android,webn - web notification,sms,em - email,emw - email weekly,emd - email daily, emm - email monthly)   
+    mtemplates set<text, text>, --default template eg. {email,00001} --template text, --use a url for now 
     admins set<uuid>,
     users set<uuid>,
     prefs set<uuid, set<text>>, --msg preferences (user,mtypes) apn,~,webn etc.    
