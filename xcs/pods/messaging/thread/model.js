@@ -8,80 +8,16 @@
 
 const R = require('ramda');
 const uuidv1 = require('uuid/v1');
-const APN = require('../../utils/apn')
-const FCM = require('../../utils/fcm')
+const APN = require('../../../utils/apn')
+const FCM = require('../../../utils/fcm')
 //const sms = require('../../utils/sms')
-const cxn = require('../../utils/cassandra');
-const httpCodes = require('../../utils/httpStatusCodes')
+const cxn = require('../../../utils/cassandra');
+const httpCodes = require('../../../utils/httpStatusCodes')
 
-class Messaging {
+class Threading {
 
-  static async multicast(comms) {
-    const db = new cxn();
-    try {
-      if (!comms.obj.uids || !Array.isArray(comms.obj.uids)) {
-          return false;
-      }
-      for (let i = 0; i < comms.obj.uids.length; i++) {
-        if (comms.obj.uids[i].length !== 36) {
-          continue;
-        }
-        //TODO: Run an Elassandra query when bug is fixed
-        const user = (await db.client.execute(
-          `select uid,mtypes,mdevices from users where uid=?`, [
-          comms.obj.uids[i]
-        ], {
-          prepare: true
-        })).first()
-        await Messaging.send(comms, user);
-      }
-    } catch {
-      console.warn(ex);
-      switch (ex.code) {
-        case httpCodes.INTERNAL_SERVER_ERROR:
-        default:
-          throw ex; // Internal Server Error for uncaught exception
-      }
-    }    
-    return true;
-  }
 
-  static async broadcast(comms) {
-    const db = new cxn();
-    try {
-      return new Promise((resolve, reject) => {
-        db.client.stream('SELECT * FROM users')
-          .on('readable', function () {
-            let row;
-            // 'readable' is emitted as soon a row is received and parsed
-            while (row = this.read()) {
-              //TODO: AG MOVE TO BATCHING
-              try {
-                (async () => { await Messaging.send(comms, row)})();
-              } catch {} //TODO: AG might want to catch errors here.
-            }
-          })
-          .on('end', function () {
-            // Stream ended, there aren't any more rows
-            resolve(true);
-          })
-          .on('error', function (err) {
-            // Something went wrong: err is a response error from Cassandra
-            resolve(false);
-          });
-      });
-
-    } catch (ex) {
-      console.warn(ex);
-      switch (ex.code) {
-        case httpCodes.INTERNAL_SERVER_ERROR:
-        default:
-          throw ex; // Internal Server Error for uncaught exception
-      }
-    }
-  }
-
-  static async send(comms, user = null) {
+  static async publish(comms) {
     const db = new cxn();
     try {
       let sent = false;
@@ -167,8 +103,12 @@ class Messaging {
     }
   }
 
+  static async unsubscribe(comms) {
+    throw {code: httpCodes.NOT_IMPLEMENTED, msg: 'not implemented'}
+  }
+
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
-module.exports = Messaging;
+module.exports = Threading;

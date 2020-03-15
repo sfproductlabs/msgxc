@@ -1,19 +1,19 @@
 'use strict';
 
 const Threading = require('./model');
-const httpCodes = require('../../utils/httpStatusCodes')
+const httpCodes = require('../../../utils/httpStatusCodes')
 
 class ThreadController {
 
    
-    static async send(comms) {
+    static async publish(comms) {
         try {
-            return await Threading.send(comms);            
+            return await Threading.publish(comms);            
         } catch (ex) {
             console.warn(ex);
             comms.error = {
                 code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
-                msg: ex.msg || "Unknown server error sending thread."
+                msg: ex.msg || "Unknown server error publishing thread."
             };
             throw comms.error;
         }
@@ -27,6 +27,19 @@ class ThreadController {
             comms.error = {
                 code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
                 msg: ex.msg || "Unknown server error subscribing thread."
+            };
+            throw comms.error;
+        }
+    }
+
+    static async unsubscribe(comms) {
+        try {
+            return await Threading.unsubscribe(comms);            
+        } catch (ex) {
+            console.warn(ex);
+            comms.error = {
+                code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                msg: ex.msg || "Unknown server error unsubscribing thread."
             };
             throw comms.error;
         }

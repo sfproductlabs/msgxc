@@ -22,6 +22,7 @@ create table users (
   ehash       text, --email hash
   org         uuid, --org member
   roles      set<text>,
+  rights     set<text>,
   ref uuid, --referral
   aff text, --affiliate
   promo text, --promo code
@@ -68,6 +69,7 @@ create table services (
   svc    text,
   secret  text, --secret hash
   roles   set<text>,
+  rights  set<text>,
   expiry date,
   created timestamp,
   owner uuid,
@@ -176,9 +178,9 @@ create type mcert (
   sym text, --symmetric enc method (aes,rsa,elgamal)
   sver text, --version
   sspec text, --dhpubprivsha256
-  skey text, --symmetric/shared key
+  skey text, --OPTIONAL symmetric/shared key
   dhpub text,
-  dhpriv text, 
+  dhpriv text, --OPTIONAL
   created timestamp,
   expires timestamp
 );
@@ -187,10 +189,12 @@ CREATE TABLE mthreads (
     tid timeuuid,
     alias text,
     mcert mcert,
-    mtypes set<text>,  --message type (ws - websocket,apn - apple push ios,fcm - firebase/android,webn - web notification,sms,em - email,emw - email weekly,emd - email daily, emm - email monthly)   
+    mtypes set<text>,  --message type (ws - websocket,apn - apple push ios,fcm - firebase/android,webn - web notification,sms,em - email,emw - email weekly,emd - email daily, emm - email monthly) 
+    fmtypes set<text>, --  specific faluire / fallback mtypes (to override app defaults)
     mtemplates map<text, text>, --default template eg. {email,00001} --template text, --use a url for now 
     admins set<uuid>,
-    users set<uuid>, --null = broadcast
+    subs set<uuid>, --null = broadcast, admins+writers+subs=subs (only this index required to subscribe)
+    pubs set<uuid>, --uids who can publish to admins+pubs=pubs (only this index required to publish)
     prefs map<uuid, frozen<set<text>>>, --msg preferences (user,mtypes) apn,~,webn etc.    
     cats set<text>, --categories   
     ephemeral int, --seconds until expiry (null == keep)

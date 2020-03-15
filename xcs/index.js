@@ -4,7 +4,8 @@
 //  ws.onmessage = msg => console.log(msg)
 // // ws.send('WebSockets are awesome!')
 // ws.onerror = evt => console.error("WebSocket error observed:", event)
-require('dotenv').config()
+const ePath = process.env.PROJECT ? `${__dirname}/.env.${process.env.PROJECT}` : `${__dirname}/.env`
+require('dotenv').config({path: ePath})
 const R = require('ramda');
 const debugWS = require('debug')('ws')
 const debugHTTP = require('debug')('http')
@@ -104,7 +105,7 @@ const app = uApp({
     debugWS('WebSocket closed, sockets open:', sockets.size);
   }
 })
-//MESSAGING
+//SYSTEM MESSAGING
 .post(`${process.env.V1_PREFIX}/multicast`, async (res, req) => {
   let comms = {res, req};
   try {
@@ -128,17 +129,39 @@ const app = uApp({
 .post(`${process.env.V1_PREFIX}/send`, async (res, req) => {
   let comms = {res, req};
   try {
-    new RestRoute(comms).authorizeUser().send()
+    new RestRoute(comms).authorizeUser('msgxc_admin,admin').send()
   } catch (ex) {
     debugHTTP(ex)
     nats.natsLogger.error({...comms, error: ex});
     Route.abort(res, ex);
   }
 })
-.post(`${process.env.V1_PREFIX}/native/subscribe`, async (res, req) => {
+//ENLIST A DEVICE OR PROTOCOL
+.post(`${process.env.V1_PREFIX}/enlist`, async (res, req) => {
   let comms = {res, req};
   try {
-    new RestRoute(comms).authorizeUser().subscribe()
+    new RestRoute(comms).authorizeUser().enlist()
+  } catch (ex) {
+    debugHTTP(ex)
+    nats.natsLogger.error({...comms, error: ex});
+    Route.abort(res, ex);
+  }
+})
+//THREAD MESSAGING
+.post(`${process.env.V1_PREFIX}/publish`, async (res, req) => {
+  let comms = {res, req};
+  try {
+    new RestRoute(comms).authorizeUser().publish()
+  } catch (ex) {
+    debugHTTP(ex)
+    nats.natsLogger.error({...comms, error: ex});
+    Route.abort(res, ex);
+  }
+})
+.post(`${process.env.V1_PREFIX}/subscribe`, async (res, req) => {
+  let comms = {res, req};
+  try {
+    new RestRoute(comms).authorizeUser().publish()
   } catch (ex) {
     debugHTTP(ex)
     nats.natsLogger.error({...comms, error: ex});

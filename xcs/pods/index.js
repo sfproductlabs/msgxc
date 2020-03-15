@@ -11,7 +11,7 @@ const {
 } = require('../utils/ajwt')
 const nats = require('../utils/nats')
 
-const MessagingController = require('./messaging/controller');
+const SysMessageController = require('./messaging/sys/controller');
 const AuthController = require('./auth/controller');
 const StatusController = require('./status/controller');
 
@@ -253,7 +253,7 @@ class RestRoute extends Route {
         let result = null;
         try {            
             await this.processPayload();    
-            result = await MessagingController.broadcast(this.comms);
+            result = await SysMessageController.broadcast(this.comms);
         } catch (ex) {
             let errMsg = "Unknown error broadcasting";
             console.warn(errMsg, ex);
@@ -271,7 +271,7 @@ class RestRoute extends Route {
         let result = null;
         try {            
             await this.processPayload();    
-            result = await MessagingController.multicast(this.comms);
+            result = await SysMessageController.multicast(this.comms);
         } catch (ex) {
             let errMsg = "Unknown error multicasting";
             console.warn(errMsg, ex);
@@ -290,7 +290,7 @@ class RestRoute extends Route {
         let result = null;
         try {            
             await this.processPayload();    
-            result = await MessagingController.send(this.comms);
+            result = await SysMessageController.send(this.comms);
         } catch (ex) {
             let errMsg = "Unknown error sending";
             console.warn(errMsg, ex);
@@ -304,13 +304,13 @@ class RestRoute extends Route {
         this.respond(result);
     }
 
-    async subscribe() {
+    async enlist() {
         let result = null;
         try {            
             await this.processPayload();    
-            result = await MessagingController.subscribe(this.comms);
+            result = await SysMessageController.enlist(this.comms);
         } catch (ex) {
-            let errMsg = "Unknown error subscribing";
+            let errMsg = "Unknown error enlisting";
             console.warn(errMsg, ex);
             if (!this.comms.error) {
                 this.comms.error = {

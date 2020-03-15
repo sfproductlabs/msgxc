@@ -68,10 +68,12 @@ class AuthController {
                 AuthController.checkUserLevel(comms, R.defaultTo([])(R.path(['pub', 'roles'], jwt)), level)
                 comms.user = R.path(['pub'], jwt)
             } catch {
-                comms.error = {
-                    code: httpCodes.UNAUTHORIZED,
-                    msg: 'Authorization Failed (Validate)'
-                };
+                if (!comms.error) { 
+                    comms.error = {
+                        code: httpCodes.UNAUTHORIZED,
+                        msg: 'Authorization Failed (Validate)'
+                    };
+                }
                 throw comms.error;
             }
         }
