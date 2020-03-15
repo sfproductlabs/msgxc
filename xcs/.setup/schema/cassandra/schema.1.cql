@@ -205,8 +205,8 @@ CREATE TABLE mthreads (
     max_users int,
     --ADVANCED PERMISSIONS
     aperms boolean, --use advanced perms (true to use)
-    rperms map<text, frozen<set<text>>>, -- detail role permissions {"post", "admin" } etc. 
-    dperms map<text, frozen<set<text>>>, -- detail usage rights {"post", "writers,managers" } etc. 
+    gperms map<text, frozen<set<text>>>, -- detail group/role permissions {"post", "admin" } etc. 
+    rperms map<text, frozen<set<text>>>, -- detail usage rights {"post", "writers,managers" } etc. 
     uperms map<uuid, frozen<set<text>>>, -- user permissions {00000-00000-00000-000000000, "join,post" } etc. 
     --RECIPIENTS
     subs set<uuid>, --null = broadcast, admins+writers+subs=subs (only this index required to subscribe)
