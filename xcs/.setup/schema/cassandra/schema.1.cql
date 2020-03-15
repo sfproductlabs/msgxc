@@ -186,22 +186,33 @@ create type mcert (
 );
 
 CREATE TABLE mthreads (
-    tid timeuuid,
+    --THREAD INFO
+    tid timeuuid, --thread id
     alias text,
     mcert mcert,
     mtypes set<text>,  --message type (ws - websocket,apn - apple push ios,fcm - firebase/android,webn - web notification,sms,em - email,emw - email weekly,emd - email daily, emm - email monthly) 
+    mtempl map<text, text>, --default template eg. {email,00001} --template text, --use a url for now
     fmtypes set<text>, --  specific faluire / fallback mtypes (to override app defaults)
-    mtemplates map<text, text>, --default template eg. {email,00001} --template text, --use a url for now 
-    admins set<uuid>,
-    subs set<uuid>, --null = broadcast, admins+writers+subs=subs (only this index required to subscribe)
-    pubs set<uuid>, --uids who can publish to admins+pubs=pubs (only this index required to publish)
-    prefs map<uuid, frozen<set<text>>>, --msg preferences (user,mtypes) apn,~,webn etc.    
     cats set<text>, --categories   
     ephemeral int, --seconds until expiry (null == keep)
     archived boolean,
-    max_users int,
+    --PERMISSIONS
+    opens boolean, --publicly subscribable, still add uid to subs [Default: false]
+    openp boolean, --publicly publishable, still add uid to pubs [Default: false]
+    admins set<uuid>, --approve new members etc.
     approved timestamp,
     approver uuid,
+    max_users int,
+    --ADVANCED PERMISSIONS
+    aperms boolean, --use advanced perms (true to use)
+    rperms map<text, frozen<set<text>>>, -- detail role permissions {"post", "admin" } etc. 
+    dperms map<text, frozen<set<text>>>, -- detail usage rights {"post", "writers,managers" } etc. 
+    uperms map<uuid, frozen<set<text>>>, -- user permissions {00000-00000-00000-000000000, "join,post" } etc. 
+    --RECIPIENTS
+    subs set<uuid>, --null = broadcast, admins+writers+subs=subs (only this index required to subscribe)
+    pubs set<uuid>, --uids who can publish to admins+pubs=pubs (only this index required to publish)
+    prefs map<uuid, frozen<set<text>>>, --msg preferences (user,mtypes) apn,~,webn etc.    
+    --OWNER
     org         uuid,
     created timestamp,
     owner uuid,

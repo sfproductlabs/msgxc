@@ -161,7 +161,7 @@ const app = uApp({
 .post(`${process.env.V1_PREFIX}/subscribe`, async (res, req) => {
   let comms = {res, req};
   try {
-    new RestRoute(comms).authorizeUser().publish()
+    new RestRoute(comms).authorizeUser().subscribe()
   } catch (ex) {
     debugHTTP(ex)
     nats.natsLogger.error({...comms, error: ex});

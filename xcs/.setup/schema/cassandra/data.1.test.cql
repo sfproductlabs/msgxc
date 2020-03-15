@@ -9,6 +9,7 @@ insert into mthreads (
     alias, 
     mtypes,
     owner,
+    opens,
     admins,
     subs,
     pubs
@@ -17,6 +18,7 @@ insert into mthreads (
     'native:dailypulse', 
     {'apn','fcm'},
     14fb0860-b4bf-11e9-8971-7b80435315ac,
+    true,
     {14fb0860-b4bf-11e9-8971-7b80435315ac},
     {14fb0860-b4bf-11e9-8971-7b80435315ac},
     {14fb0860-b4bf-11e9-8971-7b80435315ac}
