@@ -68,44 +68,54 @@ class Threading {
     const db = new cxn();
     try {
 
+      if (!comms.user || !comms.user.uid) {
+        return false;
+      }
+
       let threadPerms = (await db.client.execute(
         `select owner,admins,opens,openp,perms,org from mthreads where tid=?`, [
-        comms.tid
+        comms.obj.tid
       ], {
         prepare: true
       })).first()
-
       if (!threadPerms) {
         return false;
       }
 
       if (threadPerms.perms) {
-        let user = (await db.client.execute(
-          `select roles,rights,org from users where uid=?`, [
-          comms.user.uid
+        throw {code: httpCodes.NOT_IMPLEMENTED, msg: 'not implemented'}
+        //const Uuid = require('cassandra-driver').types.Uuid;
+        //const id = Uuid.random();
+        //id.getDate()
+        // let user = (await db.client.execute(
+        //   `select roles,rights,org from users where uid=?`, [
+        //   comms.user.uid
+        // ], {
+        //   prepare: true
+        // })).first()
+
+        // if (!user) {
+        //   return false;
+        // }
+      }
+      
+      const isOwner = threadPerms.owner.toString() === comms.user.uid;
+      const isAdmin = threadPerms.admins && threadPerms.admins.some(f=> f.toString() === comms.user.uid);
+      
+      if (isOwner || isAdmin || threadPerms.opens || threadPerms.openp) {
+
+        await db.client.execute(
+          `update mthreads set subs=subs+? where tid=?`, [
+          [comms.user.uid, cxn.newTimeUuid()],
+          comms.obj.tid
         ], {
           prepare: true
-        })).first()
+        })
 
-        if (!user) {
-          return false;
-        }
+        return true;
+      } else {
+        return false;
       }
-
-      if (!user.mdevices) user.mdevices = [];
-      user.mdevices = user.mdevices.filter(device => device.did !== comms.obj.token);
-      if (comms.obj.os === "ios") user.mdevices.splice(0, 0, { mtype: 'apn', did: comms.obj.token, updated: Date.now() })
-      if (comms.obj.os === "android") user.mdevices.splice(0, 0, { mtype: 'fcm', did: comms.obj.token, updated: Date.now() })
-
-      await db.client.execute(
-        `update users set mdevices=? where uid=?`, [
-        user.mdevices,
-        comms.user.uid
-      ], {
-        prepare: true
-      })
-
-      return true;
 
     } catch (ex) {
       console.warn(ex);
