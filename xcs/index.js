@@ -168,6 +168,16 @@ const app = uApp({
     Route.abort(res, ex);
   }
 })
+.post(`${process.env.V1_PREFIX}/unsubscribe`, async (res, req) => {
+  let comms = {res, req};
+  try {
+    new RestRoute(comms).authorizeUser().unsubscribe()
+  } catch (ex) {
+    debugHTTP(ex)
+    nats.natsLogger.error({...comms, error: ex});
+    Route.abort(res, ex);
+  }
+})
 //STATUS
 .get(`${process.env.V1_PREFIX}/status/dbver`, async (res, req) => {
   let comms = {res, req};

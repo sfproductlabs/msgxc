@@ -67,15 +67,29 @@ class Threading {
   static async subscribe(comms) {
     const db = new cxn();
     try {
-      let user = (await db.client.execute(
-        `select mdevices from users where uid=?`, [
-        comms.user.uid
+
+      let threadPerms = (await db.client.execute(
+        `select owner,admins,opens,openp,perms,org from mthreads where tid=?`, [
+        comms.tid
       ], {
         prepare: true
       })).first()
 
-      if (!user) {
+      if (!threadPerms) {
         return false;
+      }
+
+      if (threadPerms.perms) {
+        let user = (await db.client.execute(
+          `select roles,rights,org from users where uid=?`, [
+          comms.user.uid
+        ], {
+          prepare: true
+        })).first()
+
+        if (!user) {
+          return false;
+        }
       }
 
       if (!user.mdevices) user.mdevices = [];

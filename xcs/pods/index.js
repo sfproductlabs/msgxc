@@ -12,6 +12,7 @@ const {
 const nats = require('../utils/nats')
 
 const SysMessageController = require('./messaging/sys/controller');
+const ThreadController = require('./messaging/thread/controller');
 const AuthController = require('./auth/controller');
 const StatusController = require('./status/controller');
 
@@ -311,6 +312,60 @@ class RestRoute extends Route {
             result = await SysMessageController.enlist(this.comms);
         } catch (ex) {
             let errMsg = "Unknown error enlisting";
+            console.warn(errMsg, ex);
+            if (!this.comms.error) {
+                this.comms.error = {
+                    code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                    msg: ex.msg || errMsg
+                };
+            }
+        }
+        this.respond(result);
+    }
+
+    async publish() {
+        let result = null;
+        try {            
+            await this.processPayload();    
+            result = await ThreadController.publish(this.comms);
+        } catch (ex) {
+            let errMsg = "Unknown error publishing";
+            console.warn(errMsg, ex);
+            if (!this.comms.error) {
+                this.comms.error = {
+                    code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                    msg: ex.msg || errMsg
+                };
+            }
+        }
+        this.respond(result);
+    }
+
+    async subscribe() {
+        let result = null;
+        try {            
+            await this.processPayload();    
+            result = await ThreadController.subscribe(this.comms);
+        } catch (ex) {
+            let errMsg = "Unknown error subscribing";
+            console.warn(errMsg, ex);
+            if (!this.comms.error) {
+                this.comms.error = {
+                    code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                    msg: ex.msg || errMsg
+                };
+            }
+        }
+        this.respond(result);
+    }
+
+    async unsubscribe() {
+        let result = null;
+        try {            
+            await this.processPayload();    
+            result = await ThreadController.unsubscribe(this.comms);
+        } catch (ex) {
+            let errMsg = "Unknown error unsubscribing";
             console.warn(errMsg, ex);
             if (!this.comms.error) {
                 this.comms.error = {

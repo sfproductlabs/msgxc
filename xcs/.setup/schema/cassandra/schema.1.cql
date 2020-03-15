@@ -13,6 +13,46 @@ use msgxc;
 
 ------------------------------ EXISTING START
 
+create type address (
+  fullname text,
+  st1 text,
+  st2 text,
+  city text,
+  province text,
+  country text,
+  zip text,
+  active boolean,
+  type text,
+  phone text
+);
+
+create table orgs (
+  org      uuid,
+  parent   uuid,
+  root uuid,
+  lname text, --legal name
+  hname text, --human name
+  notes text,
+  roles    set<text>,
+  rights   set<text>,
+  etype text, --entity type (legal)
+  country  text,  
+  lang text,
+  hq address,
+  addresses    map<text, frozen<address>>,
+  created timestamp,
+  owner uuid,
+  updated timestamp,
+  updater uuid,
+  primary key (org)
+);
+
+create materialized view conglomerate as 
+select * from orgs
+where root is not null
+primary key (root, org)
+with clustering order by (root DESC, org ASC);
+
 create table users (
   uid         uuid,
   uname       text,
@@ -20,7 +60,6 @@ create table users (
   uhash       text, --username hash
   email       text,
   ehash       text, --email hash
-  org         uuid, --org member
   roles      set<text>,
   rights     set<text>,
   ref uuid, --referral
@@ -34,12 +73,14 @@ create table users (
   splits map<text,text>, --experimentid : splitid
   lang text,
   created timestamp,
-  owner uuid, --org or person that owns this record
+  org uuid,
+  owner uuid,
   updated timestamp,
   updater uuid,
   primary key       (uid)
 );
 CREATE INDEX user_cohorts_idx ON users ( cohorts );
+
 
 --Used for update/creation only
 create table user_emails (
@@ -72,6 +113,7 @@ create table services (
   rights  set<text>,
   expiry date,
   created timestamp,
+  org uuid,
   owner uuid,
   updated timestamp,
   updater uuid,
@@ -90,10 +132,11 @@ create table queues (
   schedule timestamp,
   started timestamp,
   completed timestamp,
+  created timestamp,
+  org uuid,
+  owner uuid,
   updated timestamp,
   updater uuid,
-  created timestamp,  
-  owner uuid,
   PRIMARY KEY ((qid))
 )
 WITH default_time_to_live = 1209600; --2 week Tombstones
@@ -111,7 +154,10 @@ create table cohorts (
   started timestamp,
   completed timestamp,
   created timestamp,
+  org uuid,
   owner uuid,
+  updated timestamp,
+  updater uuid,
   PRIMARY KEY ((cohort))
 );
 
@@ -185,6 +231,17 @@ create type mcert (
   expires timestamp
 );
 
+
+--advanced permission (org and owner in everything else)
+create type perm (
+      --Priority HIGH
+      uperms frozen<map<uuid, set<text>>>, -- user permissions {00000-00000-00000-000000000, "join,post,block" } etc. 
+      --Priority MEDIUM
+      rperms frozen<map<text, set<text>>>, -- detail usage rights {"post", "writers,managers" } etc. 
+      --Priority LOW
+      gperms frozen<map<text, set<text>>>, -- detail group/role permissions {"post", "admin" } etc. 
+);
+
 CREATE TABLE mthreads (
     --THREAD INFO
     tid timeuuid, --thread id
@@ -197,24 +254,24 @@ CREATE TABLE mthreads (
     ephemeral int, --seconds until expiry (null == keep)
     archived boolean,
     --PERMISSIONS
-    opens boolean, --publicly subscribable, still add uid to subs [Default: false]
-    openp boolean, --publicly publishable, still add uid to pubs [Default: false]
-    admins set<uuid>, --approve new members etc.
-    approved timestamp,
-    approver uuid,
-    max_users int,
-    --ADVANCED PERMISSIONS
-    aperms boolean, --use advanced perms (true to use)
-    gperms map<text, frozen<set<text>>>, -- detail group/role permissions {"post", "admin" } etc. 
-    rperms map<text, frozen<set<text>>>, -- detail usage rights {"post", "writers,managers" } etc. 
-    uperms map<uuid, frozen<set<text>>>, -- user permissions {00000-00000-00000-000000000, "join,post" } etc. 
+      --Prioritized from most specific to most general >>>
+      --Priority HIGH
+      --owner
+      admins set<uuid>, --approve new members etc.
+      --Priority MEDIUM
+      opens boolean, --publicly subscribable, still add uid to subs [Default: false]
+      openp boolean, --publicly publishable, still add uid to pubs [Default: false]
+      --Priority LOW
+      perms perm, --additional perms
+      --org
     --RECIPIENTS
     subs set<uuid>, --null = broadcast, admins+writers+subs=subs (only this index required to subscribe)
     pubs set<uuid>, --uids who can publish to admins+pubs=pubs (only this index required to publish)
     prefs map<uuid, frozen<set<text>>>, --msg preferences (user,mtypes) apn,~,webn etc.    
     --OWNER
-    org         uuid,
+    updates map<uuid, timestamp>, --participant updated
     created timestamp,
+    org uuid,
     owner uuid,
     updated timestamp,
     updater uuid,
@@ -260,9 +317,9 @@ create table mtriage (
   srckey text, --source id, audit id, inc. external Ex. SES message-id
   meta map<text,text>, --METADATA, SPLIT etc.
   keep boolean, --keep this message on the server
-  org         uuid,
   createdms bigint,
   created timestamp,
+  org uuid,
   owner uuid,
   updated timestamp,
   updater uuid,
@@ -283,8 +340,9 @@ create table mfailures (
  mdevice frozen<mdevice>,
  failure text, --failure type (Ex. nopened, noack)
  retries int, 
- created timestamp,
  died timestamp, --stop retries
+ created timestamp,
+ org uuid,
  owner uuid,
  updated timestamp,
  updater uuid,
