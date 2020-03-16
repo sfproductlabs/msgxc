@@ -64,8 +64,8 @@ class Threading {
         throw { code: httpCodes.NOT_IMPLEMENTED, msg: 'Not Implemented' }
       } else if (thread.subs) {
         //Send to subscribers (subs)
-        //First check thread.prefs and user.mtypes
-        for (let i = 0; i < thread.subs; i++) {
+        //TODO: First check thread.prefs and user.mtypes
+        for (let i = 0; i < thread.subs.length; i++) {
           let sent = false;
           let user = (await db.client.execute(
               `select uid,mtypes,mdevices from users where uid=?`, [
