@@ -14,12 +14,38 @@ const FCM = require('../../../utils/fcm')
 const cxn = require('../../../utils/cassandra');
 const httpCodes = require('../../../utils/httpStatusCodes')
 
+const AuthController = require('../../auth/controller');
+
 class Threading {
 
 
   static async publish(comms) {
     const db = new cxn();
     try {
+      if (!comms.user || !comms.obj.tid) {
+        return false;
+      }
+
+      let thread = (await db.client.execute(
+        `select owner,admins,openp,perms,org,pubs,prefs from mthreads where tid=?`, [
+        comms.obj.tid
+      ], {
+        prepare: true
+      })).first()
+      
+      if (!thread) {
+        return false;
+      }
+
+      let checked = false;
+      if (comms.user.method === 'svc') {
+        checked = true;
+      } else if (comms.user.uid) {
+        
+      }
+
+      
+
       let sent = false;
       if (!user) {
         if (!comms.obj.uid) {
@@ -68,7 +94,7 @@ class Threading {
     const db = new cxn();
     try {
 
-      if (!comms.user || !comms.user.uid) {
+      if (!comms.user || !comms.user.uid || !comms.obj.tid) {
         return false;
       }
 
@@ -82,31 +108,22 @@ class Threading {
         return false;
       }
 
+      let checked = false;
       if (threadPerms.perms) {
-        throw {code: httpCodes.NOT_IMPLEMENTED, msg: 'not implemented'}
-        //const Uuid = require('cassandra-driver').types.Uuid;
-        //const id = Uuid.random();
-        //id.getDate()
-        // let user = (await db.client.execute(
-        //   `select roles,rights,org from users where uid=?`, [
-        //   comms.user.uid
-        // ], {
-        //   prepare: true
-        // })).first()
-
-        // if (!user) {
-        //   return false;
-        // }
+        checked = AuthController.checkPerms(comms, threadPerms.perms, 'thread', 'subscribe');
+      } 
+      
+      let isOwner = false, isAdmin = false;
+      if (!checked) {
+        isOwner = threadPerms.owner.toString() === comms.user.uid;
+        isAdmin = threadPerms.admins && threadPerms.admins.some(f=> f.toString() === comms.user.uid);  
       }
       
-      const isOwner = threadPerms.owner.toString() === comms.user.uid;
-      const isAdmin = threadPerms.admins && threadPerms.admins.some(f=> f.toString() === comms.user.uid);
-      
-      if (isOwner || isAdmin || threadPerms.opens || threadPerms.openp) {
+      if (checked || isOwner || isAdmin || threadPerms.opens || threadPerms.openp) {
 
         await db.client.execute(
           `update mthreads set subs=subs+? where tid=?`, [
-          [comms.user.uid, cxn.newTimeUuid()],
+          [comms.user.uid],
           comms.obj.tid
         ], {
           prepare: true
@@ -128,7 +145,32 @@ class Threading {
   }
 
   static async unsubscribe(comms) {
-    throw {code: httpCodes.NOT_IMPLEMENTED, msg: 'not implemented'}
+    const db = new cxn();
+    try {
+
+      if (!comms.user || !comms.user.uid || !comms.obj.tid) {
+        return false;
+      }
+
+      await db.client.execute(
+        `update mthreads set subs=subs-?, prefs=prefs-? where tid=?`, [
+        [comms.user.uid],
+        [comms.user.uid],
+        comms.obj.tid
+      ], {
+        prepare: true
+      })
+
+      return true;
+
+    } catch (ex) {
+      console.warn(ex);
+      switch (ex.code) {
+        case httpCodes.INTERNAL_SERVER_ERROR:
+        default:
+          throw ex; // Internal Server Error for uncaught exception
+      }
+    }
   }
 
 }

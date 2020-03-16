@@ -108,6 +108,20 @@ class AuthController {
         return crypt.encrypt(compression.compress(JSON.stringify(claims)), clientKey);
     }
 
+    static checkPerms(comms, perms, noun, verb) {
+        throw {code: httpCodes.NOT_IMPLEMENTED, msg: 'Not Implemented'}
+        //update mthreads set perms = { {right : 'test'}} where tid = 5ae3c890-5e55-11ea-9283-4fa18a847130 ;
+        //update mthreads set perms = perms- {{right : 'test'}} where tid = 5ae3c890-5e55-11ea-9283-4fa18a847130 ;
+        // let user = (await db.client.execute(
+        //   `select roles,rights,org from users where uid=?`, [
+        //   comms.user.uid
+        // ], {
+        //   prepare: true
+        // })).first()
+        // if (!user) {
+        //   return false;
+        // }
+    }
 
 
 }

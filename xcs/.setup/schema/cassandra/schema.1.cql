@@ -234,14 +234,15 @@ create type mcert (
 
 --advanced permission (org and owner in everything else)
 create type perm (
-      --Priority HIGH
-      public boolean, --publicly searchable
-      uperms frozen<map<uuid, set<text>>>, -- user permissions {00000-00000-00000-000000000, "join,post,block" } etc. 
-      --Priority MEDIUM
-      rperms frozen<map<text, set<text>>>, -- detail usage rights {"post", "writers,managers" } etc. 
-      --Priority LOW
-      gperms frozen<map<text, set<text>>>, -- detail group/role permissions {"post", "admin" } etc. 
+  org uuid,
+  role uuid,
+  right text,
+  owner uuid,
+  noun text,
+  verb text,
+  blk boolean --blacklist
 );
+
 
 CREATE TABLE mthreads (
   --THREAD INFO
@@ -265,19 +266,22 @@ CREATE TABLE mthreads (
     opens boolean, --publicly subscribable, still add uid to subs [Default: false]
     openp boolean, --publicly publishable, still add uid to pubs [Default: false]
     --Priority LOW
-    perms perm, --additional perms
+    perms set<frozen<perm>>, --additional perms
     --org
     --RECIPIENTS
-    subs set<uuid>, --null = broadcast, admins+writers+subs=subs (only this index required to subscribe)
+    broadcast boolean,
+    ftrack boolean, --track failed deliveries
+    strack boolean, --track successful deliveries
+    subs set<uuid>, --admins+writers+subs=subs (only this index required to subscribe)
     pubs set<uuid>, --uids who can publish to admins+pubs=pubs (only this index required to publish)
     prefs map<uuid, frozen<set<text>>>, --msg preferences (user,mtypes) apn,~,webn etc.  
     --INTEREST
     interest map<text, int>, -- Ex. { hearts : 44 , views : 55, clicks etc.}  
     --OWNER
-    updates map<uuid, timestamp>, --participant updated
     created timestamp,
     org uuid,
     owner uuid,
+    updatedms bigint, --participant updated CHECK
     updated timestamp,
     updater uuid,
     PRIMARY KEY ((tid))
@@ -300,6 +304,7 @@ create table mtriage (
   auth text, --author
   xid text, --experiment id 
   mtypes set<text>, --attempted mtypes (update after actually sent)
+  broadcast boolean,
   users set<uuid>, --keep this here for pull mid > lastloggedin
   deliveries set<uuid>, --uid delivered, update after ACK of wsocket
   failures set<uuid>, --uid failures
@@ -316,7 +321,7 @@ create table mtriage (
   aff text, --affiliate uname or code (Select)
   repl map<text,text>, --text to replace ex Hi {{fn}} -> becomes -> Hi Andrew, Prepend "text." to use Raw text instead of the user record Ex. {{text.msg}}. Only start off with one "text." message body in Admin UI (text.msg)
   --PERMISSIONS
-  perms perm, --additional perms 
+  perms set<frozen<perm>>, --additional perms 
   --REQUEST OWNER
   app text, --app 
   svc text, --Ex. SES, 'message', 'sms, 'action'
@@ -355,6 +360,7 @@ create table mstore (
   auth text, --author
   xid text, --experiment id 
   mtypes set<text>, --attempted mtypes (update after actually sent)
+  broadcast boolean,
   users set<uuid>, --keep this here for pull mid > lastloggedin
   deliveries set<uuid>, --uid delivered, update after ACK of wsocket
   failures set<uuid>, --uid failures
@@ -371,7 +377,7 @@ create table mstore (
   aff text, --affiliate uname or code (Select)
   repl map<text,text>, --text to replace ex Hi {{fn}} -> becomes -> Hi Andrew, Prepend "text." to use Raw text instead of the user record Ex. {{text.msg}}. Only start off with one "text." message body in Admin UI (text.msg)
   --PERMISSIONS
-  perms perm, --additional perms 
+  perms set<frozen<perm>>, --additional perms 
   --REQUEST OWNER
   app text, --app 
   svc text, --Ex. SES, 'message', 'sms, 'action'
@@ -420,7 +426,7 @@ WITH CLUSTERING ORDER BY (mid DESC);
 
 alter table users add mdevices list<frozen<mdevice>>; --prioritized list of devices
 alter table users add mtypes list<text>; --[mtype] prioritized list of preferences ~ => disabled
-alter table users add mlast bigint; --(ms) last updated/looked at a mxc message
+alter table users add mlast bigint; --(ms) last updated/looked at a mxc messages
 alter table users add cell text; 
 alter table users add chash text; --cell hash 
 alter table users add mcerts set<frozen<mcert>>; 
