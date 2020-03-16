@@ -65,6 +65,8 @@ class Threading {
       } else if (thread.subs) {
         //Send to subscribers (subs)
         //TODO: First check thread.prefs and user.mtypes
+        //TODO: Send()
+        //TODO: ScheduleDegraded()
         for (let i = 0; i < thread.subs.length; i++) {
           let sent = false;
           let user = (await db.client.execute(
