@@ -260,14 +260,12 @@ CREATE TABLE mthreads (
   --PERMISSIONS
     --Prioritized from most specific to most general >>>
     --Priority HIGH
-    --owner
     admins set<uuid>, --approve new members etc.
     --Priority MEDIUM
     opens boolean, --publicly subscribable, still add uid to subs [Default: false]
     openp boolean, --publicly publishable, still add uid to pubs [Default: false]
     --Priority LOW
     perms set<frozen<perm>>, --additional perms
-    --org
     --RECIPIENTS
     broadcast boolean,
     ftrack boolean, --track failed deliveries

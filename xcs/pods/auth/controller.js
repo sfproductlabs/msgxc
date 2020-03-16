@@ -109,6 +109,7 @@ class AuthController {
     }
 
     static checkPerms(comms, perms, noun, verb) {
+        //TODO: Implement after the elastic update is made
         throw {code: httpCodes.NOT_IMPLEMENTED, msg: 'Not Implemented'}
         //update mthreads set perms = { {right : 'test'}} where tid = 5ae3c890-5e55-11ea-9283-4fa18a847130 ;
         //update mthreads set perms = perms- {{right : 'test'}} where tid = 5ae3c890-5e55-11ea-9283-4fa18a847130 ;

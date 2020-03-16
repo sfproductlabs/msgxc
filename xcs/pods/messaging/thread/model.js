@@ -27,12 +27,12 @@ class Threading {
       }
 
       let thread = (await db.client.execute(
-        `select owner,admins,openp,perms,org,pubs,prefs from mthreads where tid=?`, [
+        `select broadcast,owner,admins,openp,perms,org,pubs,prefs,subs from mthreads where tid=?`, [
         comms.obj.tid
       ], {
         prepare: true
       })).first()
-      
+
       if (!thread) {
         return false;
       }
@@ -41,44 +41,64 @@ class Threading {
       if (comms.user.method === 'svc') {
         checked = true;
       } else if (comms.user.uid) {
-        
-      }
-
-      
-
-      let sent = false;
-      if (!user) {
-        if (!comms.obj.uid) {
-          return false;
+        checked = threadPerms.openp;
+        if (!checked) {
+          checked = threadPerms.owner.toString() === comms.user.uid;
         }
-        user = (await db.client.execute(
-          `select uid,mtypes,mdevices from users where uid=?`, [
-          comms.obj.uid
-        ], {
-          prepare: true
-        })).first()
-      }
-
-      if (user.mtypes) {
-        if (user.mtypes.find(e => e == "~")) {
-          return false;
+        if (!checked) {
+          checked = threadPerms.admins && threadPerms.admins.some(f => f.toString() === comms.user.uid);
+        }
+        if (!checked) {
+          checked = threadPerms.pubs && threadPerms.pubs.some(f => f.toString() === comms.user.uid);
+        }
+        if (threadPerms.perms) {
+          checked = AuthController.checkPerms(comms, threadPerms.perms, 'thread', 'subscribe');
         }
       }
 
-      //TODO: Message Type filtering Ex. SMS-only
-      if (user.mdevices) {
-        const apns = user.mdevices.filter(device => device.mtype === 'apn');
-        apns.map(async mdevice => {
-          const results = await APN.send(mdevice.did, comms.obj.msg, comms.obj.opts);
-          //TODO: AG Manage Failures, Triage             
-        });
-
-        const fcms = user.mdevices.filter(device => device.mtype === 'fcm');
-        fcms.map(async mdevice => {
-          const results = await FCM.send(mdevice.did, comms.obj.msg, comms.obj.opts);
-          //TODO: AG Manage Failures, Triage            
-        });
+      if (!checked) {
+        return false;
       }
+
+      if (thread.broadcast) {
+        throw { code: httpCodes.NOT_IMPLEMENTED, msg: 'Not Implemented' }
+      } else if (thread.subs) {
+        //Send to subscribers (subs)
+        //First check thread.prefs and user.mtypes
+        for (let i = 0; i < thread.subs; i++) {
+          let sent = false;
+          let user = (await db.client.execute(
+              `select uid,mtypes,mdevices from users where uid=?`, [
+              thread.subs[i]
+            ], {
+              prepare: true
+            })).first()
+          if (user.mtypes) {
+            if (user.mtypes.find(e => e == "~")) {
+              continue;
+            }
+          }
+
+          //TODO: Message Type filtering Ex. SMS-only
+          if (user.mdevices) {
+            const apns = user.mdevices.filter(device => device.mtype === 'apn');
+            apns.map(async mdevice => {
+              const results = await APN.send(mdevice.did, comms.obj.msg, comms.obj.opts);
+              //TODO: AG Manage Failures, Triage             
+            });
+
+            const fcms = user.mdevices.filter(device => device.mtype === 'fcm');
+            fcms.map(async mdevice => {
+              const results = await FCM.send(mdevice.did, comms.obj.msg, comms.obj.opts);
+              //TODO: AG Manage Failures, Triage            
+            });
+          }
+        }
+        return true;
+      } else {
+        return false;
+      }
+
     } catch (ex) {
       console.warn(ex);
       switch (ex.code) {
@@ -87,7 +107,6 @@ class Threading {
           throw ex; // Internal Server Error for uncaught exception
       }
     }
-    return true;
   }
 
   static async subscribe(comms) {
@@ -111,14 +130,14 @@ class Threading {
       let checked = false;
       if (threadPerms.perms) {
         checked = AuthController.checkPerms(comms, threadPerms.perms, 'thread', 'subscribe');
-      } 
-      
+      }
+
       let isOwner = false, isAdmin = false;
       if (!checked) {
         isOwner = threadPerms.owner.toString() === comms.user.uid;
-        isAdmin = threadPerms.admins && threadPerms.admins.some(f=> f.toString() === comms.user.uid);  
+        isAdmin = threadPerms.admins && threadPerms.admins.some(f => f.toString() === comms.user.uid);
       }
-      
+
       if (checked || isOwner || isAdmin || threadPerms.opens || threadPerms.openp) {
 
         await db.client.execute(
