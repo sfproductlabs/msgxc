@@ -27,7 +27,7 @@ class Threading {
       }
 
       let thread = (await db.client.execute(
-        `select broadcast,owner,admins,openp,perms,org,pubs,prefs,subs from mthreads where tid=?`, [
+        `select broadcast,owner,admins,openp,perms,org,pubs,prefs,subs,mtypes from mthreads where tid=?`, [
         comms.obj.tid
       ], {
         prepare: true
@@ -64,36 +64,65 @@ class Threading {
         throw { code: httpCodes.NOT_IMPLEMENTED, msg: 'Not Implemented' }
       } else if (thread.subs) {
         //Send to subscribers (subs)
-        //TODO: First check thread.prefs and user.mtypes
-        //TODO: Send()
-        //TODO: ScheduleDegraded()
         for (let i = 0; i < thread.subs.length; i++) {
           let sent = false;
+
+          //////////////////////////
+          //First check thread.prefs and user.mtypes and thread.mtypes
+
+          //Check the thread
+          let sendTypes = thread.mtypes ? thread.mtypes.slice() : null; //null means sendall
+          if (thread.mtypes && thread.mtypes.find(e => e == "~")) {
+            continue; //We can use this to temporarily disable the thread notifications.
+          }
+
+          //Check the thread specific user preferences
+          if (thread.prefs) {
+            const userThreadPrefs = thread.prefs[thread.subs[i]];
+            if (userThreadPrefs) {
+              if (userThreadPrefs.find(e => e == "~")) {
+                continue; 
+              }
+              sendTypes = sendTypes ? sendTypes.filter(v => userThreadPrefs.includes(v)) : userThreadPrefs.slice();
+            }            
+          }
+                    
+          //Check the user
           let user = (await db.client.execute(
-              `select uid,mtypes,mdevices from users where uid=?`, [
-              thread.subs[i]
-            ], {
-              prepare: true
-            })).first()
+            `select uid,mtypes,mdevices from users where uid=?`, [
+            thread.subs[i]
+          ], {
+            prepare: true
+          })).first()
           if (user.mtypes) {
             if (user.mtypes.find(e => e == "~")) {
               continue;
             }
+            sendTypes = sendTypes ? sendTypes.filter(v => user.mtypes.includes(v)) : user.mtypes.slice();
           }
-
-          //TODO: Message Type filtering Ex. SMS-only
+          
+          //////////////////////////
+          //SEND
+          //TODO: Add other realtime message types Ex. SMS, Email, WS, WebNotifications
+          //TODO: Add retries for realtime
+          //TODO: ScheduleDegraded() and include nearline messaging emd, emm , emw (email summaries)
           if (user.mdevices) {
-            const apns = user.mdevices.filter(device => device.mtype === 'apn');
-            apns.map(async mdevice => {
-              const results = await APN.send(mdevice.did, comms.obj.msg, comms.obj.opts);
-              //TODO: AG Manage Failures, Triage             
-            });
-
-            const fcms = user.mdevices.filter(device => device.mtype === 'fcm');
-            fcms.map(async mdevice => {
-              const results = await FCM.send(mdevice.did, comms.obj.msg, comms.obj.opts);
-              //TODO: AG Manage Failures, Triage            
-            });
+            //APN
+            if (!sendTypes || sendTypes.find(e => e == "apn")) {
+              const apns = user.mdevices.filter(device => device.mtype === 'apn');
+              apns.map(async mdevice => {
+                const results = await APN.send(mdevice.did, comms.obj.msg, comms.obj.opts);
+                //TODO: AG Manage Failures, Triage             
+              });
+            }
+            //FCM
+            if (!sendTypes || sendTypes.find(e => e == "fcm")) {
+              const fcms = user.mdevices.filter(device => device.mtype === 'fcm');
+              fcms.map(async mdevice => {
+                const results = await FCM.send(mdevice.did, comms.obj.msg, comms.obj.opts);
+                //TODO: AG Manage Failures, Triage            
+              });
+            }
           }
         }
         return true;
