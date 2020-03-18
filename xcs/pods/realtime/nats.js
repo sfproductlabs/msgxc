@@ -21,7 +21,7 @@ const prepClientMessage = (subject, msg) => {
  return obj;
 }
 
-const publishClients = (ws, subject, msg) => {
+const publishClients = (subject, msg, ws) => {
     const cm = prepClientMessage(subject, msg);
     if (ws) {
         debugWS('Publish to (others): #', cm.slug)

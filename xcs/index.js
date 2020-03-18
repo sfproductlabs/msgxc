@@ -52,19 +52,20 @@ const app = uApp({
   message: (ws, msg, isBinary) => {
       let comms = {};
       comms.obj = R.tryCatch(JSON.parse, R.always({}))(Buffer.from(msg || ""))  
+      if (!comms.obj || !comms.obj.slug) {
+        debugWS("Bad request...")
+        ws.send(`{ "error" : "${httpCodes.NOT_FOUND}" }`, isBinary);  
+        nats.natsLogger.error({...comms, error: "Bad client request (slug missing, potential hack attempt)"});        
+        return;
+      }
       comms.ws = ws;
       comms.isBinary = isBinary;
       debugWS(`Request (ws) ${comms.obj.slug}`);  
       switch (true) {
         case /^\/api\/v1\/sub\//.test(comms.obj.slug):           
-          try {
-            //Get the action
+          try {            
             comms.params = router.subscribe.parse(comms.obj.slug);
-            const route = new WSRoute(comms)
-            switch (comms.params.action) {
-              default:
-                  ws.send(`{ "error" : "${httpCodes.NOT_IMPLEMENTED}", "ok": false, "slug" : "${comms.obj.slug}", "action" : "${comms.params.action}" }`, isBinary);
-            }
+            new WSRoute(comms).authorizeUser().subcribeWebsocket()            
           } catch (ex) {
             debugHTTP(ex)
             nats.natsLogger.error({...comms, error: ex});

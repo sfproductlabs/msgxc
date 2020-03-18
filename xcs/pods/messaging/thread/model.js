@@ -63,6 +63,7 @@ class Threading {
       if (thread.broadcast) {
         throw { code: httpCodes.NOT_IMPLEMENTED, msg: 'Not Implemented' }
       } else if (thread.subs) {
+        const notified = [];
         //Send to subscribers (subs)
         for (let i = 0; i < thread.subs.length; i++) {
           let sent = false;
@@ -81,12 +82,12 @@ class Threading {
             const userThreadPrefs = thread.prefs[thread.subs[i]];
             if (userThreadPrefs) {
               if (userThreadPrefs.find(e => e == "~")) {
-                continue; 
+                continue;
               }
               sendTypes = sendTypes ? sendTypes.filter(v => userThreadPrefs.includes(v)) : userThreadPrefs.slice();
-            }            
+            }
           }
-                    
+
           //Check the user
           let user = (await db.client.execute(
             `select uid,mtypes,mdevices from users where uid=?`, [
@@ -100,12 +101,14 @@ class Threading {
             }
             sendTypes = sendTypes ? sendTypes.filter(v => user.mtypes.includes(v)) : user.mtypes.slice();
           }
-          
+
+
           //////////////////////////
           //SEND
           //TODO: Add other realtime message types Ex. SMS, Email, WS, WebNotifications
           //TODO: Add retries for realtime
           //TODO: ScheduleDegraded() and include nearline messaging emd, emm , emw (email summaries)
+          notified.push(thread.subs[i]);
           if (user.mdevices) {
             //APN
             if (!sendTypes || sendTypes.find(e => e == "apn")) {
@@ -140,37 +143,44 @@ class Threading {
     }
   }
 
+  static async canSubscribe(comms) {
+    if (!comms.user || !comms.user.uid || !comms.obj.tid) {
+      return false;
+    }
+
+    let threadPerms = (await db.client.execute(
+      `select owner,admins,opens,openp,perms,org from mthreads where tid=?`, [
+      comms.obj.tid
+    ], {
+      prepare: true
+    })).first()
+    if (!threadPerms) {
+      return false;
+    }
+
+    let checked = false;
+    if (threadPerms.perms) {
+      checked = AuthController.checkPerms(comms, threadPerms.perms, 'thread', 'subscribe');
+    }
+
+    let isOwner = false, isAdmin = false;
+    if (!checked) {
+      isOwner = threadPerms.owner.toString() === comms.user.uid;
+      isAdmin = threadPerms.admins && threadPerms.admins.some(f => f.toString() === comms.user.uid);
+    }
+
+    if (checked || isOwner || isAdmin || threadPerms.opens || threadPerms.openp) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   static async subscribe(comms) {
     const db = new cxn();
     try {
 
-      if (!comms.user || !comms.user.uid || !comms.obj.tid) {
-        return false;
-      }
-
-      let threadPerms = (await db.client.execute(
-        `select owner,admins,opens,openp,perms,org from mthreads where tid=?`, [
-        comms.obj.tid
-      ], {
-        prepare: true
-      })).first()
-      if (!threadPerms) {
-        return false;
-      }
-
-      let checked = false;
-      if (threadPerms.perms) {
-        checked = AuthController.checkPerms(comms, threadPerms.perms, 'thread', 'subscribe');
-      }
-
-      let isOwner = false, isAdmin = false;
-      if (!checked) {
-        isOwner = threadPerms.owner.toString() === comms.user.uid;
-        isAdmin = threadPerms.admins && threadPerms.admins.some(f => f.toString() === comms.user.uid);
-      }
-
-      if (checked || isOwner || isAdmin || threadPerms.opens || threadPerms.openp) {
-
+      if (await Threading.canSubscribe(comms)) {
         await db.client.execute(
           `update mthreads set subs=subs+? where tid=?`, [
           [comms.user.uid],

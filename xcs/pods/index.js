@@ -13,6 +13,7 @@ const nats = require('../utils/nats')
 
 const SysMessageController = require('./messaging/sys/controller');
 const ThreadController = require('./messaging/thread/controller');
+const ThreadRealtime = require('./messaging/thread/realtime');
 const AuthController = require('./auth/controller');
 const StatusController = require('./status/controller');
 
@@ -29,7 +30,7 @@ class Route {
     //send a ws or res
     static abort(channel, error) { 
         if (!error) {
-            error = {code: httpCodes.INTERNAL_SERVER_ERROR, msg: 'UNKNOWN ERROR OCCURRED )\'('}
+            error = {error: httpCodes.INTERNAL_SERVER_ERROR, ok: false, code: httpCodes.INTERNAL_SERVER_ERROR, msg: 'UNKNOWN ERROR OCCURRED )\'('}
         }
         if (channel.send) {
             channel.send(JSON.stringify(error));
@@ -47,13 +48,27 @@ class Route {
             case "ws":
                 let wso = {};
                 if (this.comms.error) {
-                    wso = {
-                        error: this.comms.error
+                    if (this.comms.error.msg) {
+                        wso = {
+                            error: this.comms.error.code || this.comms.error.msg,
+                            code: this.comms.error.code,
+                            msg: this.comms.error.msg,
+                            slug: this.comms.obj.slug,
+                            ok: false
+                        }
+                    } else {
+                        wso = {
+                            error: this.comms.error,
+                            slug: this.comms.obj.slug,
+                            ok: false
+                        }
                     }
+                    nats.natsLogger.error({...comms, error: JSON.stringify(wso)});
                 } else {
                     wso = {
                         slug: this.comms.obj.slug,
-                        data: obj
+                        data: obj,
+                        ok: true
                     }
                 }
                 this.comms.ws.send(JSON.stringify(wso), this.comms.isBinary);
@@ -86,33 +101,31 @@ class Route {
         // if (typeof this.comms.user === 'object') {
         //     return this;
         // }
-        let jwt = null;
+        let token = null;
         switch (this.comms.protocol) {
             case "ws":
-                jwt = this.comms.obj.jwt;
+                token = this.comms.ws.authorization || this.comms.obj.jwt;
                 break;            
             default:
+                token = this.comms.authorization || R.path(['headers', 'authorization'], this.comms);
                 break;
         }
-        if (!jwt) {
-            const token = this.comms.authorization || R.path(['headers', 'authorization'], this.comms);            
-            if (typeof token !== 'string' || !token) {
-                this.comms.error = {
-                    code: httpCodes.UNAUTHORIZED,
-                    msg: 'Authorization Failed (1)'
-                };
-                throw this.comms.error;
-            }
-            const tokenSplit = token.match(/(?:Bearer)+ (.*)/i);
-            if (tokenSplit.length != 2 || !tokenSplit[1]) {
-                this.comms.error = {
-                    code: httpCodes.UNAUTHORIZED,
-                    msg: 'Authorization Failed (2)'
-                };
-                throw this.comms.error;
-            }
-            AuthController.authorizeUser(this.comms, tokenSplit[1], level);
+        if (typeof token !== 'string' || !token) {
+            this.comms.error = {
+                code: httpCodes.UNAUTHORIZED,
+                msg: 'Authorization Failed (1)'
+            };
+            throw this.comms.error;
         }
+        const tokenSplit = token.match(/(?:Bearer)+ (.*)/i);
+        if (tokenSplit.length != 2 || !tokenSplit[1]) {
+            this.comms.error = {
+                code: httpCodes.UNAUTHORIZED,
+                msg: 'Authorization Failed (2)'
+            };
+            throw this.comms.error;
+        }
+        AuthController.authorizeUser(this.comms, tokenSplit[1], level);
         if (!this.comms.user) {
             this.comms.error = {
                 code: httpCodes.UNAUTHORIZED,
@@ -382,6 +395,43 @@ class WSRoute extends Route {
     constructor(comms) {
         super(comms);
         this.comms.protocol = 'ws';
+    }
+
+    subscribeWebsocket() {
+        let result = null;
+        try {
+            switch (comms.params.action) {
+                case "thread":
+                    result = ThreadRealtime.subscribe(this.comms);
+                    break;
+                default:
+                    this.comms.error = { code: httpCodes.BAD_REQUEST, msg: "Unsupported subscription type" };
+                    break;
+            }
+        } catch (ex) {
+            let errMsg = "Unknown error subscribing";
+            console.warn(errMsg, ex);
+            if (!this.comms.error) {
+                this.comms.error = {
+                    code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                    msg: ex.msg || errMsg
+                };
+            }
+        }
+        this.respond(result);
+    }
+
+    sendError (ex) {
+        if (!ex) {            
+            ex = this.comms.error || {code : httpCodes.INTERNAL_SERVER_ERROR, msg : 'Unknown server error occurred'};
+        }        
+        if (typeof ex === 'string') {
+            nats.natsLogger.error({...comms, error: ex});
+            this.comms.ws.send(`{ "error" : "${httpCodes.INTERNAL_SERVER_ERROR}", "code": "${httpCodes.INTERNAL_SERVER_ERROR}", "ok": false, "slug" : "${comms.obj.slug}", "action" : "${comms.params ? comms.params.action : "undefined"}", "msg" : "${ex}" }`, isBinary);
+        } else {
+            nats.natsLogger.error({...comms, error: JSON.stringify(ex)});
+            this.comms.ws.send(`{ "error" : "${ex.code}", "code": "${ex.code}", "ok": false, "slug" : "${comms.obj.slug}", "action" : "${comms.params.action}", "msg" : "${ex.msg}" }`, isBinary);
+        }
     }
 
 }
