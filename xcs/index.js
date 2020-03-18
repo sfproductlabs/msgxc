@@ -47,6 +47,7 @@ const app = uApp({
     ws.subscribe('broadcast/system');
     ws.req = req;
     ws.authorization = req.getHeader("authorization");
+    debugWS("[WS Connected] ", ws);
     sockets.add(ws)
   },
   message: (ws, msg, isBinary) => {
