@@ -28,7 +28,7 @@ require('./pods/realtime/scheduler')
 
 const uApp = (env === 'dev') ? uWS.App : uWS.SSLApp;
 const router = {
-  subscribe: routeMatcher(`${process.env.V1_PREFIX}/sub/:action`),
+  subscribe: routeMatcher(`${process.env.V1_PREFIX}/subscribe/:action`),
 }
 const app = uApp({
   key_file_name: process.env.SITE_KEY,
@@ -63,21 +63,21 @@ const app = uApp({
       comms.isBinary = isBinary;
       debugWS(`Request (ws) ${comms.obj.slug}`);  
       switch (true) {
-        case /^\/api\/v1\/sub\//.test(comms.obj.slug):           
+        case /^\/api\/v1\/subscribe\//.test(comms.obj.slug):           
           try {            
             comms.params = router.subscribe.parse(comms.obj.slug);
-            new WSRoute(comms).authorizeUser().subcribeWebsocket()            
+            new WSRoute(comms).authorizeUser().subscribeWebsocket()            
           } catch (ex) {
             debugHTTP(ex)
             nats.natsLogger.error({...comms, error: ex});
             Route.abort(ws, ex);
           }            
           return;
-        case /^\/api\/v1\/pub/.test(comms.obj.slug):
+        case /^\/api\/v1\/publish/.test(comms.obj.slug):
           //TODO, only allow trusted publish to friends 
           ws.send(`{ "error" : "${httpCodes.NOT_IMPLEMENTED}" }`, isBinary);  
           return;        
-        case /^\/api\/v1\/unsub/.test(comms.obj.slug):   
+        case /^\/api\/v1\/unsubscribe/.test(comms.obj.slug):   
           ws.send(`{ "error" : "${httpCodes.NOT_IMPLEMENTED}" }`, isBinary);  
           return;
         case /^\/api\/v1\/admin/.test(comms.obj.slug):   

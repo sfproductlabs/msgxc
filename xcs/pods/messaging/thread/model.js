@@ -8,6 +8,7 @@
 
 const R = require('ramda');
 const uuidv1 = require('uuid/v1');
+const { broadcastServers } = require('../../realtime/nats')
 const APN = require('../../../utils/apn')
 const FCM = require('../../../utils/fcm')
 //const sms = require('../../utils/sms')
@@ -15,7 +16,6 @@ const cxn = require('../../../utils/cassandra');
 const httpCodes = require('../../../utils/httpStatusCodes')
 
 const AuthController = require('../../auth/controller');
-const ThreadRealtime = require('./realtime');
 
 class Threading {
 
@@ -66,8 +66,12 @@ class Threading {
         return false;
       }
 
-      //WS (WebSocket) - Publish to any subscribers
-      ThreadRealtime.broadcast(comms.obj.tid, comms.obj.msg);
+      //WS (WebSocket) - Publish to any subscribers      
+      broadcastServers(`thread.${comms.obj.tid}`, {
+        sender: { uid : comms.user.uid, method: comms.user.method },
+        msg: comms.obj.msg,
+        opts: comms.obj.opts
+      });
 
       if (thread.broadcast) {
         throw { code: httpCodes.NOT_IMPLEMENTED, msg: 'Not Implemented' }

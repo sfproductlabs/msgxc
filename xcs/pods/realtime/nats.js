@@ -14,7 +14,10 @@ const broadcastServers = (subject, msg) => {
 
 const prepClientMessage = (subject, msg) => {
  const slug = `/${(subject||"").replace(/\./g,"\/")}`
- const obj = typeof msg === 'object' ? msg : { value: msg };
+ try {
+     msg = JSON.parse(msg)
+ } catch {}
+ const obj = typeof msg === 'object' ? msg : { data: msg };
  obj.slug = slug;
  obj.ok = true;
  obj.msg = JSON.stringify(obj)

@@ -28,9 +28,9 @@ class Route {
     }
 
     //send a ws or res
-    static abort(channel, error) { 
+    static abort(channel, error) {
         if (!error) {
-            error = {error: httpCodes.INTERNAL_SERVER_ERROR, ok: false, code: httpCodes.INTERNAL_SERVER_ERROR, msg: 'UNKNOWN ERROR OCCURRED )\'('}
+            error = { error: httpCodes.INTERNAL_SERVER_ERROR, ok: false, code: httpCodes.INTERNAL_SERVER_ERROR, msg: 'UNKNOWN ERROR OCCURRED )\'(' }
         }
         if (channel.send) {
             channel.send(JSON.stringify(error));
@@ -51,7 +51,7 @@ class Route {
                     if (this.comms.error.msg) {
                         wso = {
                             error: this.comms.error.code || this.comms.error.msg,
-                            code: this.comms.error.code,
+                            code: this.comms.error.code && this.comms.error.code.length > 2 ? this.comms.error.code.slice(0,3) : this.comms.error.code,
                             msg: this.comms.error.msg,
                             slug: this.comms.obj.slug,
                             ok: false
@@ -63,7 +63,7 @@ class Route {
                             ok: false
                         }
                     }
-                    nats.natsLogger.error({...comms, error: JSON.stringify(wso)});
+                    nats.natsLogger.error({ ...this.comms, error: JSON.stringify(wso) });
                 } else {
                     wso = {
                         slug: this.comms.obj.slug,
@@ -80,13 +80,13 @@ class Route {
                             nats.natsLogger.error(this.comms);
                             this.comms.res.writeStatus(this.comms.error.code || httpCodes.INTERNAL_SERVER_ERROR);
                             this.comms.res.end(JSON.stringify(this.comms.error));
-                        });                        
+                        });
                     } else {
                         this.comms.res.cork(() => {
                             this.comms.res.writeStatus(httpCodes.OK);
                             this.comms.res.writeHeader("Content-Type", this.comms.contentType || "application/json")
                             this.comms.res.end(this.comms.contentType ? obj : JSON.stringify(obj));
-                        });                        
+                        });
                     }
                 }
                 break;
@@ -104,8 +104,8 @@ class Route {
         let token = null;
         switch (this.comms.protocol) {
             case "ws":
-                token = this.comms.ws.authorization || this.comms.obj.jwt;
-                break;            
+                token = this.comms.obj.jwt || this.comms.ws.authorization;
+                break;
             default:
                 token = this.comms.authorization || R.path(['headers', 'authorization'], this.comms);
                 break;
@@ -118,14 +118,18 @@ class Route {
             throw this.comms.error;
         }
         const tokenSplit = token.match(/(?:Bearer)+ (.*)/i);
-        if (tokenSplit.length != 2 || !tokenSplit[1]) {
-            this.comms.error = {
-                code: httpCodes.UNAUTHORIZED,
-                msg: 'Authorization Failed (2)'
-            };
-            throw this.comms.error;
+        if (tokenSplit) {
+            if (tokenSplit.length != 2 || !tokenSplit[1]) {
+                this.comms.error = {
+                    code: httpCodes.UNAUTHORIZED,
+                    msg: 'Authorization Failed (2)'
+                };
+                throw this.comms.error;
+            } else {
+                token = tokenSplit[1];
+            }
         }
-        AuthController.authorizeUser(this.comms, tokenSplit[1], level);
+        AuthController.authorizeUser(this.comms, token, level);
         if (!this.comms.user) {
             this.comms.error = {
                 code: httpCodes.UNAUTHORIZED,
@@ -133,7 +137,7 @@ class Route {
             };
             throw this.comms.error;
         }
-        
+
         return this;
     }
 
@@ -150,9 +154,9 @@ class Route {
     }
 
     async getDbVersion() {
-        let version= 0;
+        let version = 0;
         try {
-            version = await StatusController.getDbVersion();           
+            version = await StatusController.getDbVersion();
         } catch (ex) {
             let errMsg = "Unknown error occurred getting database version";
             console.warn(errMsg, ex);
@@ -165,7 +169,7 @@ class Route {
         }
         this.respond(version);
     }
-    
+
 }
 
 class RestRoute extends Route {
@@ -242,21 +246,21 @@ class RestRoute extends Route {
 
                     //TODO kafka
                     _that.comms.res.aborted = true;
-                } finally {                    
+                } finally {
                     reject(err);
                 }
             })
         })
     }
 
-    async processPayload() {             
+    async processPayload() {
         if (!this.comms.obj) {
             this.comms.obj = await this.parseJson();
         }
         return this;
     }
 
-    async processRawPayload() {             
+    async processRawPayload() {
         if (!this.comms.obj) {
             this.comms.obj = await this.parseRaw();
         }
@@ -265,8 +269,8 @@ class RestRoute extends Route {
 
     async broadcast() {
         let result = null;
-        try {            
-            await this.processPayload();    
+        try {
+            await this.processPayload();
             result = await SysMessageController.broadcast(this.comms);
         } catch (ex) {
             let errMsg = "Unknown error broadcasting";
@@ -283,8 +287,8 @@ class RestRoute extends Route {
 
     async multicast() {
         let result = null;
-        try {            
-            await this.processPayload();    
+        try {
+            await this.processPayload();
             result = await SysMessageController.multicast(this.comms);
         } catch (ex) {
             let errMsg = "Unknown error multicasting";
@@ -302,8 +306,8 @@ class RestRoute extends Route {
 
     async send() {
         let result = null;
-        try {            
-            await this.processPayload();    
+        try {
+            await this.processPayload();
             result = await SysMessageController.send(this.comms);
         } catch (ex) {
             let errMsg = "Unknown error sending";
@@ -320,8 +324,8 @@ class RestRoute extends Route {
 
     async enlist() {
         let result = null;
-        try {            
-            await this.processPayload();    
+        try {
+            await this.processPayload();
             result = await SysMessageController.enlist(this.comms);
         } catch (ex) {
             let errMsg = "Unknown error enlisting";
@@ -338,8 +342,8 @@ class RestRoute extends Route {
 
     async publish() {
         let result = null;
-        try {            
-            await this.processPayload();    
+        try {
+            await this.processPayload();
             result = await ThreadController.publish(this.comms);
         } catch (ex) {
             let errMsg = "Unknown error publishing";
@@ -356,8 +360,8 @@ class RestRoute extends Route {
 
     async subscribe() {
         let result = null;
-        try {            
-            await this.processPayload();    
+        try {
+            await this.processPayload();
             result = await ThreadController.subscribe(this.comms);
         } catch (ex) {
             let errMsg = "Unknown error subscribing";
@@ -374,8 +378,8 @@ class RestRoute extends Route {
 
     async unsubscribe() {
         let result = null;
-        try {            
-            await this.processPayload();    
+        try {
+            await this.processPayload();
             result = await ThreadController.unsubscribe(this.comms);
         } catch (ex) {
             let errMsg = "Unknown error unsubscribing";
@@ -397,15 +401,15 @@ class WSRoute extends Route {
         this.comms.protocol = 'ws';
     }
 
-    subscribeWebsocket() {
+    async subscribeWebsocket() {
         let result = null;
         try {
-            switch (comms.params.action) {
+            switch (this.comms.params.action) {
                 case "thread":
-                    result = ThreadRealtime.subscribe(this.comms);
+                    result = await ThreadRealtime.subscribe(this.comms);
                     break;
                 default:
-                    throw({ code: httpCodes.BAD_REQUEST, msg: "Unsupported subscription type" });
+                    throw ({ code: httpCodes.BAD_REQUEST, msg: "Unsupported subscription type" });
             }
         } catch (ex) {
             let errMsg = "Unknown error subscribing";
@@ -420,15 +424,15 @@ class WSRoute extends Route {
         this.respond(result);
     }
 
-    sendError (ex) {
-        if (!ex) {            
-            ex = this.comms.error || {code : httpCodes.INTERNAL_SERVER_ERROR, msg : 'Unknown server error occurred'};
-        }        
+    sendError(ex) {
+        if (!ex) {
+            ex = this.comms.error || { code: httpCodes.INTERNAL_SERVER_ERROR, msg: 'Unknown server error occurred' };
+        }
         if (typeof ex === 'string') {
-            nats.natsLogger.error({...comms, error: ex});
+            nats.natsLogger.error({ ...comms, error: ex });
             this.comms.ws.send(`{ "error" : "${httpCodes.INTERNAL_SERVER_ERROR}", "code": "${httpCodes.INTERNAL_SERVER_ERROR}", "ok": false, "slug" : "${comms.obj.slug}", "action" : "${comms.params ? comms.params.action : "undefined"}", "msg" : "${ex}" }`, isBinary);
         } else {
-            nats.natsLogger.error({...comms, error: JSON.stringify(ex)});
+            nats.natsLogger.error({ ...comms, error: JSON.stringify(ex) });
             this.comms.ws.send(`{ "error" : "${ex.code}", "code": "${ex.code}", "ok": false, "slug" : "${comms.obj.slug}", "action" : "${comms.params.action}", "msg" : "${ex.msg}" }`, isBinary);
         }
     }

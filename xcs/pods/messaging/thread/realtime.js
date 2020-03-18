@@ -2,37 +2,40 @@ const { nats } = require('../../../utils/nats');
 const { publishClients, broadcastServers } = require('../../realtime/nats')
 const httpCodes = require('../../../utils/httpStatusCodes')
 
-const Threading = require('./model');
+const ThreadController = require('./controller');
 
-nats.subscribe(`thread.>`, function(msg, reply, subject) {
+//TODO: !IMPORTANT make this more sophisticated, as all servers are pinged this way 
+nats.subscribe(`thread.>`, function (msg, reply, subject) {
     publishClients(subject, msg)
 });
 
-const broadcast = (tid, msg) => {
-    broadcastServers(`thread.${tid}`, msg);
-}
 
-const subscribe = async (comms) => {
-    try {
-        if (await Threading.subscribe(comms)) {
-            let channel = `/thread/${comms.obj.tid}`;    
-            comms.ws.subscribe(channel);
-            return {slug: channel, ok: true, action : 'subscribed' };      
-        } else {
-            throw { code : httpCodes.UNAUTHORIZED, msg: 'You are not authorized to subscribe to this thread.' }
+class ThreadRealtime {
+
+    static broadcast(tid, msg) {
+        broadcastServers(`thread.${tid}`, msg);
+    }
+
+    static async subscribe(comms) {
+        try {
+            const subscribed = await ThreadController.subscribe(comms);
+            if (subscribed) {
+                let channel = `/thread/${comms.obj.tid}`;
+                comms.ws.subscribe(channel);
+                return { slug: channel, action: 'subscribed', ok: true };
+            } else {
+                throw { code: httpCodes.UNAUTHORIZED, msg: 'You are not authorized to subscribe to this thread.' }
+            }
+        } catch (ex) {
+            console.warn(ex);
+            comms.error = {
+                code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                msg: ex.msg || "Unknown server error subscribing thread."
+            };
+            return null;
         }
-    } catch (ex) {
-        console.warn(ex);
-        comms.error = {
-            code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
-            msg: ex.msg || "Unknown server error subscribing thread."
-        };
-        throw comms.error;
     }
 }
 
-             
-module.exports = {
-    broadcast,
-    subscribe
-}
+
+module.exports = ThreadRealtime;
