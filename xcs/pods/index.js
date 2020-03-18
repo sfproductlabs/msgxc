@@ -405,8 +405,7 @@ class WSRoute extends Route {
                     result = ThreadRealtime.subscribe(this.comms);
                     break;
                 default:
-                    this.comms.error = { code: httpCodes.BAD_REQUEST, msg: "Unsupported subscription type" };
-                    break;
+                    throw({ code: httpCodes.BAD_REQUEST, msg: "Unsupported subscription type" });
             }
         } catch (ex) {
             let errMsg = "Unknown error subscribing";
