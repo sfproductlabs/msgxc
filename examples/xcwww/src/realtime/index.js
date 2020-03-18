@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, Component } from 'react'
+import React, { useEffect } from 'react'
 import WebSocketClient from './WebSocketClient';
 
 const socket = new WebSocketClient(process.env.REACT_APP_URL_WS);

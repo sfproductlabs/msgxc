@@ -11,7 +11,7 @@ const uuidv1 = require('uuid/v1');
 const { broadcastServers } = require('../../realtime/nats')
 const APN = require('../../../utils/apn')
 const FCM = require('../../../utils/fcm')
-//const sms = require('../../utils/sms')
+const SMS = require('../../../utils/sms')
 const cxn = require('../../../utils/cassandra');
 const httpCodes = require('../../../utils/httpStatusCodes')
 
@@ -66,12 +66,17 @@ class Threading {
         return false;
       }
 
+      //////////////////////////
+      //SEND BROADCASTS
       //WS (WebSocket) - Publish to any subscribers      
-      broadcastServers(`thread.${comms.obj.tid}`, {
-        sender: { uid : comms.user.uid, method: comms.user.method },
-        msg: comms.obj.msg,
-        opts: comms.obj.opts
-      });
+      if (!thread.mtypes || thread.mtypes.includes('ws')) {
+        broadcastServers(`thread.${comms.obj.tid}`, {
+          sender: { uid : comms.user.uid, method: comms.user.method },
+          msg: comms.obj.msg,
+          opts: comms.obj.opts
+        });
+        //TODO: AG Manage ACK, Failures, Triage
+      }
 
       if (thread.broadcast) {
         throw { code: httpCodes.NOT_IMPLEMENTED, msg: 'Not Implemented' }
@@ -81,7 +86,6 @@ class Threading {
         for (let i = 0; i < thread.subs.length; i++) {
           let sent = false;
 
-          //////////////////////////
           //First check thread.prefs and user.mtypes and thread.mtypes
           let sendTypes = thread.mtypes ? thread.mtypes.slice() : null; //null means sendall
 
@@ -89,7 +93,7 @@ class Threading {
           if (thread.prefs) {
             const userThreadPrefs = thread.prefs[thread.subs[i]];
             if (userThreadPrefs) {
-              if (userThreadPrefs.find(e => e == "~")) {
+              if (userThreadPrefs.includes('~')) {
                 continue;
               }
               sendTypes = sendTypes ? sendTypes.filter(v => userThreadPrefs.includes(v)) : userThreadPrefs.slice();
@@ -98,13 +102,13 @@ class Threading {
 
           //Check the user
           let user = (await db.client.execute(
-            `select uid,mtypes,mdevices from users where uid=?`, [
+            `select cell,uid,mtypes,mdevices from users where uid=?`, [
             thread.subs[i]
           ], {
             prepare: true
           })).first()
           if (user.mtypes) {
-            if (user.mtypes.find(e => e == "~")) {
+            if (user.mtypes.includes('~')) {
               continue;
             }
             sendTypes = sendTypes ? sendTypes.filter(v => user.mtypes.includes(v)) : user.mtypes.slice();
@@ -112,14 +116,14 @@ class Threading {
 
 
           //////////////////////////
-          //SEND
-          //TODO: Add other realtime message types Ex. SMS, Email, WS, WebNotifications
+          //SEND OTHERS
+          //TODO: Add other realtime message types Ex.Email, WebNotifications
           //TODO: Add retries for realtime
           //TODO: ScheduleDegraded() and include nearline messaging emd, emm , emw (email summaries)
           notified.push(thread.subs[i]);
           if (user.mdevices) {
             //APN
-            if (!sendTypes || sendTypes.find(e => e == "apn")) {
+            if (!sendTypes || sendTypes.includes('apn')) {
               const apns = user.mdevices.filter(device => device.mtype === 'apn');
               apns.map(async mdevice => {
                 const results = await APN.send(mdevice.did, comms.obj.msg, comms.obj.opts);
@@ -127,13 +131,20 @@ class Threading {
               });
             }
             //FCM
-            if (!sendTypes || sendTypes.find(e => e == "fcm")) {
+            if (!sendTypes || sendTypes.includes('fcm')) {
               const fcms = user.mdevices.filter(device => device.mtype === 'fcm');
               fcms.map(async mdevice => {
                 const results = await FCM.send(mdevice.did, comms.obj.msg, comms.obj.opts);
                 //TODO: AG Manage Failures, Triage            
               });
             }
+          }
+          
+          //SMS
+          if (user.cell && (!sendTypes || sendTypes.includes('sms'))) {
+            console.log('SMS', user.cell, comms.obj.msg)
+            SMS.send(user.cell, comms.obj.msg);
+            //TODO: AG Manage Failures, Triage 
           }
         }
 

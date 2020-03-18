@@ -12,46 +12,123 @@
 
 const isLocalhost = Boolean(
   window.location.hostname === 'localhost' ||
-    // [::1] is the IPv6 localhost address.
-    window.location.hostname === '[::1]' ||
-    // 127.0.0.0/8 are considered localhost for IPv4.
-    window.location.hostname.match(
-      /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/
-    )
+  // [::1] is the IPv6 localhost address.
+  window.location.hostname === '[::1]' ||
+  // 127.0.0.0/8 are considered localhost for IPv4.
+  window.location.hostname.match(
+    /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/
+  )
 );
 
+
+
+
 export function register(config) {
-  if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
-    // The URL constructor is available in all browsers that support SW.
-    const publicUrl = new URL(process.env.PUBLIC_URL, window.location.href);
-    if (publicUrl.origin !== window.location.origin) {
-      // Our service worker won't work if PUBLIC_URL is on a different origin
-      // from what our page is served on. This might happen if a CDN is used to
-      // serve assets; see https://github.com/facebook/create-react-app/issues/2374
-      return;
-    }
+  let swRegistration = null, isSubscribed = false;
 
-    window.addEventListener('load', () => {
-      const swUrl = `${process.env.PUBLIC_URL}/service-worker.js`;
-
-      if (isLocalhost) {
-        // This is running on localhost. Let's check if a service worker still exists or not.
-        checkValidServiceWorker(swUrl, config);
-
-        // Add some additional logging to localhost, pointing developers to the
-        // service worker/PWA documentation.
-        navigator.serviceWorker.ready.then(() => {
-          console.log(
-            'This web app is being served cache-first by a service ' +
-              'worker. To learn more, visit https://bit.ly/CRA-PWA'
-          );
-        });
-      } else {
-        // Is not localhost. Just register service worker
-        registerValidSW(swUrl, config);
+  function unsubscribeUser() {
+    swRegistration.pushManager.getSubscription()
+    .then(function(subscription) {
+      if (subscription) {
+        return subscription.unsubscribe();
       }
+    })
+    .catch(function(error) {
+      console.log('Error unsubscribing', error);
+    })
+    .then(function() {
+      //updateSubscriptionOnServer(null);
+  
+      console.log('User is unsubscribed.');
+      isSubscribed = false;
+  
     });
   }
+  
+  if ('serviceWorker' in navigator && 'PushManager' in window) {
+    console.log('Service Worker and Push is supported');
+
+    navigator.serviceWorker.register('sw.js')
+      .then(function (swReg) {
+        console.log('Service Worker is registered', swReg);
+        swRegistration = swReg;
+
+        // Set the initial subscription value
+        swRegistration.pushManager.getSubscription()
+          .then(function (subscription) {
+            isSubscribed = !(subscription === null);
+
+            if (isSubscribed) {
+              console.log('User IS subscribed.');
+            } else {
+              console.log('User is NOT subscribed.');
+              swRegistration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: process.env.REACT_APP_EXAMPLE_PUSH_PUB
+              })
+              .then(function(subscription) {
+                console.log('User is subscribed.');
+              
+                //updateSubscriptionOnServer(subscription);
+              
+                isSubscribed = true;
+              
+              
+              })
+              .catch(function(err) {
+                console.log('Failed to subscribe the user: ', err);
+              });
+              
+
+            }
+
+          });
+
+
+      })
+      .catch(function (error) {
+        console.error('Service Worker Error', error);
+      });
+  } else {
+    console.warn('Push messaging is not supported');
+    //pushButton.textContent = 'Push Not Supported';
+  }
+
+
+
+
+  //Removing crappy fb code
+  // if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
+  //   // The URL constructor is available in all browsers that support SW.
+  //   const publicUrl = new URL(process.env.PUBLIC_URL, window.location.href);
+  //   if (publicUrl.origin !== window.location.origin) {
+  //     // Our service worker won't work if PUBLIC_URL is on a different origin
+  //     // from what our page is served on. This might happen if a CDN is used to
+  //     // serve assets; see https://github.com/facebook/create-react-app/issues/2374
+  //     return;
+  //   }
+
+  //   window.addEventListener('load', () => {
+  //     const swUrl = `${process.env.PUBLIC_URL}/service-worker.js`;
+
+  //     if (isLocalhost) {
+  //       // This is running on localhost. Let's check if a service worker still exists or not.
+  //       checkValidServiceWorker(swUrl, config);
+
+  //       // Add some additional logging to localhost, pointing developers to the
+  //       // service worker/PWA documentation.
+  //       navigator.serviceWorker.ready.then(() => {
+  //         console.log(
+  //           'This web app is being served cache-first by a service ' +
+  //             'worker. To learn more, visit https://bit.ly/CRA-PWA'
+  //         );
+  //       });
+  //     } else {
+  //       // Is not localhost. Just register service worker
+  //       registerValidSW(swUrl, config);
+  //     }
+  //   });
+  // }
 }
 
 function registerValidSW(swUrl, config) {
@@ -71,7 +148,7 @@ function registerValidSW(swUrl, config) {
               // content until all client tabs are closed.
               console.log(
                 'New content is available and will be used when all ' +
-                  'tabs for this page are closed. See https://bit.ly/CRA-PWA.'
+                'tabs for this page are closed. See https://bit.ly/CRA-PWA.'
               );
 
               // Execute callback
