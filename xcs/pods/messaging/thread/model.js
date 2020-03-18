@@ -15,6 +15,7 @@ const cxn = require('../../../utils/cassandra');
 const httpCodes = require('../../../utils/httpStatusCodes')
 
 const AuthController = require('../../auth/controller');
+const ThreadRealtime = require('./realtime');
 
 class Threading {
 
@@ -35,6 +36,11 @@ class Threading {
 
       if (!thread) {
         return false;
+      }
+
+      //Check the thread
+      if (thread.mtypes && thread.mtypes.find(e => e == "~")) {
+        return true; //We can use this to temporarily disable the thread notifications.
       }
 
       let checked = false;
@@ -60,6 +66,9 @@ class Threading {
         return false;
       }
 
+      //WS (WebSocket) - Publish to any subscribers
+      ThreadRealtime.broadcast(comms.obj.tid, comms.obj.msg);
+
       if (thread.broadcast) {
         throw { code: httpCodes.NOT_IMPLEMENTED, msg: 'Not Implemented' }
       } else if (thread.subs) {
@@ -70,12 +79,7 @@ class Threading {
 
           //////////////////////////
           //First check thread.prefs and user.mtypes and thread.mtypes
-
-          //Check the thread
           let sendTypes = thread.mtypes ? thread.mtypes.slice() : null; //null means sendall
-          if (thread.mtypes && thread.mtypes.find(e => e == "~")) {
-            continue; //We can use this to temporarily disable the thread notifications.
-          }
 
           //Check the thread specific user preferences
           if (thread.prefs) {
@@ -128,6 +132,8 @@ class Threading {
             }
           }
         }
+
+
         return true;
       } else {
         return false;
@@ -143,44 +149,36 @@ class Threading {
     }
   }
 
-  static async canSubscribe(comms) {
-    if (!comms.user || !comms.user.uid || !comms.obj.tid) {
-      return false;
-    }
-
-    let threadPerms = (await db.client.execute(
-      `select owner,admins,opens,openp,perms,org from mthreads where tid=?`, [
-      comms.obj.tid
-    ], {
-      prepare: true
-    })).first()
-    if (!threadPerms) {
-      return false;
-    }
-
-    let checked = false;
-    if (threadPerms.perms) {
-      checked = AuthController.checkPerms(comms, threadPerms.perms, 'thread', 'subscribe');
-    }
-
-    let isOwner = false, isAdmin = false;
-    if (!checked) {
-      isOwner = threadPerms.owner.toString() === comms.user.uid;
-      isAdmin = threadPerms.admins && threadPerms.admins.some(f => f.toString() === comms.user.uid);
-    }
-
-    if (checked || isOwner || isAdmin || threadPerms.opens || threadPerms.openp) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
   static async subscribe(comms) {
     const db = new cxn();
     try {
 
-      if (await Threading.canSubscribe(comms)) {
+      if (!comms.user || !comms.user.uid || !comms.obj.tid) {
+        return false;
+      }
+  
+      let threadPerms = (await db.client.execute(
+        `select owner,admins,opens,openp,perms,org from mthreads where tid=?`, [
+        comms.obj.tid
+      ], {
+        prepare: true
+      })).first()
+      if (!threadPerms) {
+        return false;
+      }
+  
+      let checked = false;
+      if (threadPerms.perms) {
+        checked = AuthController.checkPerms(comms, threadPerms.perms, 'thread', 'subscribe');
+      }
+  
+      let isOwner = false, isAdmin = false;
+      if (!checked) {
+        isOwner = threadPerms.owner.toString() === comms.user.uid;
+        isAdmin = threadPerms.admins && threadPerms.admins.some(f => f.toString() === comms.user.uid);
+      }
+  
+      if (checked || isOwner || isAdmin || threadPerms.opens || threadPerms.openp) {
         await db.client.execute(
           `update mthreads set subs=subs+? where tid=?`, [
           [comms.user.uid],
