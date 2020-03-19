@@ -140,6 +140,7 @@ class Threading {
                 //TODO: AG Manage Failures, Triage            
               });
             }
+            //WPN
             if (!sendTypes || sendTypes.includes('wpn')) {
               const wpns = user.mdevices.filter(device => device.mtype === 'wpn');
               wpns.map(async mdevice => {
