@@ -20,7 +20,20 @@ const isLocalhost = Boolean(
   )
 );
 
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
 
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
 
 
 export function register(config) {
@@ -44,7 +57,7 @@ export function register(config) {
   
     });
   }
-  
+
   if ('serviceWorker' in navigator && 'PushManager' in window) {
     console.log('Service Worker and Push is supported');
 
@@ -60,27 +73,34 @@ export function register(config) {
 
             if (isSubscribed) {
               console.log('User IS subscribed.');
+              subscription.unsubscribe();
             } else {
               console.log('User is NOT subscribed.');
-              swRegistration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: process.env.REACT_APP_EXAMPLE_PUSH_PUB
-              })
-              .then(function(subscription) {
-                console.log('User is subscribed.');
-              
-                //updateSubscriptionOnServer(subscription);
-              
-                isSubscribed = true;
-              
-              
-              })
-              .catch(function(err) {
-                console.log('Failed to subscribe the user: ', err);
-              });
-              
-
             }
+
+            swRegistration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(process.env.REACT_APP_EXAMPLE_PUSH_PUB)
+            })
+            .then(function(subscription) {
+              console.log('User is subscribed.');
+            
+              //updateSubscriptionOnServer(subscription);
+            
+              isSubscribed = true;
+              fetch(`${process.env.REACT_APP_URL_API}/api/v1/enlist`, {
+                method: 'POST',
+                body: JSON.stringify(subscription),
+                headers: {
+                  'content-type': 'application/json',
+                  'authorization': `Bearer ${process.env.REACT_APP_EXAMPLE_JWT}`
+                }
+              });
+            
+            })
+            .catch(function(err) {
+              console.log('Failed to subscribe the user: ', err);
+            });
 
           });
 

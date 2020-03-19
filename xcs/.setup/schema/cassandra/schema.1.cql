@@ -251,7 +251,7 @@ CREATE TABLE mthreads (
     name text, --human readable name
     post text, --note/description of thread/post
     mcert mcert,
-    mtypes set<text>,  --message type (ws - websocket,apn - apple push ios,fcm - firebase/android,webn - web notification,sms,em - email,emw - email weekly,emd - email daily, emm - email monthly) 
+    mtypes set<text>,  --message type (ws - websocket,apn - apple push ios,fcm - firebase/android,wpn - web push notification,sms,em - email,emw - email weekly,emd - email daily, emm - email monthly) 
     mtempl map<text, text>, --default template eg. {email,00001} --template text, --use a url for now
     fmtypes set<text>, --  specific faluire / fallback mtypes (to override app defaults)
     cats set<text>, --categories   
@@ -272,7 +272,7 @@ CREATE TABLE mthreads (
     strack boolean, --track successful deliveries
     subs set<uuid>, --admins+writers+subs=subs (only this index required to subscribe)
     pubs set<uuid>, --uids who can publish to admins+pubs=pubs (only this index required to publish)
-    prefs map<uuid, frozen<set<text>>>, --msg preferences (user,mtypes) apn,~,webn etc.  
+    prefs map<uuid, frozen<set<text>>>, --msg preferences (user,mtypes) apn,~,wpn etc.  
     --INTEREST
     interest map<text, int>, -- Ex. { hearts : 44 , views : 55, clicks etc.}  
     --OWNER

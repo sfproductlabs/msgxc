@@ -17,8 +17,8 @@ insert into mthreads (
 ) values (
     5ae3c890-5e55-11ea-9283-4fa18a847130, 
     'native:dailypulse', 
-    {'fcm', 'apn', 'ws', 'sms'},
-    {14fb0860-b4bf-11e9-8971-7b80435315ac : {'sms'}},
+    {'fcm', 'apn', 'ws', 'sms', 'wpn', 'em'},
+    {14fb0860-b4bf-11e9-8971-7b80435315ac : {'em'}},
     14fb0860-b4bf-11e9-8971-7b80435315ac,
     true,
     {14fb0860-b4bf-11e9-8971-7b80435315ac},

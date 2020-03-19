@@ -146,6 +146,7 @@ class SysMessaging {
       user.mdevices = user.mdevices.filter(device => device.did !== comms.obj.token);
       if (comms.obj.os === "ios") user.mdevices.splice(0, 0, { mtype: 'apn', did: comms.obj.token, updated: Date.now() })
       if (comms.obj.os === "android") user.mdevices.splice(0, 0, { mtype: 'fcm', did: comms.obj.token, updated: Date.now() })
+      if (comms.obj.endpoint && comms.obj.keys) user.mdevices.splice(0, 0, { mtype: 'wpn', did: JSON.stringify(comms.obj), updated: Date.now() })
 
       await db.client.execute(
         `update users set mdevices=? where uid=?`, [

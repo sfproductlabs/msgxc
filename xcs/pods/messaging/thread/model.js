@@ -11,7 +11,9 @@ const uuidv1 = require('uuid/v1');
 const { broadcastServers } = require('../../realtime/nats')
 const APN = require('../../../utils/apn')
 const FCM = require('../../../utils/fcm')
+const WPN = require('../../../utils/wpn')
 const SMS = require('../../../utils/sms')
+const EMAIL = require('../../../utils/sendgrid')
 const cxn = require('../../../utils/cassandra');
 const httpCodes = require('../../../utils/httpStatusCodes')
 
@@ -28,7 +30,7 @@ class Threading {
       }
 
       let thread = (await db.client.execute(
-        `select broadcast,owner,admins,openp,perms,org,pubs,prefs,subs,mtypes from mthreads where tid=?`, [
+        `select broadcast,owner,admins,openp,perms,org,pubs,prefs,subs,mtypes,alias,name from mthreads where tid=?`, [
         comms.obj.tid
       ], {
         prepare: true
@@ -102,7 +104,7 @@ class Threading {
 
           //Check the user
           let user = (await db.client.execute(
-            `select cell,uid,mtypes,mdevices from users where uid=?`, [
+            `select cell,uid,mtypes,mdevices,email from users where uid=?`, [
             thread.subs[i]
           ], {
             prepare: true
@@ -117,7 +119,7 @@ class Threading {
 
           //////////////////////////
           //SEND OTHERS
-          //TODO: Add other realtime message types Ex.Email, WebNotifications
+          //TODO: Triage
           //TODO: Add retries for realtime
           //TODO: ScheduleDegraded() and include nearline messaging emd, emm , emw (email summaries)
           notified.push(thread.subs[i]);
@@ -138,12 +140,37 @@ class Threading {
                 //TODO: AG Manage Failures, Triage            
               });
             }
+            if (!sendTypes || sendTypes.includes('wpn')) {
+              const wpns = user.mdevices.filter(device => device.mtype === 'wpn');
+              wpns.map(async mdevice => {
+                const result = await WPN.send(mdevice.did, { ...comms.obj.opts, msg: comms.obj.msg, ok: true, slug: `/thread/${comms.obj.tid}`});
+                if (!result) {
+                  db.client.execute(
+                    `update users set mdevices = mdevices - ? where uid = ? ;`, [
+                    [mdevice],
+                    thread.subs[i]
+                  ], {
+                    prepare: true
+                  }).catch(error => {
+                    console.error(error);
+                  })
+                }
+                //TODO: AG Manage Failures, Triage            
+              });
+            }
+
+
           }
           
           //SMS
           if (user.cell && (!sendTypes || sendTypes.includes('sms'))) {
-            console.log('SMS', user.cell, comms.obj.msg)
             SMS.send(user.cell, comms.obj.msg);
+            //TODO: AG Manage Failures, Triage 
+          }
+
+          //EMAIL
+          if (user.email && (!sendTypes || sendTypes.includes('em'))) {
+            EMAIL.send({to: user.email, subject: `New message in thread ${thread.name || thread.alias}`, text: comms.obj.msg});
             //TODO: AG Manage Failures, Triage 
           }
         }

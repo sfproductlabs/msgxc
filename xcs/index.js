@@ -195,6 +195,20 @@ const app = uApp({
   res.writeStatus(httpCodes.OK);       
   res.end(httpCodes.OK);  
 })
+//OPTIONS - CORS
+.options(`${process.env.V1_PREFIX}/*`, (res, req) => {
+  res.writeStatus(httpCodes.OK);       
+  res.writeHeader("Content-Type", "application/json")
+  res.writeHeader("Access-Control-Allow-Origin", "*") //TODO: Update CORS
+  res.writeHeader("Access-Control-Allow-Methods", "GET, POST, HEAD, DELETE, PUT")
+  res.writeHeader("Access-Control-Allow-Headers", "Content-Type, Header, Authorization, Accept, User")
+  res.writeHeader("Access-Control-Allow-Credentials", "true")
+  res.writeHeader("Access-Control-Max-Age", "1728000")
+  res.writeHeader("Vary", "Accept-Encoding, Origin")
+  res.writeHeader("Keep-Alive", "timeout=2, max=100")
+  res.writeHeader("Connection", "Keep-Alive")
+  res.end();  
+})
 //CATCH ALL
 .any(`${process.env.V1_PREFIX}/*`, (res, req) => {
     let comms = {res, req};

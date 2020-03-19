@@ -85,6 +85,7 @@ class Route {
                         this.comms.res.cork(() => {
                             this.comms.res.writeStatus(httpCodes.OK);
                             this.comms.res.writeHeader("Content-Type", this.comms.contentType || "application/json")
+                            this.comms.res.writeHeader('Access-Control-Allow-Origin', '*'); //TODO: Update CORS                            
                             this.comms.res.end(this.comms.contentType ? obj : JSON.stringify(obj));
                         });
                     }
