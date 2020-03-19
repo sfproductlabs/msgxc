@@ -1,13 +1,13 @@
 'use strict';
 
-const Messaging = require('./model');
-const httpCodes = require('../../utils/httpStatusCodes')
+const SysMessaging = require('./model');
+const httpCodes = require('../../../utils/httpStatusCodes')
 
-class MessageController {
+class SysMessageController {
 
     static async multicast(comms) {
         try {
-            return await Messaging.multicast(comms);            
+            return await SysMessaging.multicast(comms);            
         } catch (ex) {
             console.warn(ex);
             comms.error = {
@@ -20,7 +20,7 @@ class MessageController {
 
     static async broadcast(comms) {
         try {
-            return await Messaging.broadcast(comms);            
+            return await SysMessaging.broadcast(comms);            
         } catch (ex) {
             console.warn(ex);
             comms.error = {
@@ -33,7 +33,7 @@ class MessageController {
 
     static async send(comms) {
         try {
-            return await Messaging.send(comms);            
+            return await SysMessaging.send(comms);            
         } catch (ex) {
             console.warn(ex);
             comms.error = {
@@ -44,14 +44,14 @@ class MessageController {
         }
     }
 
-    static async subscribe(comms) {
+    static async enlist(comms) {
         try {
-            return await Messaging.subscribe(comms);            
+            return await SysMessaging.enlist(comms);            
         } catch (ex) {
             console.warn(ex);
             comms.error = {
                 code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
-                msg: ex.msg || "Unknown server error subscribing."
+                msg: ex.msg || "Unknown server error enlisting."
             };
             throw comms.error;
         }
@@ -61,4 +61,4 @@ class MessageController {
 }
 
 
-module.exports = MessageController;
+module.exports = SysMessageController;

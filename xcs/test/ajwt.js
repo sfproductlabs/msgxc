@@ -1,5 +1,5 @@
 var path = require('path');
-var dotEnvPath = path.resolve('./.env');
+var dotEnvPath = path.resolve('./.env.sfpl');
 require('dotenv').config({ path: dotEnvPath});
 const jws = require('jws');
 const fs = require('fs');

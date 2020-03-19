@@ -68,10 +68,12 @@ class AuthController {
                 AuthController.checkUserLevel(comms, R.defaultTo([])(R.path(['pub', 'roles'], jwt)), level)
                 comms.user = R.path(['pub'], jwt)
             } catch {
-                comms.error = {
-                    code: httpCodes.UNAUTHORIZED,
-                    msg: 'Authorization Failed (Validate)'
-                };
+                if (!comms.error) { 
+                    comms.error = {
+                        code: httpCodes.UNAUTHORIZED,
+                        msg: 'Authorization Failed (Validate)'
+                    };
+                }
                 throw comms.error;
             }
         }
@@ -106,6 +108,21 @@ class AuthController {
         return crypt.encrypt(compression.compress(JSON.stringify(claims)), clientKey);
     }
 
+    static checkPerms(comms, perms, noun, verb) {
+        //TODO: Implement after the elastic update is made
+        throw {code: httpCodes.NOT_IMPLEMENTED, msg: 'Not Implemented'}
+        //update mthreads set perms = { {right : 'test'}} where tid = 5ae3c890-5e55-11ea-9283-4fa18a847130 ;
+        //update mthreads set perms = perms- {{right : 'test'}} where tid = 5ae3c890-5e55-11ea-9283-4fa18a847130 ;
+        // let user = (await db.client.execute(
+        //   `select roles,rights,org from users where uid=?`, [
+        //   comms.user.uid
+        // ], {
+        //   prepare: true
+        // })).first()
+        // if (!user) {
+        //   return false;
+        // }
+    }
 
 
 }

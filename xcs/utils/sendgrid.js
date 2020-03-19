@@ -3,7 +3,7 @@ sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
 sendgrid.setSubstitutionWrappers('{{', '}}'); // Configure the substitution tag wrappers globally
 //Use Like msg.sendmsg
 //subject,from, substitutions : {{'old, 'new'},{'old2','new2'}}, templateId, text, html, to = "asdads,asdasd"
-const sendEmail = function (params) {
+const send = function (params) {
 	var msg = {};
 	if (typeof params.to !== 'string')
 		throw {code: httpCodes.UNPROCESSABLE_ENTITY, msg: 'Invalid Recipient (Email)'};
@@ -33,5 +33,5 @@ const sendEmail = function (params) {
 };
 
 module.exports = {
-	sendEmail: sendEmail
+	send
 };

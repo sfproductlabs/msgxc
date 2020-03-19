@@ -8,13 +8,13 @@
 
 const R = require('ramda');
 const uuidv1 = require('uuid/v1');
-const APN = require('../../utils/apn')
-const FCM = require('../../utils/fcm')
+const APN = require('../../../utils/apn')
+const FCM = require('../../../utils/fcm')
 //const sms = require('../../utils/sms')
-const cxn = require('../../utils/cassandra');
-const httpCodes = require('../../utils/httpStatusCodes')
+const cxn = require('../../../utils/cassandra');
+const httpCodes = require('../../../utils/httpStatusCodes')
 
-class Messaging {
+class SysMessaging {
 
   static async multicast(comms) {
     const db = new cxn();
@@ -128,7 +128,7 @@ class Messaging {
     return true;
   }
 
-  static async subscribe(comms) {
+  static async enlist(comms) {
     const db = new cxn();
     try {
       let user = (await db.client.execute(
@@ -146,6 +146,7 @@ class Messaging {
       user.mdevices = user.mdevices.filter(device => device.did !== comms.obj.token);
       if (comms.obj.os === "ios") user.mdevices.splice(0, 0, { mtype: 'apn', did: comms.obj.token, updated: Date.now() })
       if (comms.obj.os === "android") user.mdevices.splice(0, 0, { mtype: 'fcm', did: comms.obj.token, updated: Date.now() })
+      if (comms.obj.endpoint && comms.obj.keys) user.mdevices.splice(0, 0, { mtype: 'wpn', did: JSON.stringify(comms.obj), updated: Date.now() })
 
       await db.client.execute(
         `update users set mdevices=? where uid=?`, [
@@ -171,4 +172,4 @@ class Messaging {
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
-module.exports = Messaging;
+module.exports = SysMessaging;

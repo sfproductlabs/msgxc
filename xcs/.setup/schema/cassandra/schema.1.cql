@@ -13,6 +13,46 @@ use msgxc;
 
 ------------------------------ EXISTING START
 
+create type address (
+  fullname text,
+  st1 text,
+  st2 text,
+  city text,
+  province text,
+  country text,
+  zip text,
+  active boolean,
+  type text,
+  phone text
+);
+
+create table orgs (
+  org      uuid,
+  parent   uuid,
+  root uuid,
+  lname text, --legal name
+  hname text, --human name
+  notes text,
+  roles    set<text>,
+  rights   set<text>,
+  etype text, --entity type (legal)
+  country  text,  
+  lang text,
+  hq address,
+  addresses    map<text, frozen<address>>,
+  created timestamp,
+  owner uuid,
+  updated timestamp,
+  updater uuid,
+  primary key (org)
+);
+
+create materialized view conglomerate as 
+select * from orgs
+where root is not null
+primary key (root, org)
+with clustering order by (root DESC, org ASC);
+
 create table users (
   uid         uuid,
   uname       text,
@@ -20,8 +60,8 @@ create table users (
   uhash       text, --username hash
   email       text,
   ehash       text, --email hash
-  org         uuid, --org member
   roles      set<text>,
+  rights     set<text>,
   ref uuid, --referral
   aff text, --affiliate
   promo text, --promo code
@@ -33,12 +73,14 @@ create table users (
   splits map<text,text>, --experimentid : splitid
   lang text,
   created timestamp,
-  owner uuid, --org or person that owns this record
+  org uuid,
+  owner uuid,
   updated timestamp,
   updater uuid,
   primary key       (uid)
 );
 CREATE INDEX user_cohorts_idx ON users ( cohorts );
+
 
 --Used for update/creation only
 create table user_emails (
@@ -68,8 +110,10 @@ create table services (
   svc    text,
   secret  text, --secret hash
   roles   set<text>,
+  rights  set<text>,
   expiry date,
   created timestamp,
+  org uuid,
   owner uuid,
   updated timestamp,
   updater uuid,
@@ -88,10 +132,11 @@ create table queues (
   schedule timestamp,
   started timestamp,
   completed timestamp,
+  created timestamp,
+  org uuid,
+  owner uuid,
   updated timestamp,
   updater uuid,
-  created timestamp,  
-  owner uuid,
   PRIMARY KEY ((qid))
 )
 WITH default_time_to_live = 1209600; --2 week Tombstones
@@ -109,7 +154,10 @@ create table cohorts (
   started timestamp,
   completed timestamp,
   created timestamp,
+  org uuid,
   owner uuid,
+  updated timestamp,
+  updater uuid,
   PRIMARY KEY ((cohort))
 );
 
@@ -163,41 +211,90 @@ create table updates (
 
 -------------------START ENTIRELY NEW
 
-create table mxccerts (
-  certid text,
-  pub  text, --public key
-  priv text, --private key
-  algo text,
-  org         uuid,
+create type mcert (
+  id timeuuid,
+  name text,
+  algo text, --ex ecc
+  spec text, --ex 192spec2k1
+  sz text, --serialization type (hex,num,json)
+  opub  text, --asymmetric owner public key (der)
+  opriv text, --OPTIONAL STORE asymmetric owner private key (hex)
+  tpub text, --asymmetric thread public key
+  tpriv text, --OPTIONAL STORE asymmetric thread private key
+  sym text, --symmetric enc method (aes,rsa,elgamal)
+  sver text, --version
+  sspec text, --dhpubprivsha256
+  skey text, --OPTIONAL symmetric/shared key
+  dhpub text,
+  dhpriv text, --OPTIONAL
   created timestamp,
-  owner uuid, 
-  updated timestamp,
-  updater uuid,
-  PRIMARY KEY ((certid))
+  expires timestamp
 );
 
-create table user_certs (
-  certid       text,
-  uid         uuid,
-  primary key       (certid)
-); 
-CREATE INDEX user_certs_uid_idx ON user_certs ( uid );
 
-create table group_certs (
-  certid       text,
-  gid         uuid, --group-id
-  primary key       (certid)
-); 
-CREATE INDEX group_certs_gid_idx ON group_certs ( gid );
+--advanced permission (org and owner in everything else)
+create type perm (
+  org uuid,
+  role uuid,
+  right text,
+  owner uuid,
+  noun text,
+  verb text,
+  blk boolean --blacklist
+);
 
-create table mxctriage (
-  mxcid timeuuid,
-  mtype text, --message type (ws - websocket,apn - apple push ios,fcm - firebase/android,webn - web notification,sms,em - email,emw - email weekly,emd - email daily, emm - email monthly)
+
+CREATE TABLE mthreads (
+  --THREAD INFO
+    tid timeuuid, --thread id
+    alias text, --human identifier
+    name text, --human readable name
+    post text, --note/description of thread/post
+    mcert mcert,
+    mtypes set<text>,  --message type (ws - websocket,apn - apple push ios,fcm - firebase/android,wpn - web push notification,sms,em - email,emw - email weekly,emd - email daily, emm - email monthly) 
+    mtempl map<text, text>, --default template eg. {email,00001} --template text, --use a url for now
+    fmtypes set<text>, --  specific faluire / fallback mtypes (to override app defaults)
+    cats set<text>, --categories
+    urgency int,   
+    ephemeral int, --seconds until expiry (null == keep)
+    archived boolean,
+  --PERMISSIONS
+    --Prioritized from most specific to most general >>>
+    --Priority HIGH
+    admins set<uuid>, --approve new members etc.
+    --Priority MEDIUM
+    opens boolean, --publicly subscribable, still add uid to subs [Default: false]
+    openp boolean, --publicly publishable, still add uid to pubs [Default: false]
+    --Priority LOW
+    perms set<frozen<perm>>, --additional perms
+    --RECIPIENTS
+    broadcast boolean,
+    ftrack boolean, --track failed deliveries
+    strack boolean, --track successful deliveries
+    subs set<uuid>, --admins+writers+subs=subs (only this index required to subscribe)
+    pubs set<uuid>, --uids who can publish to admins+pubs=pubs (only this index required to publish)
+    prefs map<uuid, frozen<set<text>>>, --msg preferences (user,mtypes) apn,~,wpn etc.  
+    --INTEREST
+    interest map<text, int>, -- Ex. { hearts : 44 , views : 55, clicks etc.}  
+    --OWNER
+    created timestamp,
+    org uuid,
+    owner uuid,
+    updatedms bigint, --participant updated CHECK
+    updated timestamp,
+    updater uuid,
+    PRIMARY KEY ((tid))
+);
+
+--IF threadid==messageid = 1st Messsage!!!
+create table mtriage (
+  tid timeuuid, --threadid
+  mid timeuuid, --message id
   subject text,
   msg text,
   data text,
+  urgency int,   
   template text, --use a url for now 
-  certid text, --public key for encryption
   rel text, 
   ver int, --version
   schedule timestamp,
@@ -206,9 +303,10 @@ create table mxctriage (
   ptyp text, 
   auth text, --author
   xid text, --experiment id 
-  gid uuid,
-  users set<uuid>,
-  deliveries set<uuid>, --uid delivered
+  mtypes set<text>, --attempted mtypes (update after actually sent)
+  broadcast boolean,
+  users set<uuid>, --keep this here for pull mid > lastloggedin
+  deliveries set<uuid>, --uid delivered, update after ACK of wsocket
   failures set<uuid>, --uid failures
   cohorts set<text>,
   split decimal, --% random 1=1%
@@ -222,6 +320,8 @@ create table mxctriage (
   ref uuid, --referrer uid (Select)
   aff text, --affiliate uname or code (Select)
   repl map<text,text>, --text to replace ex Hi {{fn}} -> becomes -> Hi Andrew, Prepend "text." to use Raw text instead of the user record Ex. {{text.msg}}. Only start off with one "text." message body in Admin UI (text.msg)
+  --PERMISSIONS
+  perms set<frozen<perm>>, --additional perms 
   --REQUEST OWNER
   app text, --app 
   svc text, --Ex. SES, 'message', 'sms, 'action'
@@ -230,42 +330,106 @@ create table mxctriage (
   srckey text, --source id, audit id, inc. external Ex. SES message-id
   meta map<text,text>, --METADATA, SPLIT etc.
   keep boolean, --keep this message on the server
-  org         uuid,
-  createdms bigint,
+  createdms bigint, --INDEX and use this for last-seen & alerts ALONGWITH users
   created timestamp,
+  org uuid,
   owner uuid,
   updated timestamp,
   updater uuid,
-  PRIMARY KEY ((mxcid))
+  PRIMARY KEY ((tid), mid)
 )
-WITH default_time_to_live = 1209600; --Tombstones after 2 weeks
+WITH CLUSTERING ORDER BY (mid DESC)
+AND default_time_to_live = 1209600 --Tombstones after 2 weeks
+AND GC_GRACE_SECONDS = 3600; --Force regular tombstone clearouts
 
-create type mxcdevice (
+--PERMANENT ARCHIVE
+--IF threadid==messageid = 1st Messsage!!!
+create table mstore (
+  tid timeuuid, --threadid
+  mid timeuuid, --message id
+  subject text,
+  msg text,
+  data text,
+  urgency int,   
+  template text, --use a url for now 
+  rel text, 
+  ver int, --version
+  schedule timestamp,
+  started timestamp,
+  completed timestamp,
+  ptyp text, 
+  auth text, --author
+  xid text, --experiment id 
+  mtypes set<text>, --attempted mtypes (update after actually sent)
+  broadcast boolean,
+  users set<uuid>, --keep this here for pull mid > lastloggedin
+  deliveries set<uuid>, --uid delivered, update after ACK of wsocket
+  failures set<uuid>, --uid failures
+  cohorts set<text>,
+  split decimal, --% random 1=1%
+  source text,
+  medium text,
+  campaign text,
+  term text, 
+  sink text,
+  score double,
+  promo text, --promo code to pass through
+  ref uuid, --referrer uid (Select)
+  aff text, --affiliate uname or code (Select)
+  repl map<text,text>, --text to replace ex Hi {{fn}} -> becomes -> Hi Andrew, Prepend "text." to use Raw text instead of the user record Ex. {{text.msg}}. Only start off with one "text." message body in Admin UI (text.msg)
+  --PERMISSIONS
+  perms set<frozen<perm>>, --additional perms 
+  --REQUEST OWNER
+  app text, --app 
+  svc text, --Ex. SES, 'message', 'sms, 'action'
+  qid timeuuid, --executing queue id -- IMPORTANT !!!!
+  srcid timeuuid, --source id Ex. message-id
+  srckey text, --source id, audit id, inc. external Ex. SES message-id
+  meta map<text,text>, --METADATA, SPLIT etc.
+  keep boolean, --keep this message on the server
+  createdms bigint, --INDEX and use this for last-seen & alerts ALONGWITH users
+  created timestamp,
+  org uuid,
+  owner uuid,
+  updated timestamp,
+  updater uuid,
+  --ADDITIONAL FIELDS
+  interest map<text, int>, -- Ex. { hearts : 44 , views : 55, clicks etc.} 
+  hide timestamp, --use ephemeral value in thread
+  hidden boolean, --REQUIRED: set to false
+  PRIMARY KEY ((tid), mid)
+)
+WITH CLUSTERING ORDER BY (mid DESC);
+
+create type mdevice (
   mtype text,
   did text,
   updated timestamp
 );
 
-create table mxcfailures (
- mxcid timeuuid, --mxctriageid
+create table mfailures (
+ tid timeuuid,
+ mid timeuuid, --mtriageid
  uid uuid,
  mtype text,
- mdevice frozen<mxcdevice>,
+ mdevice frozen<mdevice>,
  failure text, --failure type (Ex. nopened, noack)
  retries int, 
- created timestamp,
  died timestamp, --stop retries
+ created timestamp,
+ org uuid,
  owner uuid,
  updated timestamp,
  updater uuid,
- PRIMARY KEY ((mxcid), uid, mtype, mdevice)
-);
+ PRIMARY KEY ((tid), mid, uid, mtype, mdevice)
+)
+WITH CLUSTERING ORDER BY (mid DESC);
 
-alter table users add mdevices list<frozen<mxcdevice>>; --prioritized list of devices
+alter table users add mdevices list<frozen<mdevice>>; --prioritized list of devices
 alter table users add mtypes list<text>; --[mtype] prioritized list of preferences ~ => disabled
-alter table users add mlast bigint; --last updated/looked at a mxc message
+alter table users add mlast bigint; --(ms) last updated/looked at a mxc messages
 alter table users add cell text; 
 alter table users add chash text; --cell hash 
-
+alter table users add mcerts set<frozen<mcert>>; 
 
 -------------------END ENTIRELY NEW

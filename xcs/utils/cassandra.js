@@ -46,6 +46,15 @@ class Cassandra {
     constructor() {
       this.client = cassandraClient;
     }
+    
+    static newUuid() { return cassandra.types.Uuid.random() };
+
+    static newTimeUuid() { return cassandra.types.TimeUuid.now() };
+
+    static getDateFromTimeUuid(uuid) { return uuid.getDate() };
+
+    static getTimeUuidFromDate(date) { return cassandra.types.TimeUuid.fromDate(date || new Date()) };    
+
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */

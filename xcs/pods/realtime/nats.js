@@ -14,14 +14,17 @@ const broadcastServers = (subject, msg) => {
 
 const prepClientMessage = (subject, msg) => {
  const slug = `/${(subject||"").replace(/\./g,"\/")}`
- const obj = typeof msg === 'object' ? msg : (typeof msg === 'string' ? (msg.length > 0 ? JSON.parse(msg) : {}) : {value: msg});
+ try {
+     msg = JSON.parse(msg)
+ } catch {}
+ const obj = typeof msg === 'object' ? msg : { data: msg };
  obj.slug = slug;
  obj.ok = true;
  obj.msg = JSON.stringify(obj)
  return obj;
 }
 
-const publishClients = (ws, subject, msg) => {
+const publishClients = (subject, msg, ws) => {
     const cm = prepClientMessage(subject, msg);
     if (ws) {
         debugWS('Publish to (others): #', cm.slug)
@@ -31,7 +34,6 @@ const publishClients = (ws, subject, msg) => {
         //TODO: AG USE the app.publish when its released
         debugWS('Publish to (all)', cm.slug)
         appInstance().publish(cm.slug, cm.msg)
-        debugWS('[INFO] Published')
     }
 
 }

@@ -4,7 +4,8 @@
 //  ws.onmessage = msg => console.log(msg)
 // // ws.send('WebSockets are awesome!')
 // ws.onerror = evt => console.error("WebSocket error observed:", event)
-require('dotenv').config()
+const ePath = process.env.PROJECT ? `${__dirname}/.env.${process.env.PROJECT}` : `${__dirname}/.env`
+require('dotenv').config({path: ePath})
 const R = require('ramda');
 const debugWS = require('debug')('ws')
 const debugHTTP = require('debug')('http')
@@ -27,7 +28,7 @@ require('./pods/realtime/scheduler')
 
 const uApp = (env === 'dev') ? uWS.App : uWS.SSLApp;
 const router = {
-  subscribe: routeMatcher(`${process.env.V1_PREFIX}/sub/:action`),
+  subscribe: routeMatcher(`${process.env.V1_PREFIX}/subscribe/:action`),
 }
 const app = uApp({
   key_file_name: process.env.SITE_KEY,
@@ -46,35 +47,37 @@ const app = uApp({
     ws.subscribe('broadcast/system');
     ws.req = req;
     ws.authorization = req.getHeader("authorization");
+    debugWS("[WS Connected] ", ws);
     sockets.add(ws)
   },
   message: (ws, msg, isBinary) => {
       let comms = {};
       comms.obj = R.tryCatch(JSON.parse, R.always({}))(Buffer.from(msg || ""))  
+      if (!comms.obj || !comms.obj.slug) {
+        debugWS("Bad request...")
+        ws.send(`{ "error" : "${httpCodes.NOT_FOUND}" }`, isBinary);  
+        nats.natsLogger.error({...comms, error: "Bad client request (slug missing, potential hack attempt)"});        
+        return;
+      }
       comms.ws = ws;
       comms.isBinary = isBinary;
       debugWS(`Request (ws) ${comms.obj.slug}`);  
       switch (true) {
-        case /^\/api\/v1\/sub\//.test(comms.obj.slug):           
-          try {
-            //Get the action
+        case /^\/api\/v1\/subscribe\//.test(comms.obj.slug):           
+          try {            
             comms.params = router.subscribe.parse(comms.obj.slug);
-            const route = new WSRoute(comms)
-            switch (comms.params.action) {
-              default:
-                  ws.send(`{ "error" : "${httpCodes.NOT_IMPLEMENTED}", "ok": false, "slug" : "${comms.obj.slug}", "action" : "${comms.params.action}" }`, isBinary);
-            }
+            new WSRoute(comms).authorizeUser().subscribeWebsocket()            
           } catch (ex) {
             debugHTTP(ex)
             nats.natsLogger.error({...comms, error: ex});
             Route.abort(ws, ex);
           }            
           return;
-        case /^\/api\/v1\/pub/.test(comms.obj.slug):
+        case /^\/api\/v1\/publish/.test(comms.obj.slug):
           //TODO, only allow trusted publish to friends 
           ws.send(`{ "error" : "${httpCodes.NOT_IMPLEMENTED}" }`, isBinary);  
           return;        
-        case /^\/api\/v1\/unsub/.test(comms.obj.slug):   
+        case /^\/api\/v1\/unsubscribe/.test(comms.obj.slug):   
           ws.send(`{ "error" : "${httpCodes.NOT_IMPLEMENTED}" }`, isBinary);  
           return;
         case /^\/api\/v1\/admin/.test(comms.obj.slug):   
@@ -104,7 +107,7 @@ const app = uApp({
     debugWS('WebSocket closed, sockets open:', sockets.size);
   }
 })
-//MESSAGING
+//SYSTEM MESSAGING
 .post(`${process.env.V1_PREFIX}/multicast`, async (res, req) => {
   let comms = {res, req};
   try {
@@ -128,17 +131,49 @@ const app = uApp({
 .post(`${process.env.V1_PREFIX}/send`, async (res, req) => {
   let comms = {res, req};
   try {
-    new RestRoute(comms).authorizeUser().send()
+    new RestRoute(comms).authorizeUser('msgxc_admin,admin').send()
   } catch (ex) {
     debugHTTP(ex)
     nats.natsLogger.error({...comms, error: ex});
     Route.abort(res, ex);
   }
 })
-.post(`${process.env.V1_PREFIX}/native/subscribe`, async (res, req) => {
+//ENLIST A DEVICE OR PROTOCOL
+.post(`${process.env.V1_PREFIX}/enlist`, async (res, req) => {
+  let comms = {res, req};
+  try {
+    new RestRoute(comms).authorizeUser().enlist()
+  } catch (ex) {
+    debugHTTP(ex)
+    nats.natsLogger.error({...comms, error: ex});
+    Route.abort(res, ex);
+  }
+})
+//THREAD MESSAGING
+.post(`${process.env.V1_PREFIX}/publish`, async (res, req) => {
+  let comms = {res, req};
+  try {
+    new RestRoute(comms).authorizeUser().publish()
+  } catch (ex) {
+    debugHTTP(ex)
+    nats.natsLogger.error({...comms, error: ex});
+    Route.abort(res, ex);
+  }
+})
+.post(`${process.env.V1_PREFIX}/subscribe`, async (res, req) => {
   let comms = {res, req};
   try {
     new RestRoute(comms).authorizeUser().subscribe()
+  } catch (ex) {
+    debugHTTP(ex)
+    nats.natsLogger.error({...comms, error: ex});
+    Route.abort(res, ex);
+  }
+})
+.post(`${process.env.V1_PREFIX}/unsubscribe`, async (res, req) => {
+  let comms = {res, req};
+  try {
+    new RestRoute(comms).authorizeUser().unsubscribe()
   } catch (ex) {
     debugHTTP(ex)
     nats.natsLogger.error({...comms, error: ex});
@@ -159,6 +194,21 @@ const app = uApp({
 .get(`${process.env.V1_PREFIX}/ping`, (res) => {
   res.writeStatus(httpCodes.OK);       
   res.end(httpCodes.OK);  
+})
+//OPTIONS - CORS
+.options(`${process.env.V1_PREFIX}/*`, (res, req) => {
+  res.writeStatus(httpCodes.OK);       
+  res.writeHeader("Content-Type", "application/json")
+  res.writeHeader("Access-Control-Allow-Origin", "*") //TODO: Update CORS
+  res.writeHeader("Access-Control-Allow-Methods", "GET, POST, HEAD, DELETE, PUT")
+  res.writeHeader("Access-Control-Allow-Headers", "Content-Type, Header, Authorization, Accept, User")
+  res.writeHeader("Access-Control-Allow-Credentials", "true")
+  res.writeHeader("Access-Control-Max-Age", "1728000")
+  res.writeHeader("Vary", "Accept-Encoding, Origin")
+  res.writeHeader("Keep-Alive", "timeout=2, max=100")
+  res.writeHeader("Connection", "Keep-Alive")
+  res.writeHeader("Author", "SFPL")
+  res.end();  
 })
 //CATCH ALL
 .any(`${process.env.V1_PREFIX}/*`, (res, req) => {

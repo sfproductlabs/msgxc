@@ -129,6 +129,17 @@ Subscribes a user to native messaging using their current device.
 or
 
 {"os": "android", "token": "e_nslPZejyM:APA91bHR-znf4EuSIKeY9dzlX4cupXA5cdsW1SzOHUFRrsteaL5WDuzsh_cnpVpQC3IPcewl_v3N0kbArC67UTEW_ENt5Ej5Sn0qi1RoRHv5beLNi9y4OzZ__T3SH3tW5gwqxn2Hap01"}
+
+or
+
+{
+  endpoint: 'https://fcm.googleapis.com/fcm/send/czVGxJOoycA:APA91bGZt8FZU2fEAnDCr1PdRb7HDtayoGDUO1dy6vjTu1sDKhGAAB0i2nXw_jGKhnzmh5rmK4klsyaRQaUpM0oS0VYGBCTTpF-nkP67UEW7BX9o7vNatcPuiG-yHa75hXE80B5F7DNi',
+  expirationTime: null,
+  keys: {
+    p256dh: 'BN81HfHxzt4V4lXDV_2ia8Rl_QvqofvoNI7_MOHCiOMEYuFXFNDBOJzKCCj2nzK5luwnH6rvBCN2jx7lNHpraaw',
+    auth: '0ywNrBxQ-rm4skkHDJB5lw'
+  }
+}
 ```
 
 **Correct Response:**
@@ -138,8 +149,8 @@ or
 
 - [ ] Processing in batches
 - [ ] Multicast using elastic search (instead of slower CQL)
-- [ ] Add web notifications and SMS (Amazon/Twilio)
-- [ ] Add WebSocket
-- [ ] Think about gRPC
-- [ ] Add email fallback w/ templated options (inc. scheduling options)
+- [x] Add web notifications and SMS (Amazon/Twilio)
+- [x] Add WebSocket
+- [x] ~~Think about gRPC~~ waste of time
+- [x] Add email fallback w/ templated options (inc. scheduling options)
 - [ ] Add "last read" to each method, and ensure not sent in WebSocket first.

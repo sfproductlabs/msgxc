@@ -30,8 +30,9 @@
     "apidoc": "apidoc -i app-api -o app-api/apidoc/apidoc",
     "gencerts": "openssl req -x509 -newkey rsa:2048 -keyout .setup/keys/staging/key.pem -out .setup/keys/staging/cert.pem -days 999 -nodes",
     "debug": "DEBUG=* node --trace-warnings index.js ",
-    "adebug": "DEBUG=* LD_PRELOAD=/usr/lib/llvm-7/lib/clang/7.0.1/lib/linux/libclang_rt.asan-x86_64.so npm run debug",
-    "cdebug": "LD_PRELOAD=/usr/lib/llvm-7/lib/clang/7.0.1/lib/linux/libclang_rt.asan-x86_64.so gdb node"
+    "adebug": "PROJECT=sfpl DEBUG=* LD_PRELOAD=/usr/lib/llvm-7/lib/clang/7.0.1/lib/linux/libclang_rt.asan-x86_64.so npm run debug",
+    "cdebug": "LD_PRELOAD=/usr/lib/llvm-7/lib/clang/7.0.1/lib/linux/libclang_rt.asan-x86_64.so gdb node",
+    "vapid" : "web-push generate-vapid-keys"
   },
   "dependencies": {
     "@sendgrid/mail": "^6.3.1",
@@ -54,7 +55,8 @@
     "route-matcher": "^0.1.0",
     "twilio": "^3.36.0",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v17.0.0",
-    "uuid": "^3.3.3"
+    "uuid": "^3.3.3",
+    "web-push": "^3.4.3"
   },
   "devDependencies": {
     "apidoc": "^0.17.5",
