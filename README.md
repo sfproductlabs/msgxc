@@ -249,7 +249,7 @@ Written in collaboration with the wonderful people...
 
 ## TODO
 
-- [ ] Request -> Prioritization -> Triage (write [messageid/dateuuid, owner]; [owner, msgs], [option Realtime, Nearline, scheduled, failed], [tracking,capture,reporting,recall])
+- [ ] Triage. Request -> Prioritization -> Triage (write [messageid/dateuuid, owner]; [owner, msgs], [option Realtime, Nearline, scheduled, failed], [tracking,capture,reporting,recall])
 - [ ] Scheduler
 - [ ] Processing in batches
 - [ ] Multicast using elastic search (instead of slower CQL)
