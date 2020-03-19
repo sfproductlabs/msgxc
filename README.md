@@ -1,6 +1,6 @@
 # Messaging Exchange for Node.js
 
-Multi-modal messaging inc. native push, web push, fcm, gcm, apn, sms, email with reports in Python & PySpark. Subsystem of the SFPL growth and experimentation framework.
+Multi-modal messaging inc. native push, websockets, web push, fcm, gcm, apn, sms, email with reports in Python & PySpark. Subsystem of the SFPL growth and experimentation framework.
 
 ### &#x1F534; Important &#x1F534;
 ```diff
