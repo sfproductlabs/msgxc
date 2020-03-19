@@ -17,7 +17,7 @@ Tracking messaging like we do the rest of internet traffic is essential to under
 * Native Android and iOS notifications https://github.com/sfproductlabs/msgxc/blob/master/examples/xcrn/push.js
 * Websockets https://github.com/sfproductlabs/msgxc/blob/master/examples/xcwww/src/realtime/index.js
 * Web Push Notifications https://github.com/sfproductlabs/msgxc/blob/6d12d44c7ff86e123844ea6c3062fb07304ac00c/examples/xcwww/src/serviceWorker.js#L61
-* Email, SMS (work to your email)
+* Email, SMS (work to your email/cell phone)
 
 Using the schema https://github.com/sfproductlabs/msgxc/tree/master/xcs/.setup/schema/cassandra and example data https://github.com/sfproductlabs/msgxc/blob/master/xcs/.setup/schema/cassandra/data.1.test.cql  
 
@@ -31,7 +31,7 @@ docker-compose up
 
 **Setup**
 
-Change the connection parameters to Google FCM/GCM, Sendgrid, Apple, etc. and write your own .env file.
+Change the connection parameters to Google FCM/GCM, Sendgrid, Apple, Twilio, etc. and write your own .env file.
 https://github.com/sfproductlabs/msgxc/blob/master/xcs/.env.sample
 
 **Run**
