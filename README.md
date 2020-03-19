@@ -20,7 +20,7 @@ Tracking messaging like we do the rest of internet traffic is essential to under
 * Web Push Notifications https://github.com/sfproductlabs/msgxc/blob/6d12d44c7ff86e123844ea6c3062fb07304ac00c/examples/xcwww/src/serviceWorker.js#L61
 * Email, SMS (work to your email/cell phone)
 
-Using the schema https://github.com/sfproductlabs/msgxc/tree/master/xcs/.setup/schema/cassandra and example data https://github.com/sfproductlabs/msgxc/blob/master/xcs/.setup/schema/cassandra/data.1.test.cql  
+Using the schema https://github.com/sfproductlabs/msgxc/tree/master/xcs/.setup/schema/cassandra and example data https://github.com/sfproductlabs/msgxc/blob/master/xcs/.setup/schema/cassandra/data.1.test.cql  (see also https://github.com/sfproductlabs/msgxc/blob/master/xcs/README.md#a-deeper-look-at-the-schema).
 
 ### Quickstart
 
