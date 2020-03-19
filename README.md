@@ -238,6 +238,10 @@ opts _Optional_
 **Correct Response:**
 ```true```
 
+## Credits
+
+Written in collaboration with the wonderful people...
+
 ## TODO
 
 - [ ] Request -> Prioritization -> Triage (write [messageid/dateuuid, owner]; [owner, msgs], [option Realtime, Nearline, scheduled, failed], [tracking,capture,reporting,recall])
