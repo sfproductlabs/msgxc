@@ -1,6 +1,5 @@
 const webpush = require('web-push');
-
-webpush.setGCMAPIKey(process.env.GOOGLE_FIREBASE_API_KEY);
+if (process.env.GOOGLE_FIREBASE_API_KEY) webpush.setGCMAPIKey(process.env.GOOGLE_FIREBASE_API_KEY);
 webpush.setVapidDetails(`mailto:${process.env.WEB_PUSH_EMAIL}`, process.env.PUBLIC_VAPID_KEY, process.env.PRIVATE_VAPID_KEY);
 
 class WPN {
