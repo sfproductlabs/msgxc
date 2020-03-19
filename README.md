@@ -21,6 +21,14 @@ Tracking messaging like we do the rest of internet traffic is essential to under
 
 Using the schema https://github.com/sfproductlabs/msgxc/tree/master/xcs/.setup/schema/cassandra and example data https://github.com/sfproductlabs/msgxc/blob/master/xcs/.setup/schema/cassandra/data.1.test.cql  
 
+### Quickstart
+
+Run
+
+```
+docker-compose up
+```
+
 ### Components
 
 * Realtime
