@@ -254,7 +254,8 @@ CREATE TABLE mthreads (
     mtypes set<text>,  --message type (ws - websocket,apn - apple push ios,fcm - firebase/android,wpn - web push notification,sms,em - email,emw - email weekly,emd - email daily, emm - email monthly) 
     mtempl map<text, text>, --default template eg. {email,00001} --template text, --use a url for now
     fmtypes set<text>, --  specific faluire / fallback mtypes (to override app defaults)
-    cats set<text>, --categories   
+    cats set<text>, --categories
+    urgency int,   
     ephemeral int, --seconds until expiry (null == keep)
     archived boolean,
   --PERMISSIONS
@@ -292,6 +293,7 @@ create table mtriage (
   subject text,
   msg text,
   data text,
+  urgency int,   
   template text, --use a url for now 
   rel text, 
   ver int, --version
@@ -348,6 +350,7 @@ create table mstore (
   subject text,
   msg text,
   data text,
+  urgency int,   
   template text, --use a url for now 
   rel text, 
   ver int, --version
