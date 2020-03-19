@@ -37,7 +37,7 @@ This will install Elassandra (Cassandra) and Nats, and initialize the database w
 Change the connection parameters to Google FCM/GCM, Sendgrid, Apple, Twilio, etc. and write your own .env file.
 https://github.com/sfproductlabs/msgxc/blob/master/xcs/.env.sample
 
-**Run**
+**Run the service**
 
 Go into /xcs
 
