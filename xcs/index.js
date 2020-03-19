@@ -207,6 +207,7 @@ const app = uApp({
   res.writeHeader("Vary", "Accept-Encoding, Origin")
   res.writeHeader("Keep-Alive", "timeout=2, max=100")
   res.writeHeader("Connection", "Keep-Alive")
+  res.writeHeader("Author", "SFPL")
   res.end();  
 })
 //CATCH ALL
