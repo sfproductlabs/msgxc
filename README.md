@@ -29,6 +29,8 @@ Using the schema https://github.com/sfproductlabs/msgxc/tree/master/xcs/.setup/s
 docker-compose up
 ```
 
+This will install Elassandra (Cassandra) and Nats, and initialize the database with the schema above.
+
 **Setup**
 
 Change the connection parameters to Google FCM/GCM, Sendgrid, Apple, Twilio, etc. and write your own .env file.
