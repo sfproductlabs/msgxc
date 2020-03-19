@@ -1,4 +1,4 @@
-# Messaging Exchange and Event Bus for Node.js & Python
+# Messaging Exchange and Event Bus for Node.js & Reports in Python, PySpark
 
 ### &#x1F534; Important &#x1F534;
 ```diff
@@ -6,12 +6,12 @@
 ```
 ## Design
 
-Request -> Prioritization -> Triage (write [messageid/dateuuid, owner]; [owner, msgs], [option Realtime, Nearline, scheduled, failed], [capture,reporting,recall])
+Request -> Prioritization -> Triage (write [messageid/dateuuid, owner]; [owner, msgs], [option Realtime, Nearline, scheduled, failed], [tracking,capture,reporting,recall])
 
 ### Components
 
 * Realtime
-  * Websockets (Socket.io, uWebSockets)
+  * Websockets
   * Web Notifications
   * Native Messaging
 * Nearline
@@ -41,7 +41,9 @@ Request -> Prioritization -> Triage (write [messageid/dateuuid, owner]; [owner, 
 
 Run ```docker-compose up``` in the root of this project to get elassandra (cassandra with elastic search), and NATS.io working.
 
-### API
+## API
+
+### User Functions
 
 #### GETs
 
@@ -56,6 +58,91 @@ Checks whether the server is up.
 **Correct Response:**
 ```200```
 
+
+#### POSTs
+
+##### Enlist
+_Requires Any JWT_
+```
+/api/v1/enlist
+```
+
+Enlists a user's devices including web-browsers, native android/os, to receive messages.
+
+**Request body:**
+```
+{"os": "ios", "token": "ad62ea6ea23d6974871cf59a06cbdb2783b85adbafe3355c0007362249d3e75c"}
+
+*or*
+
+{"os": "android", "token": "e_nslPZejyM:APA91bHR-znf4EuSIKeY9dzlX4cupXA5cdsW1SzOHUFRrsteaL5WDuzsh_cnpVpQC3IPcewl_v3N0kbArC67UTEW_ENt5Ej5Sn0qi1RoRHv5beLNi9y4OzZ__T3SH3tW5gwqxn2Hap01"}
+
+*or*
+
+{
+  endpoint: 'https://fcm.googleapis.com/fcm/send/czVGxJOoycA:APA91bGZt8FZU2fEAnDCr1PdRb7HDtayoGDUO1dy6vjTu1sDKhGAAB0i2nXw_jGKhnzmh5rmK4klsyaRQaUpM0oS0VYGBCTTpF-nkP67UEW7BX9o7vNatcPuiG-yHa75hXE80B5F7DNi',
+  expirationTime: null,
+  keys: {
+    p256dh: 'BN81HfHxzt4V4lXDV_2ia8Rl_QvqofvoNI7_MOHCiOMEYuFXFNDBOJzKCCj2nzK5luwnH6rvBCN2jx7lNHpraaw',
+    auth: '0ywNrBxQ-rm4skkHDJB5lw'
+  }
+}
+```
+
+**Correct Response:**
+```true```
+
+##### Publish
+_Requires Any JWT_
+```
+/api/v1/publish
+```
+
+Publish a message to a thread (this sends a message to the mthread).
+
+**Request body:**
+```
+{"tid": "5ae3c890-5e55-11ea-9283-4fa18a847130", "msg":"the message you want to send", "opts", { }}
+```
+
+**Correct Response:**
+```true```
+
+
+##### Subscribe
+_Requires Any JWT_
+```
+/api/v1/subscribe
+```
+
+Subscribe a user to a thread (this adds a user to the subs column in mthreads).
+
+**Request body:**
+```
+{"tid": "5ae3c890-5e55-11ea-9283-4fa18a847130"}
+```
+
+**Correct Response:**
+```true```
+
+
+##### Unubscribe
+_Requires Any JWT_
+```
+/api/v1/unsubscribe
+```
+
+Unsubscribe a user from a thread (this removes a user from the subs column in mthreads).
+
+**Request body:**
+```
+{"tid": "5ae3c890-5e55-11ea-9283-4fa18a847130"}
+```
+
+**Correct Response:**
+```true```
+
+### Admin Functions
 
 #### POSTs
 
@@ -96,7 +183,7 @@ opts _Optional_
 ```true```
 
 ##### SEND
-_Requires Any JWT_
+_Requires Admin JWT_
 ```
 /api/v1/send
 ```
@@ -114,39 +201,9 @@ opts _Optional_
 **Correct Response:**
 ```true```
 
-##### SUBSCRIBE-NATIVE
-_Requires Any JWT_
-```
-/api/v1/native/subscribe
-```
-
-Subscribes a user to native messaging using their current device.
-
-**Request body:**
-```
-{"os": "ios", "token": "ad62ea6ea23d6974871cf59a06cbdb2783b85adbafe3355c0007362249d3e75c"}
-
-or
-
-{"os": "android", "token": "e_nslPZejyM:APA91bHR-znf4EuSIKeY9dzlX4cupXA5cdsW1SzOHUFRrsteaL5WDuzsh_cnpVpQC3IPcewl_v3N0kbArC67UTEW_ENt5Ej5Sn0qi1RoRHv5beLNi9y4OzZ__T3SH3tW5gwqxn2Hap01"}
-
-or
-
-{
-  endpoint: 'https://fcm.googleapis.com/fcm/send/czVGxJOoycA:APA91bGZt8FZU2fEAnDCr1PdRb7HDtayoGDUO1dy6vjTu1sDKhGAAB0i2nXw_jGKhnzmh5rmK4klsyaRQaUpM0oS0VYGBCTTpF-nkP67UEW7BX9o7vNatcPuiG-yHa75hXE80B5F7DNi',
-  expirationTime: null,
-  keys: {
-    p256dh: 'BN81HfHxzt4V4lXDV_2ia8Rl_QvqofvoNI7_MOHCiOMEYuFXFNDBOJzKCCj2nzK5luwnH6rvBCN2jx7lNHpraaw',
-    auth: '0ywNrBxQ-rm4skkHDJB5lw'
-  }
-}
-```
-
-**Correct Response:**
-```true```
-
 ## TODO
 
+- [ ] Scheduler
 - [ ] Processing in batches
 - [ ] Multicast using elastic search (instead of slower CQL)
 - [x] Add web notifications and SMS (Amazon/Twilio)
