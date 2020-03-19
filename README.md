@@ -179,7 +179,7 @@ Unsubscribe a user from a thread (this removes a user from the subs column in mt
 **Correct Response:**
 ```true```
 
-### Admin Functions
+### Admin Functions (without audting)
 
 #### POSTs
 
