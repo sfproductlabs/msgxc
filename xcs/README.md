@@ -7,14 +7,19 @@
 
 ## A deeper look at the schema
 
+### Current schema and tests
 https://github.com/sfproductlabs/msgxc/tree/master/xcs/.setup/schema/cassandra
+
+### Initial Schema
 https://github.com/sfproductlabs/msgxc/blob/master/xcs/.setup/schema/cassandra/schema.1.cql
 
-with test data
+### Schema test data
 
 https://github.com/sfproductlabs/msgxc/blob/master/xcs/.setup/schema/cassandra/data.1.test.cql
 
-### mthread
+### Schema Specifics
+
+#### mthread
 
 A first class object in msgxc is a thread (mthread) and describes a conversation:
 * subscribers (**subs*** message recipients)
@@ -23,7 +28,7 @@ A first class object in msgxc is a thread (mthread) and describes a conversation
 * mtypes (messaging technologies/devices supported ex. sms, or websockets)
 * prefs (user specific device preferences ex. only send me sms)
 
-### message (mstore & mtriage)
+#### message (mstore & mtriage)
 
 A message. Stored in triage (a message in the process of sending), or in the store (archive of messages). Contains the history of a message and the specifics including growth & tracking parameters (https://github.com/sfproductlabs/tracker).
 
