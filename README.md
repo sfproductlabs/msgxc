@@ -5,11 +5,11 @@
 
 # Messaging Exchange for Node.js
 
+**Essentially this is Optimizely for messaging**
+
 Multi-modal messaging inc. native push, websockets, web push, fcm, gcm, apn, sms, email with reports in Python & PySpark. Subsystem of the SFPL growth and experimentation framework.
 
 ## Design
-
-**Essentially this is Optimizely for messaging**
 
 Tracking messaging like we do the rest of internet traffic is essential to understanding our customers and optimizing growth. Messaging exchange (MSGXC) is a central system for dispatching and tracking (see https://github.com/sfproductlabs/tracker) all messgaing (currently supports iOS native, Android native, SMS, Email, Websockets, WebPush Notifications).
 
