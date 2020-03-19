@@ -1,12 +1,16 @@
 # Messaging Exchange and Event Bus for Node.js & Reports in Python, PySpark
 
+Subsystem of the SFPL growth and experimentation framework.
+
 ### &#x1F534; Important &#x1F534;
 ```diff
 - This project is a work in progress. Please come back shortly.
 ```
 ## Design
 
-Request -> Prioritization -> Triage (write [messageid/dateuuid, owner]; [owner, msgs], [option Realtime, Nearline, scheduled, failed], [tracking,capture,reporting,recall])
+**Essentially this is Optimizely for messaging**
+
+Tracking messaging like we do the rest of internet traffic is essential to understanding our customers and optimizing growth. Messaging exchange (MSGXC) is a central system for dispatching and tracking all messgaing (currently supports iOS native, Android native, SMS, Email, Websockets, WebPush Notifications).
 
 ### Components
 
@@ -25,7 +29,7 @@ Request -> Prioritization -> Triage (write [messageid/dateuuid, owner]; [owner, 
   * Native messaging receipts
 * Offline
   * PySpark Reports
-  * Scheduler
+* Scheduler
 
 
 ### Urgency
@@ -203,6 +207,7 @@ opts _Optional_
 
 ## TODO
 
+- [ ] Request -> Prioritization -> Triage (write [messageid/dateuuid, owner]; [owner, msgs], [option Realtime, Nearline, scheduled, failed], [tracking,capture,reporting,recall])
 - [ ] Scheduler
 - [ ] Processing in batches
 - [ ] Multicast using elastic search (instead of slower CQL)
