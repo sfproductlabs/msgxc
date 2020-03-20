@@ -1,16 +1,50 @@
-# Messaging Exchange and Event Bus for Node.js & Reports in Python, PySpark
-
-Subsystem of the SFPL growth and experimentation framework.
-
 ### &#x1F534; Important &#x1F534;
 ```diff
 - This project is a work in progress. Please come back shortly.
 ```
-## Design
+
+# Messaging Exchange for Node.js
 
 **Essentially this is Optimizely for messaging**
 
-Tracking messaging like we do the rest of internet traffic is essential to understanding our customers and optimizing growth. Messaging exchange (MSGXC) is a central system for dispatching and tracking all messgaing (currently supports iOS native, Android native, SMS, Email, Websockets, WebPush Notifications).
+Multi-modal messaging inc. native push, websockets, web push, fcm, gcm, apn, sms, email with reports in Python & PySpark. Subsystem of the SFPL growth and experimentation framework.
+
+## Design
+
+Tracking messaging like we do the rest of internet traffic is essential to understanding our customers and optimizing growth. Messaging exchange (MSGXC) is a central system for dispatching and tracking (see https://github.com/sfproductlabs/tracker) all messgaing (currently supports iOS native, Android native, SMS, Email, Websockets, WebPush notifications).
+
+### Examples
+
+* Native Android and iOS notifications https://github.com/sfproductlabs/msgxc/blob/master/examples/xcrn/push.js
+* Websockets https://github.com/sfproductlabs/msgxc/blob/master/examples/xcwww/src/realtime/index.js
+* Web Push Notifications https://github.com/sfproductlabs/msgxc/blob/6d12d44c7ff86e123844ea6c3062fb07304ac00c/examples/xcwww/src/serviceWorker.js#L61 & https://github.com/sfproductlabs/msgxc/blob/master/examples/xcwww/public/sw.js
+* Email, SMS (work to your email/cell phone)
+
+Using the schema https://github.com/sfproductlabs/msgxc/tree/master/xcs/.setup/schema/cassandra and example data https://github.com/sfproductlabs/msgxc/blob/master/xcs/.setup/schema/cassandra/data.1.test.cql  (see also https://github.com/sfproductlabs/msgxc/blob/master/xcs/README.md#a-deeper-look-at-the-schema).
+
+### Quickstart
+
+**Run dependencies**
+
+```
+docker-compose up
+```
+
+This will install Elassandra (Cassandra) and Nats, and initialize the database with the schema above.
+
+**Setup**
+
+Change the connection parameters to Google FCM/GCM, Sendgrid, Apple, Twilio, etc. and write your own .env file.
+https://github.com/sfproductlabs/msgxc/blob/master/xcs/.env.sample
+
+**Run the service**
+
+Go into /xcs
+
+```
+npm start
+```
+
 
 ### Components
 
@@ -146,7 +180,7 @@ Unsubscribe a user from a thread (this removes a user from the subs column in mt
 **Correct Response:**
 ```true```
 
-### Admin Functions
+### Admin Functions (without audting)
 
 #### POSTs
 
@@ -205,9 +239,17 @@ opts _Optional_
 **Correct Response:**
 ```true```
 
+## Schema
+
+https://github.com/sfproductlabs/msgxc/blob/master/xcs/README.md#a-deeper-look-at-the-schema
+
+## Credits
+
+Written in collaboration with the wonderful people...
+
 ## TODO
 
-- [ ] Request -> Prioritization -> Triage (write [messageid/dateuuid, owner]; [owner, msgs], [option Realtime, Nearline, scheduled, failed], [tracking,capture,reporting,recall])
+- [ ] Triage. Request -> Prioritization -> Triage (write [messageid/dateuuid, owner]; [owner, msgs], [option Realtime, Nearline, scheduled, failed], [tracking,capture,reporting,recall])
 - [ ] Scheduler
 - [ ] Processing in batches
 - [ ] Multicast using elastic search (instead of slower CQL)
