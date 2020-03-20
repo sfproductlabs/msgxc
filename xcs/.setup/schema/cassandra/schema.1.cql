@@ -250,11 +250,12 @@ CREATE TABLE mthreads (
     alias text, --human identifier
     name text, --human readable name
     post text, --note/description of thread/post
-    mcert mcert,
-    mtypes set<text>,  --message type (ws - websocket,apn - apple push ios,fcm - firebase/android,wpn - web push notification,sms,em - email,emw - email weekly,emd - email daily, emm - email monthly) 
     mtempl map<text, text>, --default template eg. {email,00001} --template text, --use a url for now
-    fmtypes set<text>, --  specific faluire / fallback mtypes (to override app defaults)
+    mcert mcert,
     cats set<text>, --categories
+    mtypes set<text>,  --message type (ws - websocket,apn - apple push ios,fcm - firebase/android,wpn - web push notification,sms,em - email,emw - email weekly,emd - email daily, emm - email monthly) 
+    fmtypes set<text>, --  specific faluire / fallback mtypes (to override app defaults)
+    cmtypes set<text>, --  specific mtypes for anything with a pmid (child messages, to override app defaults)
     urgency int,   
     ephemeral int, --seconds until expiry (null == keep)
     archived boolean,
@@ -267,16 +268,17 @@ CREATE TABLE mthreads (
     openp boolean, --publicly publishable, still add uid to pubs [Default: false]
     --Priority LOW
     perms set<frozen<perm>>, --additional perms
-    --RECIPIENTS
+  --RECIPIENTS
     broadcast boolean,
-    ftrack boolean, --track failed deliveries
-    strack boolean, --track successful deliveries
     subs set<uuid>, --admins+writers+subs=subs (only this index required to subscribe)
     pubs set<uuid>, --uids who can publish to admins+pubs=pubs (only this index required to publish)
     prefs map<uuid, frozen<set<text>>>, --msg preferences (user,mtypes) apn,~,wpn etc.  
-    --INTEREST
+    ftrack boolean, --track failed deliveries
+    strack boolean, --track successful deliveries
+  --INTEREST
     interest map<text, int>, -- Ex. { hearts : 44 , views : 55, clicks etc.}  
-    --OWNER
+  --OWNER
+    deleted timestamp,
     created timestamp,
     org uuid,
     owner uuid,
@@ -288,26 +290,41 @@ CREATE TABLE mthreads (
 
 --IF threadid==messageid = 1st Messsage!!!
 create table mtriage (
+  --MESSAGE
   tid timeuuid, --threadid
   mid timeuuid, --message id
+  pmid timeuuid, --parent message id = CHILD
   subject text,
-  msg text,
-  data text,
-  urgency int,   
-  template text, --use a url for now 
-  rel text, 
-  ver int, --version
-  schedule timestamp,
+  msg text, --text
+  data text, --json
+  urgency int,  
+  sys boolean, --system message 
+  broadcast boolean,
+  mtempl text, --use a url for now (see mthreads)
+  repl map<text,text>, --text to replace ex Hi {{fn}} -> becomes -> Hi Andrew, Prepend "text." to use Raw text instead of the user record Ex. {{text.msg}}. Only start off with one "text." message body in Admin UI (text.msg)
+  --SCHEDULE
+  svc text, --Ex. SES, 'message', 'sms, 'action'
+  qid timeuuid, --executing queue id -- IMPORTANT !!!!
+  srcid timeuuid, --source id Ex. message-id
+  srckey text, --source id, audit id, inc. external Ex. SES message-id
+  meta map<text,text>, --METADATA, SPLIT etc.
+  scheduled timestamp,
   started timestamp,
   completed timestamp,
-  ptyp text, 
-  auth text, --author
-  xid text, --experiment id 
+  --AUDITING
   mtypes set<text>, --attempted mtypes (update after actually sent)
-  broadcast boolean,
   users set<uuid>, --keep this here for pull mid > lastloggedin
   deliveries set<uuid>, --uid delivered, update after ACK of wsocket
   failures set<uuid>, --uid failures
+  --TRACKING
+  app text, --app 
+  rel text, 
+  ver int, --version
+  ptyp text, 
+  etyp text,
+  ename text,
+  auth text, --author
+  xid text, --experiment id 
   cohorts set<text>,
   split decimal, --% random 1=1%
   source text,
@@ -319,16 +336,10 @@ create table mtriage (
   promo text, --promo code to pass through
   ref uuid, --referrer uid (Select)
   aff text, --affiliate uname or code (Select)
-  repl map<text,text>, --text to replace ex Hi {{fn}} -> becomes -> Hi Andrew, Prepend "text." to use Raw text instead of the user record Ex. {{text.msg}}. Only start off with one "text." message body in Admin UI (text.msg)
   --PERMISSIONS
   perms set<frozen<perm>>, --additional perms 
-  --REQUEST OWNER
-  app text, --app 
-  svc text, --Ex. SES, 'message', 'sms, 'action'
-  qid timeuuid, --executing queue id -- IMPORTANT !!!!
-  srcid timeuuid, --source id Ex. message-id
-  srckey text, --source id, audit id, inc. external Ex. SES message-id
-  meta map<text,text>, --METADATA, SPLIT etc.
+  --OWNERSHIP
+  deleted timestamp,
   keep boolean, --keep this message on the server
   createdms bigint, --INDEX and use this for last-seen & alerts ALONGWITH users
   created timestamp,
@@ -339,32 +350,47 @@ create table mtriage (
   PRIMARY KEY ((tid), mid)
 )
 WITH CLUSTERING ORDER BY (mid DESC)
-AND default_time_to_live = 1209600 --Tombstones after 2 weeks
+AND default_time_to_live = 3628800 --Tombstones after 6 weeks
 AND GC_GRACE_SECONDS = 3600; --Force regular tombstone clearouts
 
 --PERMANENT ARCHIVE
 --IF threadid==messageid = 1st Messsage!!!
 create table mstore (
+  --MESSAGE
   tid timeuuid, --threadid
   mid timeuuid, --message id
+  pmid timeuuid, --parent message id = CHILD
   subject text,
-  msg text,
-  data text,
-  urgency int,   
-  template text, --use a url for now 
-  rel text, 
-  ver int, --version
-  schedule timestamp,
+  msg text, --text
+  data text, --json
+  urgency int,  
+  sys boolean, --system message 
+  broadcast boolean,
+  mtempl text, --use a url for now (see mthreads)
+  repl map<text,text>, --text to replace ex Hi {{fn}} -> becomes -> Hi Andrew, Prepend "text." to use Raw text instead of the user record Ex. {{text.msg}}. Only start off with one "text." message body in Admin UI (text.msg)
+  --SCHEDULE
+  svc text, --Ex. SES, 'message', 'sms, 'action'
+  qid timeuuid, --executing queue id -- IMPORTANT !!!!
+  srcid timeuuid, --source id Ex. message-id
+  srckey text, --source id, audit id, inc. external Ex. SES message-id
+  meta map<text,text>, --METADATA, SPLIT etc.
+  scheduled timestamp,
   started timestamp,
   completed timestamp,
-  ptyp text, 
-  auth text, --author
-  xid text, --experiment id 
+  --AUDITING
   mtypes set<text>, --attempted mtypes (update after actually sent)
-  broadcast boolean,
   users set<uuid>, --keep this here for pull mid > lastloggedin
   deliveries set<uuid>, --uid delivered, update after ACK of wsocket
   failures set<uuid>, --uid failures
+  --TRACKING
+  app text, --app 
+  rel text, 
+  ver int, --version
+  ptyp text, 
+  etyp text,
+  ename text,
+  auth text, --author
+  xid text, --experiment id 
   cohorts set<text>,
   split decimal, --% random 1=1%
   source text,
@@ -376,23 +402,17 @@ create table mstore (
   promo text, --promo code to pass through
   ref uuid, --referrer uid (Select)
   aff text, --affiliate uname or code (Select)
-  repl map<text,text>, --text to replace ex Hi {{fn}} -> becomes -> Hi Andrew, Prepend "text." to use Raw text instead of the user record Ex. {{text.msg}}. Only start off with one "text." message body in Admin UI (text.msg)
   --PERMISSIONS
   perms set<frozen<perm>>, --additional perms 
-  --REQUEST OWNER
-  app text, --app 
-  svc text, --Ex. SES, 'message', 'sms, 'action'
-  qid timeuuid, --executing queue id -- IMPORTANT !!!!
-  srcid timeuuid, --source id Ex. message-id
-  srckey text, --source id, audit id, inc. external Ex. SES message-id
-  meta map<text,text>, --METADATA, SPLIT etc.
+  --OWNERSHIP
+  deleted timestamp,
   keep boolean, --keep this message on the server
   createdms bigint, --INDEX and use this for last-seen & alerts ALONGWITH users
   created timestamp,
   org uuid,
   owner uuid,
   updated timestamp,
-  updater uuid,
+  updater uuid, 
   --ADDITIONAL FIELDS
   interest map<text, int>, -- Ex. { hearts : 44 , views : 55, clicks etc.} 
   hide timestamp, --use ephemeral value in thread
