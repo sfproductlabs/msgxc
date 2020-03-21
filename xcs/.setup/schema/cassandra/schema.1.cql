@@ -243,6 +243,7 @@ create type perm (
   blk boolean --blacklist
 );
 
+--security audit table for join requests etc.
 CREATE TABLE msec (
     tid timeuuid, --thread id    
     secid timeuuid, --uuid for this record
