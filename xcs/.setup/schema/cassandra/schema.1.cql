@@ -243,6 +243,22 @@ create type perm (
   blk boolean --blacklist
 );
 
+CREATE TABLE msec (
+    tid timeuuid, --thread id    
+    secid timeuuid, --uuid for this record
+    perm frozen<perm>, 
+    pending boolean,
+    approver uuid,
+    approved timestamp,
+    created timestamp,
+    org uuid,
+    owner uuid,
+    updatedms bigint, --participant updated CHECK
+    updated timestamp,
+    updater uuid,
+    PRIMARY KEY ((tid), secid)
+);
+CREATE INDEX msec_pending_idx ON msec ( pending );
 
 CREATE TABLE mthreads (
   --THREAD INFO
