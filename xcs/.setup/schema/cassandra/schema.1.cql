@@ -305,6 +305,8 @@ CREATE TABLE mthreads (
     PRIMARY KEY ((tid))
 );
 
+--TRIAGE
+--Messages that are in the middle of being processed
 --IF threadid==messageid = 1st Messsage!!!
 create table mtriage (
   --MESSAGE
@@ -370,7 +372,9 @@ WITH CLUSTERING ORDER BY (mid DESC)
 AND default_time_to_live = 3628800 --Tombstones after 6 weeks
 AND GC_GRACE_SECONDS = 3600; --Force regular tombstone clearouts
 
+
 --PERMANENT ARCHIVE
+--Store for messages that have been scheduled or sent
 --IF threadid==messageid = 1st Messsage!!!
 create table mstore (
   --MESSAGE
@@ -391,7 +395,8 @@ create table mstore (
   srcid timeuuid, --source id Ex. message-id
   srckey text, --source id, audit id, inc. external Ex. SES message-id
   meta map<text,text>, --METADATA, SPLIT etc.
-  scheduled timestamp,
+  planned timestamp,
+  scheduled timestamp, --scheduled is removed once processed to limit index size
   started timestamp,
   completed timestamp,
   --AUDITING
@@ -437,6 +442,7 @@ create table mstore (
   PRIMARY KEY ((tid), mid)
 )
 WITH CLUSTERING ORDER BY (mid DESC);
+CREATE INDEX mstore_scheduled_idx ON mstore ( scheduled ); --Make scheduled null once processed
 
 create type mdevice (
   mtype text,
