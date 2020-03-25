@@ -258,3 +258,4 @@ Written in collaboration with the wonderful people...
 - [x] ~~Think about gRPC~~ waste of time
 - [x] Add email fallback w/ templated options (inc. scheduling options)
 - [ ] Add "last read" to each method, and ensure not sent in WebSocket first.
+ 
