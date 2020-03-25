@@ -4,10 +4,17 @@
 CA_DAYSVALID=30000
 
 # OTHER
+HOST_SUFFIX=sfpl.io
 STOREPASS=YInKGOL6P7kzJCx
 KEYPASS=YInKGOL6P7kzJCx
 TRUSTSTOREPASS=YInKGOL6P7kzJCx
 VALIDITY=30000
+OUTDIR=$PWD
+CA_CERT=$OUTDIR/rootCa.crt
+CA_KEY=$OUTDIR/rootCa.key
+CA_SRL=$OUTDIR/rootCa.srl
+CA_SUBJECT=/CN=rootCa/OU=PRODUCTION/O=SFPL/C=US/
+
 
 #########################################################
 
@@ -117,80 +124,33 @@ function generateTrust {
     -storepass $TRUSTSTOREPASS
 }
 
-#########################################################
-
-######## staging #########
-OUTDIR=$PWD/keys/staging
-CA_CERT=$OUTDIR/rootCa.crt
-CA_KEY=$OUTDIR/rootCa.key
-CA_SRL=$OUTDIR/rootCa.srl
-CA_SUBJECT=/CN=rootCa/OU=STAGING/O=SFPL/C=US/
-
-#ca
-generateCa
-
-#nginx
-generateModule nginx \
-  "CN=NGINX, OU=STAGING, O=SFPL, C=US" \
-  san=dns:api.staging.sfpl.com,dns:bps.staging.sfpl.com,dns:sso.staging.sfpl.com
-
-#cassandra
-generateModule cassandra-server \
-  "CN=CASSANDRA-SERVER, OU=STAGING, O=SFPL, C=US" \
-  san=dns:cassandra1.staging.sfpl.com,dns:cassandra2.staging.sfpl.com,dns:cassandra3.staging.sfpl.com
-
-generateModule cassandra-client \
-  "CN=CASSANDRA-CLIENT, OU=STAGING, O=SFPL, C=US" \
-  san=dns:cassandra-client.staging.sfpl.com
-
-generateTrust cassandra-truststore cassandra-client 
-
-#nats
-generateModule nats-server \
-  "CN=NATS-SERVER, OU=STAGING, O=SFPL, C=US" \
-  san=dns:nats1.staging.sfpl.com,dns:nats2.staging.sfpl.com,dns:nats3.staging.sfpl.com
-
-generateModule nats-client \
-  "CN=NATS-CLIENT, OU=STAGING, O=SFPL, C=US" \
-  san=dns:nats-client.staging.sfpl.com
-
-openssl genpkey -algorithm rsa -out $OUTDIR/priv.key
-openssl rsa -in $OUTDIR/priv.key -pubout -out $OUTDIR/pub.key
-
-######## production #########
-OUTDIR=$PWD/keys/production
-CA_CERT=$OUTDIR/rootCa.crt
-CA_KEY=$OUTDIR/rootCa.key
-CA_SRL=$OUTDIR/rootCa.srl
-CA_SUBJECT=/CN=rootCa/OU=PRODUCTION/O=SFPL/C=US/
-
 #ca
 generateCa
 
 #nginx
 generateModule nginx \
   "CN=NGINX, OU=PRODUCTION, O=SFPL, C=US" \
-  san=dns:api.sfpl.com,dns:bps.sfpl.com,dns:sso.sfpl.com
+  san=dns:api.$HOST_SUFFIX,dns:tr.$HOST_SUFFIX,dns:sso.$HOST_SUFFIX,dns:xcs.$HOST_SUFFIX,dns:msgxc.$HOST_SUFFIX
 
 #cassandra
 generateModule cassandra-server \
   "CN=CASSANDRA-SERVER, OU=PRODUCTION, O=SFPL, C=US" \
-  san=dns:cassandra1.sfpl.com,dns:cassandra2.sfpl.com,dns:cassandra3.sfpl.com
+  san=dns:cassandra1.$HOST_SUFFIX,dns:cassandra2.$HOST_SUFFIX,dns:cassandra3.$HOST_SUFFIX
 
 generateModule cassandra-client \
   "CN=CASSANDRA-CLIENT, OU=PRODUCTION, O=SFPL, C=US" \
-  san=dns:cassandra-client.sfpl.com
+  san=dns:cassandra-client.$HOST_SUFFIX
 
 generateTrust cassandra-truststore cassandra-client
 
 #nats
 generateModule nats-server \
   "CN=NATS-SERVER, OU=PRODUCTION, O=SFPL, C=US" \
-  san=dns:nats1.sfpl.com,dns:nats2.sfpl.com,dns:nats3.sfpl.com
+  san=dns:nats1.$HOST_SUFFIX,dns:nats2.$HOST_SUFFIX,dns:nats3.$HOST_SUFFIX
 
 generateModule nats-client \
   "CN=NATS-CLIENT, OU=PRODUCTION, O=SFPL, C=US" \
-  san=dns:nats-client.sfpl.com
+  san=dns:nats-client.$HOST_SUFFIX
 
 openssl genpkey -algorithm rsa -out $OUTDIR/priv.key
 openssl rsa -in $OUTDIR/priv.key -pubout -out $OUTDIR/pub.key
