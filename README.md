@@ -16,7 +16,7 @@ Tracking messaging like we do the rest of internet traffic is essential to under
    | [XCS](https://github.com/sfproductlabs/msgxc/tree/master/xcs) | [XAS](https://github.com/sfproductlabs/msgxc/tree/master/reporting/xas) | [XSS](https://github.com/sfproductlabs/msgxc/tree/master/scheduler/xss) |
    |---------------------------------------------------------------|:-----------------------------------------------------------------------:|:-----------------------------------------------------------------------:|
    | Dispatching messages (iOS,email etc.)                         | Experimentation and growth                                              | Manage experiment iterations and message dispatch                       |
-   | Manage thread subscriptions                                   | Provide services to large complex queries using Spark, Hive and Elastic & Cassandra (Elassandra) |  Schedule system messages                      |
+   | Manage thread subscriptions                                   | Provide services to large complex queries using Spark, Hive, Elastic & Cassandra (Elassandra) |  Schedule system messages                      |
 ### Examples
 
 * Native Android and iOS notifications https://github.com/sfproductlabs/msgxc/blob/master/examples/xcrn/push.js
