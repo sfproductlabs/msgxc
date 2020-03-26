@@ -13,10 +13,10 @@ Multi-modal messaging inc. native push, websockets, web push, fcm, gcm, apn, sms
 
 Tracking messaging like we do the rest of internet traffic is essential to understanding our customers and optimizing growth. Messaging exchange (MSGXC) is a central system for dispatching and tracking (see https://github.com/sfproductlabs/tracker) all messgaing (currently supports iOS native, Android native, SMS, Email, Websockets, WebPush notifications). It is broken into 3 main components e**X**change **C**ommunication **S**ervice (xcs - node.js); e**X**change **A**nalysis **S**ervice (xas - python); and e**X**change **S**cheduler **S**ervice (xss - pyhton).
 
-      | XCS                                   | XAS                         | XSS                                               |
-      |---------------------------------------|:---------------------------:|:-------------------------------------------------:|
-      | Dispatching messages (iOS,email etc.) | Experimentation and growth  | Manage experiment iterations and message dispatch |
-      
+   | XCS                                   | XAS                         | XSS                                               |
+   |---------------------------------------|:---------------------------:|:-------------------------------------------------:|
+   | Dispatching messages (iOS,email etc.) | Experimentation and growth  | Manage experiment iterations and message dispatch |
+
 ### Examples
 
 * Native Android and iOS notifications https://github.com/sfproductlabs/msgxc/blob/master/examples/xcrn/push.js
