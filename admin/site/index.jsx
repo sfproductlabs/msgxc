@@ -1,6 +1,7 @@
-import React from 'react';
+import React from 'reactn';
 import { render } from 'react-dom';
 import { AppContainer } from 'react-hot-loader';
+import GlobalContextProvider from "./utils/context"
 
 import 'core-js';
 
@@ -11,12 +12,12 @@ import './styles/prism.css';
 
 import App from './page';
 
-render(<AppContainer><App /></AppContainer>, document.getElementById('app'));
+render(<GlobalContextProvider><AppContainer><App /></AppContainer></GlobalContextProvider>, document.getElementById('app'));
 
 if (module.hot) {
   module.hot.accept('./page', () => {
     const App = require('./page').default;
 
-    render(<AppContainer><App /></AppContainer>, document.getElementById('app'));
+    render(<GlobalContextProvider><AppContainer><App /></AppContainer></GlobalContextProvider>, document.getElementById('app'));
   });
 }

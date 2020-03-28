@@ -5,6 +5,8 @@ export default {
   },
   reports: {
     'Basic': {
+      'upcoming-messages': require('./usage'),
+      'recent-messages': require('./usage'),
       'usage': require('./usage'),
     },    
   }

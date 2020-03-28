@@ -1,8 +1,10 @@
 module.exports = {
   page: {
     'quick-start': 'Quick Start',
-    'usage': 'Usage',
     'schedule-message' : 'Schedule a Message',
+    'upcoming-messages': 'Upcoming Messages',
+    'recent-messages': 'Recent Messages',
+    'usage': 'Usage',
   },
   misc: {
     'guide': 'Guide',
