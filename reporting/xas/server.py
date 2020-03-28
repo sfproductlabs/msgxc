@@ -4,6 +4,7 @@ from flask.json import jsonify
 from os import path, walk, getenv
 from flask_cors import CORS
 from ssl import SSLContext, PROTOCOL_TLSv1
+from elasticsearch import Elasticsearch
 
 #Setup
 ssl_opts = { 
@@ -14,6 +15,7 @@ ssl_opts = {
 context = SSLContext(PROTOCOL_TLSv1,ssl_opts=ssl_opts)
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}) #TODO: USE REAL CORS
+es = Elasticsearch()
 
 @app.route("/ping", methods=['GET'])
 def index():
@@ -26,12 +28,16 @@ def index():
 def mirror():
     return jsonify(request.get_json(force=True))
 
-@app.route("/q", methods=['POST'])
+@app.route("/q", methods=['GET'])
 def q():
     #application/json    
     ajwt = request.cookies.get('ajwt')
     resp = make_response(jsonify(id=3), 404)
     resp.headers['X-Something'] = 'A valuex'
+    res = es.search(index="mthreads", body={"query": {"match_all": {}}})
+    print("Got %d Hits:" % res['hits']['total'])
+    # for hit in res['hits']['hits']:
+    #     print("%(timestamp)s %(author)s: %(text)s" % hit["_source"])
     return resp
 
 # @app.route('/', defaults={'path': ''}, methods=['OPTIONS'])
