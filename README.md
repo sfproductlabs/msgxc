@@ -11,7 +11,12 @@ Multi-modal messaging inc. native push, websockets, web push, fcm, gcm, apn, sms
 
 ## Design
 
-Tracking messaging like we do the rest of internet traffic is essential to understanding our customers and optimizing growth. Messaging exchange (MSGXC) is a central system for dispatching and tracking (see https://github.com/sfproductlabs/tracker) all messgaing (currently supports iOS native, Android native, SMS, Email, Websockets, WebPush notifications).
+Tracking messaging like we do the rest of internet traffic is essential to understanding our customers and optimizing growth. Messaging exchange (MSGXC) is a central system for dispatching and tracking (see https://github.com/sfproductlabs/tracker) all messgaing (currently supports iOS native, Android native, SMS, Email, Websockets, WebPush notifications). It is broken into 3 main components e**X**change **C**ommunication **S**ervice (xcs - node.js); e**X**change **A**nalysis **S**ervice (xas - pyspark); and e**X**change **S**cheduler **S**ervice (xss - pyhton).
+
+   | [XCS](https://github.com/sfproductlabs/msgxc/tree/master/xcs) | [XAS](https://github.com/sfproductlabs/msgxc/tree/master/reporting/xas) | [XSS](https://github.com/sfproductlabs/msgxc/tree/master/scheduler/xss) |
+   |---------------------------------------------------------------|:-----------------------------------------------------------------------:|:-----------------------------------------------------------------------:|
+   | Dispatching messages (iOS,email etc.)                         | Experimentation and growth                                              | Manage experiment iterations and message dispatch                       |
+   | Manage thread subscriptions                                   | Provide services to large complex queries using Spark, Hive, Elastic & Cassandra (Elassandra) |  Schedule system messages                      |
 
 ### Examples
 
@@ -249,6 +254,7 @@ Written in collaboration with the wonderful people...
 
 ## TODO
 
+- [ ] Integrate with Apache Superset.
 - [ ] Triage. Request -> Prioritization -> Triage (write [messageid/dateuuid, owner]; [owner, msgs], [option Realtime, Nearline, scheduled, failed], [tracking,capture,reporting,recall])
 - [ ] Scheduler
 - [ ] Processing in batches
