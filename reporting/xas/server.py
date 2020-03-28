@@ -15,7 +15,7 @@ ssl_opts = {
 context = SSLContext(PROTOCOL_TLSv1,ssl_opts=ssl_opts)
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}) #TODO: USE REAL CORS
-es = Elasticsearch()
+es = Elasticsearch(["localhost"], sniff_on_connection_fail=True, sniffer_timeout=60)
 
 @app.route("/ping", methods=['GET'])
 def index():
