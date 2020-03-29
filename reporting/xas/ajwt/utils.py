@@ -30,12 +30,8 @@ def decode(token, secret=None, privkey=None, pubkey=None, algorithms=['RS256','H
         'verify_iat': True,
         'verify_aud': False
         }
-        try:
-            #Version 1            
-            return jwt.decode(token, secret, algorithms=algorithms, options=options)
-        except Exception as err:
-            print(err)
-            raise err
+        #Version 1            
+        return jwt.decode(token, secret, algorithms=algorithms, options=options)
     else:
         # Version 2
         copy = json.loads(token)
