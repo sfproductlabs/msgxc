@@ -47,4 +47,44 @@ def decode(token, secret=None, privkey=None, pubkey=None, algorithms=['RS256','H
             raise Exception('bad sig')
         return js
 
+def authorize(js, roles=[], rights=[], tags=[]):
+    if len(roles) == 0 and len(rights) == 0 and len(tags) == 0:
+        return { }
+    #Check roles
+    if len(roles) > 0:
+        token_roles = js.get('roles')
+        if token_roles == None:
+            temp = js.get('pub')
+            if temp != None:
+                token_roles = temp.get('roles')
+        if token_roles == None:
+            token_roles = []
+        roles_approved = [value for value in roles if value in token_roles]
+        if len(roles_approved) > 0:
+            return {'roles': roles_approved }
+    #Check rights
+    if len(rights) > 0:
+        token_rights = js.get('rights')
+        if token_rights == None:
+            temp = js.get('pub')
+            if temp != None:
+                token_rights = temp.get('rights')
+        if token_rights == None:
+            token_rights = []
+        rights_approved = [value for value in rights if value in token_rights]
+        if len(rights_approved) > 0:
+            return {'rights': rights_approved }
+    #Check tags
+    if len(tags) > 0:
+        token_tags = js.get('tags')
+        if token_tags == None:
+            temp = js.get('pub')
+            if temp != None:
+                token_tags = temp.get('tags')
+        if token_tags == None:
+            token_tags = []
+        tags_approved = [value for value in tags if value in token_tags]
+        if len(tags_approved) > 0:
+            return {'tags': tags_approved }
+    raise Exception('unauthorized')
     

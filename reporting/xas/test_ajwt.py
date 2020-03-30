@@ -26,3 +26,13 @@ def test_ajwt_v2():
     ver2 = ajwt.decode(getenv('AJWT_KEY_V2'), privkey=privKey, pubkey=pubKey, algorithms=['RS256'])
     print(ver2)
     assert None != ver2
+
+def test_ajwt_authorize_v1():
+    ver1 = ajwt.decode(getenv('AJWT_KEY_V1'), secret=getenv('APP_SECRET'), algorithms=['HS256'])
+    print(ajwt.authorize(ver1,tags=['admin']))
+    assert None != ver1
+
+def test_ajwt_authorize_v2():
+    ver2 = ajwt.decode(getenv('AJWT_KEY_V2'), privkey=privKey, pubkey=pubKey, algorithms=['RS256'])
+    print(ajwt.authorize(ver2,roles=['msgxc_admin']))
+    assert None != ver2
