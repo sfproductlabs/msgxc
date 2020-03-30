@@ -7,3 +7,7 @@ elasticsearch>=6.0.0,<7.0.0
 pytest
 pyjwt
 python-jose
+pyhive[hive]
+thrift
+pandas
+sasl
