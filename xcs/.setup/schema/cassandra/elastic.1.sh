@@ -8,6 +8,7 @@ curl -XPUT -H 'Content-Type: application/json' http://localhost:9200/msgxca -d'{
 
 curl -w "\n" -k -XDELETE "http://localhost:9200/mthreads"
 curl -w "\n" -k -XDELETE "http://localhost:9200/mtriage"
+curl -w "\n" -k -XDELETE "http://localhost:9200/mstore"
 curl -w "\n" -k -XDELETE "http://localhost:9200/mfailures"
 curl -w "\n" -k -XDELETE "http://localhost:9200/musers"
 
@@ -25,7 +26,26 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:92
     }
 }'
 
-
+# mstore - completed
+curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:9200/mstore/" -d '{
+    "settings" : { "keyspace" : "msgxc" },
+    "mappings": {
+        "mstore": {
+            "properties" : {
+                "mid": { "type": "keyword", "index": true, "cql_collection": "singleton" },
+                "subject": { "type": "keyword", "index": true, "cql_collection": "singleton" },
+                "completed": { "type": "date", "index": true, "cql_collection": "singleton" },
+                "sys": { "type": "boolean", "index": true, "cql_collection": "singleton" },
+                "broadcast": { "type": "boolean", "index": true, "cql_collection": "singleton" },
+                "scheduled": { "type": "date", "index": true, "cql_collection": "singleton" },
+                "msg": { "type": "keyword", "index": true, "cql_collection": "singleton" },
+                "owner": { "type": "keyword", "index": true, "cql_collection": "singleton" },
+                "qid": { "type": "keyword", "index": true, "cql_collection": "singleton" },
+                "createdms": { "type": "long", "index": true, "cql_collection": "singleton" }
+            }
+        }
+    }
+}'
 
 # mtriage - completed
 curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:9200/mtriage/" -d '{
