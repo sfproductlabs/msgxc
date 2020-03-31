@@ -113,7 +113,7 @@ class Threading {
       });
 
       //Check if scheduled for later
-      if (comms.obj.scheduled && comms.obj.scheduled > now) {
+      if (comms.obj.scheduled && new Date(comms.obj.scheduled).getTime() > now) {
         return true;
       }
 
