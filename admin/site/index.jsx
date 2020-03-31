@@ -12,12 +12,19 @@ import './styles/prism.css';
 
 import App from './page';
 
-render(<GlobalContextProvider><AppContainer><App /></AppContainer></GlobalContextProvider>, document.getElementById('app'));
+import Cookies from 'js-cookie'
 
-if (module.hot) {
-  module.hot.accept('./page', () => {
-    const App = require('./page').default;
+if (!Cookies.get(process.env.CLIENT_AUTH_COOKIE))  {
+  window.location.replace(process.env.LOGIN_URL);
+} else {
+  render(<GlobalContextProvider><AppContainer><App /></AppContainer></GlobalContextProvider>, document.getElementById('app'));
 
-    render(<GlobalContextProvider><AppContainer><App /></AppContainer></GlobalContextProvider>, document.getElementById('app'));
-  });
+  if (module.hot) {
+    module.hot.accept('./page', () => {
+      const App = require('./page').default;
+  
+      render(<GlobalContextProvider><AppContainer><App /></AppContainer></GlobalContextProvider>, document.getElementById('app'));
+    });
+  }  
 }
+
