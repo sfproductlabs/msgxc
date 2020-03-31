@@ -40,6 +40,14 @@ export default class MessagesRecent extends React.PureComponent {
                 width: 120
               },
               {
+                label: "Meta",
+                prop: "meta",
+                width: 360,
+                render: (el)=>{
+                    return <span>{JSON.stringify(el.meta)}</span>
+                }
+              },
+              {
                 label: "Sender",
                 prop: "owner",
                 width: 310
