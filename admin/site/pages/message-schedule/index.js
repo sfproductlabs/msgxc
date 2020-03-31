@@ -16,6 +16,7 @@ export default class SendMessage extends React.PureComponent {
     constructor(props) {
         super(props)
         this.state = {
+            loading: false,
             form: {
                 tid: "5ae3c890-5e55-11ea-9283-4fa18a847130",
                 msg: '',
@@ -46,6 +47,7 @@ export default class SendMessage extends React.PureComponent {
                 const date = this.state.form.date;
                 const time = this.state.form.time;
                 const dt = `${date.getFullYear()}-${format2(date.getMonth() + 1)}-${format2(date.getDate())} ${format2(time.getHours())}:${format2(time.getMinutes())}:00`;
+                this.setState({loading:true})
                 Request(`${process.env.XCS_URL}${process.env.V1_PREFIX}/publish`, {
                     method : 'post',
                     body : {
@@ -64,6 +66,7 @@ export default class SendMessage extends React.PureComponent {
                         type: 'success'
                     });
                     this.resetForm();
+                    this.setState({loading:false})
                 })
                 .catch(ex => {
                     Notification.error({
@@ -71,6 +74,7 @@ export default class SendMessage extends React.PureComponent {
                         message: 'Message scheduling failed',
                     });
                     console.warn(ex)
+                    this.setState({loading:false})
                 })
 
             } else {
@@ -153,7 +157,7 @@ export default class SendMessage extends React.PureComponent {
                         />
                     </Form.Item>
                     <Form.Item>
-                        <Button type="primary" onClick={this.handleSubmit.bind(this)}>Send</Button>
+                        <Button type="primary" onClick={this.handleSubmit.bind(this)} loading={this.state.loading}>Send</Button>
                         <Button onClick={this.handleReset.bind(this)}>Reset</Button>
                     </Form.Item>
                 </Form>

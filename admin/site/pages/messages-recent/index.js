@@ -10,6 +10,7 @@ import Form from '../../../libs/elements/form'
 import Button from '../../../libs/elements/button'
 import Notification from '../../../libs/elements/notification'
 import Table from '../../../libs/elements/table'
+import Loading from '../../../libs/elements/loading'
 import moment from 'moment';
 
 export default class MessagesRecent extends React.PureComponent {
@@ -17,6 +18,7 @@ export default class MessagesRecent extends React.PureComponent {
     constructor(props) {
         super(props);
         this.state = {
+            loading: true,
             columns: [
               {
                 label: "Date",
@@ -58,7 +60,7 @@ export default class MessagesRecent extends React.PureComponent {
                 const table = (R.path(['hits','hits'], data || body) || []).map(f=> {
                     return f.Source;
                 });
-                this.setState({data: table});
+                this.setState({data: table, loading: false});
             })
             .catch(console.warn)
     }
@@ -68,14 +70,16 @@ export default class MessagesRecent extends React.PureComponent {
             <React.Fragment>
                 <h2>Recent messages</h2>
                 <div>
-                <Table
-                    style={{width: '100%'}}
-                    columns={this.state.columns}
-                    data={this.state.data}
-                    border={true}
-                    height={400}
-                    stripe={true}
-                />
+                <Loading loading={this.state.loading}>
+                    <Table
+                        style={{width: '100%'}}
+                        columns={this.state.columns}
+                        data={this.state.data}
+                        border={true}
+                        height={400}
+                        stripe={true}
+                    />
+                </Loading>
                 </div>
             </React.Fragment>
         );
