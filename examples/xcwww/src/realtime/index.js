@@ -5,7 +5,7 @@ const socket = new WebSocketClient(process.env.REACT_APP_URL_WS);
 socket.onopen = () => {
     socket.send(JSON.stringify({slug: '/ping'}))
     socket.send(JSON.stringify({
-        slug: `/api/v1/subscribe/thread`,
+        slug: `${process.env.REACT_APP_V2_PREFIX}/subscribe/thread`,
         tid: '5ae3c890-5e55-11ea-9283-4fa18a847130',
         jwt: process.env.REACT_APP_EXAMPLE_JWT
     }));    

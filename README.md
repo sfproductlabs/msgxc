@@ -93,7 +93,7 @@ Run ```docker-compose up``` in the root of this project to get elassandra (cassa
 ##### PING
 
 ```
-/api/v1/ping
+/api/v2/ping
 ```
 
 Checks whether the server is up. 
@@ -107,7 +107,7 @@ Checks whether the server is up.
 ##### Enlist
 _Requires Any JWT_
 ```
-/api/v1/enlist
+/api/v2/enlist
 ```
 
 Enlists a user's devices including web-browsers, native android/os, to receive messages.
@@ -138,7 +138,7 @@ Enlists a user's devices including web-browsers, native android/os, to receive m
 ##### Publish
 _Requires Any JWT_
 ```
-/api/v1/publish
+/api/v2/publish
 ```
 
 Publish a message to a thread (this sends a message to the mthread).
@@ -155,7 +155,7 @@ Publish a message to a thread (this sends a message to the mthread).
 ##### Subscribe
 _Requires Any JWT_
 ```
-/api/v1/subscribe
+/api/v2/subscribe
 ```
 
 Subscribe a user to a thread (this adds a user to the subs column in mthreads).
@@ -172,7 +172,7 @@ Subscribe a user to a thread (this adds a user to the subs column in mthreads).
 ##### Unubscribe
 _Requires Any JWT_
 ```
-/api/v1/unsubscribe
+/api/v2/unsubscribe
 ```
 
 Unsubscribe a user from a thread (this removes a user from the subs column in mthreads).
@@ -192,7 +192,7 @@ Unsubscribe a user from a thread (this removes a user from the subs column in mt
 ##### BROADCAST
 _Requires Admin JWT_
 ```
-/api/v1/broadcast
+/api/v2/broadcast
 ```
 
 Broadcasts a message to every user on the platform.
@@ -209,7 +209,7 @@ opts _Optional_
 ##### MULTICAST
 _Requires Admin JWT_
 ```
-/api/v1/multicast
+/api/v2/multicast
 ```
 
 Sends messages to selected UIDs (user-ids) on the platform.
@@ -228,7 +228,7 @@ opts _Optional_
 ##### SEND
 _Requires Admin JWT_
 ```
-/api/v1/send
+/api/v2/send
 ```
 
 Sends a message to an individual.

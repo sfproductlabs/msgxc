@@ -28,8 +28,9 @@ require('./pods/realtime/scheduler')
 
 const uApp = (env === 'dev') ? uWS.App : uWS.SSLApp;
 const router = {
-  subscribe: routeMatcher(`${process.env.V1_PREFIX}/subscribe/:action`),
-  report: routeMatcher(`${process.env.V1_PREFIX}/reports/:report`),
+  subscribe: routeMatcher(`${process.env.V2_PREFIX}/subscribe/:action`),
+  report: routeMatcher(`${process.env.V2_PREFIX}/reports/:report`),
+  execute: routeMatcher(`${process.env.V2_PREFIX}/execute/:action`),
 }
 const app = uApp({
   key_file_name: process.env.SITE_KEY,
@@ -109,7 +110,7 @@ const app = uApp({
   }
 })
 //SYSTEM MESSAGING
-.post(`${process.env.V1_PREFIX}/multicast`, async (res, req) => {
+.post(`${process.env.V2_PREFIX}/multicast`, async (res, req) => {
   let comms = {res, req};
   try {
     new RestRoute(comms).authorizeUser('msgxc_admin,admin').multicast()
@@ -119,7 +120,7 @@ const app = uApp({
     Route.abort(res, ex);
   }
 })
-.post(`${process.env.V1_PREFIX}/broadcast`, async (res, req) => {
+.post(`${process.env.V2_PREFIX}/broadcast`, async (res, req) => {
   let comms = {res, req};
   try {
     new RestRoute(comms).authorizeUser('msgxc_admin,admin').broadcast()
@@ -129,7 +130,7 @@ const app = uApp({
     Route.abort(res, ex);
   }
 })
-.post(`${process.env.V1_PREFIX}/send`, async (res, req) => {
+.post(`${process.env.V2_PREFIX}/send`, async (res, req) => {
   let comms = {res, req};
   try {
     new RestRoute(comms).authorizeUser('msgxc_admin,admin').send()
@@ -140,7 +141,7 @@ const app = uApp({
   }
 })
 //ENLIST A DEVICE OR PROTOCOL
-.post(`${process.env.V1_PREFIX}/enlist`, async (res, req) => {
+.post(`${process.env.V2_PREFIX}/enlist`, async (res, req) => {
   let comms = {res, req};
   try {
     new RestRoute(comms).authorizeUser().enlist()
@@ -151,7 +152,7 @@ const app = uApp({
   }
 })
 //THREAD MESSAGING
-.post(`${process.env.V1_PREFIX}/publish`, async (res, req) => {
+.post(`${process.env.V2_PREFIX}/publish`, async (res, req) => {
   let comms = {res, req};
   try {
     new RestRoute(comms).authorizeUser().publish()
@@ -161,7 +162,7 @@ const app = uApp({
     Route.abort(res, ex);
   }
 })
-.post(`${process.env.V1_PREFIX}/subscribe`, async (res, req) => {
+.post(`${process.env.V2_PREFIX}/subscribe`, async (res, req) => {
   let comms = {res, req};
   try {
     new RestRoute(comms).authorizeUser().subscribe()
@@ -171,7 +172,7 @@ const app = uApp({
     Route.abort(res, ex);
   }
 })
-.post(`${process.env.V1_PREFIX}/unsubscribe`, async (res, req) => {
+.post(`${process.env.V2_PREFIX}/unsubscribe`, async (res, req) => {
   let comms = {res, req};
   try {
     new RestRoute(comms).authorizeUser().unsubscribe()
@@ -181,7 +182,7 @@ const app = uApp({
     Route.abort(res, ex);
   }
 })
-.post(`${process.env.V1_PREFIX}/cancel`, async (res, req) => {
+.post(`${process.env.V2_PREFIX}/cancel`, async (res, req) => {
   let comms = {res, req};
   try {
     new RestRoute(comms).authorizeUser('msgxc_admin,admin').cancel() //TODO: Users may cancel their own messages?
@@ -191,8 +192,19 @@ const app = uApp({
     Route.abort(res, ex);
   }
 })
+.post(`${process.env.V2_PREFIX}/execute/*`, async (res, req) => {
+  let comms = {res, req};
+  try {
+    comms.params = router.execute.parse(req.getUrl());
+    new RestRoute(comms).authorizeUser('msgxc_admin,admin').execute()
+  } catch (ex) {
+    debugHTTP(ex)
+    nats.natsLogger.error({...comms, error: ex});
+    Route.abort(res, ex);
+  }
+})
 //REPORTS
-.get(`${process.env.V1_PREFIX}/reports/*`, async (res, req) => {
+.get(`${process.env.V2_PREFIX}/reports/*`, async (res, req) => {
   let comms = {res, req};
   try {
     comms.params = router.report.parse(req.getUrl());
@@ -204,7 +216,7 @@ const app = uApp({
   }
 })
 //STATUS
-.get(`${process.env.V1_PREFIX}/status/dbver`, async (res, req) => {
+.get(`${process.env.V2_PREFIX}/status/dbver`, async (res, req) => {
   let comms = {res, req};
   try {
     new RestRoute(comms).getDbVersion()
@@ -214,7 +226,7 @@ const app = uApp({
     Route.abort(res, ex);
   }
 })
-.get(`${process.env.V1_PREFIX}/status/xasver`, async (res, req) => {
+.get(`${process.env.V2_PREFIX}/status/xasver`, async (res, req) => {
   let comms = {res, req};
   try {
     new RestRoute(comms).xasDbVersion()
@@ -224,12 +236,12 @@ const app = uApp({
     Route.abort(res, ex);
   }
 })
-.get(`${process.env.V1_PREFIX}/ping`, (res) => {
+.get(`${process.env.V2_PREFIX}/ping`, (res) => {
   res.writeStatus(httpCodes.OK);       
   res.end(httpCodes.OK);  
 })
 //OPTIONS - CORS
-.options(`${process.env.V1_PREFIX}/*`, (res, req) => {
+.options(`${process.env.V2_PREFIX}/*`, (res, req) => {
   res.writeStatus(httpCodes.OK);       
   res.writeHeader("Content-Type", "application/json")
   res.writeHeader("Access-Control-Allow-Origin", "*") //TODO: Update CORS
@@ -244,7 +256,7 @@ const app = uApp({
   res.end();  
 })
 //CATCH ALL
-.any(`${process.env.V1_PREFIX}/*`, (res, req) => {
+.any(`${process.env.V2_PREFIX}/*`, (res, req) => {
     let comms = {res, req};
     const ex = `UNAUTHORIZED ${req.getMethod()}  ${req.getUrl()} from IP ${str2ip(req.getHeader('x-forwarded-for'))} to ${ab2ip6(res.getRemoteAddress())}`;
     debugHTTP(ex)

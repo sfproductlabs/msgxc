@@ -58,7 +58,7 @@ export default class MessagesRecent extends React.PureComponent {
     }
 
     componentDidMount() {
-        Request(`${process.env.XCS_URL}${process.env.V1_PREFIX}/reports/messages_recent`)
+        Request(`${process.env.XCS_URL}${process.env.V2_PREFIX}/reports/messages_recent`)
             .then(response => {
                 const {
                     data,

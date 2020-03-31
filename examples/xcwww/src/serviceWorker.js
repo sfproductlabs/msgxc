@@ -88,7 +88,7 @@ export function register(config) {
               //updateSubscriptionOnServer(subscription);
             
               isSubscribed = true;
-              fetch(`${process.env.REACT_APP_URL_API}/api/v1/enlist`, {
+              fetch(`${process.env.REACT_APP_URL_API}${process.env.REACT_APP_V2_PREFIX}/enlist`, {
                 method: 'POST',
                 body: JSON.stringify(subscription),
                 headers: {

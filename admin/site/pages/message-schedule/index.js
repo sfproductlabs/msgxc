@@ -48,7 +48,7 @@ export default class SendMessage extends React.PureComponent {
                 const time = this.state.form.time;
                 const dt = `${date.getFullYear()}-${format2(date.getMonth() + 1)}-${format2(date.getDate())} ${format2(time.getHours())}:${format2(time.getMinutes())}:00`;
                 this.setState({loading:true})
-                Request(`${process.env.XCS_URL}${process.env.V1_PREFIX}/publish`, {
+                Request(`${process.env.XCS_URL}${process.env.V2_PREFIX}/publish`, {
                     method : 'post',
                     body : {
                         tid : this.state.form.tid,

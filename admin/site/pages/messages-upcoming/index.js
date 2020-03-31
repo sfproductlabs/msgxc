@@ -54,7 +54,7 @@ export default class MessagesUpcoming extends React.PureComponent {
     }
 
     cancel(m) {
-      Request(`${process.env.XCS_URL}${process.env.V1_PREFIX}/cancel`, {
+      Request(`${process.env.XCS_URL}${process.env.V2_PREFIX}/cancel`, {
         method : 'post',
         body : {
             tid : m.tid,
@@ -83,7 +83,7 @@ export default class MessagesUpcoming extends React.PureComponent {
     }
 
     componentDidMount() {
-        Request(`${process.env.XCS_URL}${process.env.V1_PREFIX}/reports/messages_upcoming`)
+        Request(`${process.env.XCS_URL}${process.env.V2_PREFIX}/reports/messages_upcoming`)
             .then(response => {
                 const {
                     data,

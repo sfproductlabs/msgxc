@@ -29,7 +29,7 @@ class Status {
     static async xasDbVersion(comms) {
         try {
             let opts = {
-                url: `${process.env.XAS_URL}/version`,
+                url: `${process.env.XAS_URL}${process.env.V1_PREFIX}/version`,
                 method: "get",
                 headers: {
                 }
