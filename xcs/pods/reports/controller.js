@@ -17,6 +17,17 @@ class ReportsController {
         }
     }
 
+    static async getUpcomingMessages(comms) {
+        try {
+            return await Reports.getUpcomingMessages(comms);            
+        } catch (ex) {
+            comms.error = {
+                code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                msg: ex.msg || "Unknown server error getting upcoming messages."
+            };            
+            throw ex;
+        }
+    }
 
 
 

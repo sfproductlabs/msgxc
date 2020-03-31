@@ -7,6 +7,7 @@ update users set mdevices= [
 insert into mthreads ( 
     tid, 
     alias, 
+    name,
     mtypes,
     prefs,
     owner,
@@ -18,6 +19,7 @@ insert into mthreads (
 ) values (
     5ae3c890-5e55-11ea-9283-4fa18a847130, 
     'native:dailypulse', 
+    'Daily Pulse',
     {'fcm', 'apn', 'ws', 'sms', 'wpn', 'em'},
     {14fb0860-b4bf-11e9-8971-7b80435315ac : {'em'}},
     14fb0860-b4bf-11e9-8971-7b80435315ac,

@@ -12,12 +12,44 @@ class Reports {
 
     static async getRecentMessages(comms) {
         return await es.client.search({
-            index: 'mthreads',
-            body: {  }
+            index: 'mstore',
+            body: {
+                query: {
+                    bool:{
+                        must_not:{
+                            bool: {
+                                must: [
+                                    { exists: { field: "scheduled" } }
+                                ]
+                            }
+                        }
+                    }
+                },
+                sort: [
+                    { updated: 'desc' }
+                ]
+            }
         })
     }
 
-    
+    static async getUpcomingMessages(comms) {
+        return await es.client.search({
+            index: 'mstore',
+            body: {
+                query: {
+                    bool: {
+                        must: [
+                            { exists: { field: "scheduled" } }
+                        ]
+                    }
+                },
+                sort: [
+                    { scheduled: 'asc' }
+                ]
+            }
+        })
+    }
+
 
 }
 

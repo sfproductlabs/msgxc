@@ -420,6 +420,9 @@ class RestRoute extends Route {
                 case "messages_recent":
                     result = await ReportsController.getRecentMessages(this.comms);
                     break;
+                case "messages_upcoming":
+                    result = await ReportsController.getUpcomingMessages(this.comms);
+                    break;                    
                 default:
                     result = []
                     break;

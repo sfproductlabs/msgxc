@@ -94,7 +94,7 @@ class Threading {
             comms.obj.tid,
             mid,
             comms.obj.pmid,
-            thread.sys ? thread.alias : comms.obj.subject,
+            comms.obj.subject || thread.name,
             thread.sys && comms.obj.sys && !comms.obj.pmid,
             thread.broadcast && comms.obj.broadcast && !comms.obj.pmid,
             comms.obj.scheduled,

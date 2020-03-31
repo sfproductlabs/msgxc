@@ -86,6 +86,7 @@
     "classnames": "^2.2.6",
     "js-cookie": "^2.2.1",
     "mitty": "^2.0.2",
+    "moment": "^2.24.0",
     "popper.js": "^1.14.7",
     "prop-types": "^15.6.2",
     "raf": "^3.4.1",

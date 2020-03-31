@@ -51,15 +51,14 @@ function catchError(err) {
 }
 
 export default function request(url, options) {
-    let keyLookup = (process.env.KEY_NAME || '').toLocaleLowerCase();
-    let jwt = R.defaultTo(null)(R.path([keyLookup],Cookies.getJSON(process.env.CLIENT_AUTH_COOKIE)));
+    let jwt = R.defaultTo(null)(Cookies.getJSON(process.env.CLIENT_AUTH_COOKIE));
     let auth = (typeof jwt !== null && typeof jwt === 'object') ? { "Authorization": "Bearer " + JSON.stringify(jwt) } : {};
     let opts = R.defaultTo({})(options);
     let track = R.defaultTo(false)(opts.track);
     let camelize = R.defaultTo(true)(opts.camelize);
     if (track) {
         setTimeout(function () {
-            let tj = R.defaultTo(null)(R.path([keyLookup],Cookies.getJSON(process.env.CLIENT_AUTH_COOKIE)));
+            let tj = R.defaultTo(null)(Cookies.getJSON(process.env.CLIENT_AUTH_COOKIE));
             if (tj !== null && typeof jwt === 'object') {
                 let ta = { "Authorization": "Bearer " + JSON.stringify(tj) };
                 fetch(process.env.TRACK_URL, {

@@ -43,7 +43,8 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:92
                 "msg": { "type": "keyword", "index": true, "cql_collection": "singleton" },
                 "owner": { "type": "keyword", "index": true, "cql_collection": "singleton" },
                 "qid": { "type": "keyword", "index": true, "cql_collection": "singleton" },
-                "createdms": { "type": "long", "index": true, "cql_collection": "singleton" }
+                "createdms": { "type": "long", "index": true, "cql_collection": "singleton" },
+                "updated": { "type": "date", "index": true, "cql_collection": "singleton" }
             }
         }
     }
