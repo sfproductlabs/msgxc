@@ -16,6 +16,7 @@ export default class MessagesUpcoming extends React.PureComponent {
 
     constructor(props) {
         super(props);
+        this.componentDidMount = this.componentDidMount.bind(this);
         this.state = {
             columns: [
               {
@@ -41,13 +42,41 @@ export default class MessagesUpcoming extends React.PureComponent {
                 label: "Operations",
                 fixed: 'right',
                 width: 120,
-                render: ()=>{
-                  return <span><Button type="text" size="small" disabled={true}>Run</Button><Button type="text" size="small" disabled={true}>Cancel</Button></span>
+                render: (el)=>{
+                  return <span><Button type="text" size="small" disabled={true}>Run</Button><Button type="text" size="small" onClick={() => { this.cancel(el)}}>Cancel</Button></span>
                 }
               }
             ],
             data: []
         }  
+    }
+
+    cancel(m) {
+      Request(`${process.env.XCS_URL}${process.env.V1_PREFIX}/cancel`, {
+        method : 'post',
+        body : {
+            tid : m.tid,
+            mid : m.mid
+        }
+    })
+    .then(response => {
+        if (!response) {
+            throw 'Could not cancel'
+        }
+        Notification({
+            title: 'Success',
+            message: 'Message canceled',
+            type: 'success'
+        });
+        setTimeout(this.componentDidMount, 3000);
+    })
+    .catch(ex => {
+        Notification.error({
+            title: 'Error',
+            message: 'Message canceling failed',
+        });
+        console.warn(ex)
+    })
     }
 
     componentDidMount() {

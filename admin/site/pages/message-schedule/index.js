@@ -68,7 +68,7 @@ export default class SendMessage extends React.PureComponent {
                 .catch(ex => {
                     Notification.error({
                         title: 'Error',
-                        message: 'Message scheduling faled',
+                        message: 'Message scheduling failed',
                     });
                     console.warn(ex)
                 })

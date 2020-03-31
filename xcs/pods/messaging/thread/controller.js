@@ -46,6 +46,20 @@ class ThreadController {
     }
 
 
+    static async cancel(comms) {
+        try {
+            return await Threading.cancel(comms);            
+        } catch (ex) {
+            console.warn(ex);
+            comms.error = {
+                code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                msg: ex.msg || "Unknown server error canceling thread."
+            };
+            throw comms.error;
+        }
+    }
+
+
 }
 
 

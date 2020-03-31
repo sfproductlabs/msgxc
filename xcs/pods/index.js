@@ -413,6 +413,24 @@ class RestRoute extends Route {
         this.respond(result);
     }
 
+    async cancel() {
+        let result = null;
+        try {
+            await this.processPayload();
+            result = await ThreadController.cancel(this.comms);
+        } catch (ex) {
+            let errMsg = "Unknown error canceling thread";
+            console.warn(errMsg, ex);
+            if (!this.comms.error) {
+                this.comms.error = {
+                    code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                    msg: ex.msg || errMsg
+                };
+            }
+        }
+        this.respond(result);
+    }
+
     async getReport() {
         let result = null;
         try {  

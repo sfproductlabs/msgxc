@@ -181,6 +181,16 @@ const app = uApp({
     Route.abort(res, ex);
   }
 })
+.post(`${process.env.V1_PREFIX}/cancel`, async (res, req) => {
+  let comms = {res, req};
+  try {
+    new RestRoute(comms).authorizeUser('msgxc_admin,admin').cancel() //TODO: Users may cancel their own messages?
+  } catch (ex) {
+    debugHTTP(ex)
+    nats.natsLogger.error({...comms, error: ex});
+    Route.abort(res, ex);
+  }
+})
 //REPORTS
 .get(`${process.env.V1_PREFIX}/reports/*`, async (res, req) => {
   let comms = {res, req};

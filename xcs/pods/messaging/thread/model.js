@@ -84,12 +84,13 @@ class Threading {
             createdms,
             created,
 
+            planned,
             org,
             owner,
             updated,
             updater
           ) values (
-            ?,?,?,?,?,?,?,?,?,? ,?,?,?,?
+            ?,?,?,?,?,?,?,?,?,? ,?,?,?,?,?
           )`, [
             comms.obj.tid,
             mid,
@@ -102,6 +103,7 @@ class Threading {
             now,
             now,
 
+            comms.obj.scheduled,
             undefined,        
             comms.user.uid,
             now,
@@ -305,6 +307,37 @@ class Threading {
         [comms.user.uid],
         [comms.user.uid],
         comms.obj.tid
+      ], {
+        prepare: true
+      })
+
+      return true;
+
+    } catch (ex) {
+      console.warn(ex);
+      switch (ex.code) {
+        case httpCodes.INTERNAL_SERVER_ERROR:
+        default:
+          throw ex; // Internal Server Error for uncaught exception
+      }
+    }
+  }
+
+  static async cancel(comms) {
+    const db = new cxn();
+    try {
+
+      //TODO: cancel only supports messages (mid) atm
+      if (!comms.user || !comms.user.uid || !comms.obj.tid || !comms.obj.mid) {
+        return false;
+      }
+
+      await db.client.execute(
+        `update mstore set scheduled=?, meta+=? where tid=? and mid=?`, [
+        null,
+        {"canceled" : new Date().toISOString()},
+        comms.obj.tid,
+        comms.obj.mid
       ], {
         prepare: true
       })
