@@ -1,9 +1,9 @@
 module.exports = {
   page: {
     'quick-start': 'Quick Start',
-    'schedule-message' : 'Schedule a Message',
-    'upcoming-messages': 'Upcoming Messages',
-    'recent-messages': 'Recent Messages',
+    'message-schedule' : 'Schedule a Message',
+    'messages-upcoming': 'Upcoming Messages',
+    'messages-recent': 'Recent Messages',
     'usage': 'Usage',
   },
   misc: {

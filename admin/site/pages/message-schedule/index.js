@@ -5,12 +5,12 @@ import Input from '../../../libs/elements/input'
 import Layout from '../../../libs/elements/layout'
 import Select from '../../../libs/elements/select'
 import { DatePicker, TimeSelect } from '../../../libs/elements/date-picker'
-import  Form from '../../../libs/elements/form'
-import  Button from '../../../libs/elements/button'
-import  Notification from '../../../libs/elements/notification'
+import Form from '../../../libs/elements/form'
+import Button from '../../../libs/elements/button'
+import Notification from '../../../libs/elements/notification'
 
 
-export default class Cards extends React.PureComponent {
+export default class SendMessage extends React.PureComponent {
 
     constructor(props) {
         super(props)
@@ -23,30 +23,19 @@ export default class Cards extends React.PureComponent {
             },
             rules: {
                 tid: [
-                  { required: true, message: 'Please select a thread', trigger: 'change' }
+                    { required: true, message: 'Please select a thread', trigger: 'change' }
                 ],
                 msg: [
-                  { required: true, message: 'Please input a message', trigger: 'change' }
+                    { required: true, message: 'Please input a message', trigger: 'change' }
                 ],
                 date: [
-                  { type: 'date', required: true, message: 'Please pick a date', trigger: 'change' }
+                    { type: 'date', required: true, message: 'Please pick a date', trigger: 'change' }
                 ],
                 time: [
                     { type: 'date', required: true, message: 'Please pick a time', trigger: 'change' }
                 ],
             }
         }
-    }
-
-    componentDidMount() {
-        Request(`http://localhost:5000/ping`)
-            .then(response => {
-                const {
-                    data,
-                } = response
-                this.setGlobal({ messages: data });
-            })
-            .catch(console.warn)
     }
 
     handleSubmit(e) {
@@ -57,33 +46,36 @@ export default class Cards extends React.PureComponent {
                     title: 'Success',
                     message: 'Message scheduled',
                     type: 'success'
-                  });
+                });
             } else {
-              console.log('error submit!!');
-              return false;
+                console.log('error submit!!');
+                return false;
             }
-          });
+        });
     }
 
     handleReset(e) {
-        e.preventDefault();      
+        e.preventDefault();
         this.refs.form.resetFields();
-        this.setState({form: 
-            {...this.state.form, 
-            msg :'',
-            tid: "5ae3c890-5e55-11ea-9283-4fa18a847130"
-        }})
-        this.forceUpdate();
-      }
-      
-      onChange(key, value) {
         this.setState({
-          form: Object.assign({}, this.state.form, { [key]: value })
+            form:
+            {
+                ...this.state.form,
+                msg: '',
+                tid: "5ae3c890-5e55-11ea-9283-4fa18a847130"
+            }
+        })
+        this.forceUpdate();
+    }
+
+    onChange(key, value) {
+        this.setState({
+            form: Object.assign({}, this.state.form, { [key]: value })
         });
-      }
+    }
 
     render() {
-        const {date, time} = this.state;
+        const { date, time } = this.state;
 
         return (
             <React.Fragment>
@@ -134,9 +126,6 @@ export default class Cards extends React.PureComponent {
                         <Button onClick={this.handleReset.bind(this)}>Reset</Button>
                     </Form.Item>
                 </Form>
-                <div>
-                    <Messages />
-                </div>
             </React.Fragment>
         );
     }

@@ -1,13 +1,13 @@
 export default {
   documents: {
     'quick-start': require('./quick-start'),
-    'schedule-message': require('./schedule-message'),
+    'message-schedule': require('./message-schedule'),
   },
   reports: {
     'Basic': {
-      'upcoming-messages': require('./usage'),
-      'recent-messages': require('./usage'),
-      'usage': require('./usage'),
+      'messages-upcoming': require('./messages-upcoming'),
+      // 'messages-recent': require('./usage'),
+      // 'usage': require('./usage'),
     },    
   }
 }
