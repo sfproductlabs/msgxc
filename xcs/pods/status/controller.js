@@ -19,6 +19,19 @@ class StatusController {
     }
 
 
+    static async xasDbVersion(comms) {
+        try {
+            return await Status.xasDbVersion(comms);            
+        } catch (ex) {
+            comms.error = {
+                code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                msg: ex.msg || "Unknown server error getting db version."
+            };            
+            throw ex;
+        }
+    }
+
+
 }
 
 

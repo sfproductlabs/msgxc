@@ -29,6 +29,7 @@ require('./pods/realtime/scheduler')
 const uApp = (env === 'dev') ? uWS.App : uWS.SSLApp;
 const router = {
   subscribe: routeMatcher(`${process.env.V1_PREFIX}/subscribe/:action`),
+  report: routeMatcher(`${process.env.V1_PREFIX}/reports/:report`),
 }
 const app = uApp({
   key_file_name: process.env.SITE_KEY,
@@ -174,6 +175,18 @@ const app = uApp({
   let comms = {res, req};
   try {
     new RestRoute(comms).authorizeUser().unsubscribe()
+  } catch (ex) {
+    debugHTTP(ex)
+    nats.natsLogger.error({...comms, error: ex});
+    Route.abort(res, ex);
+  }
+})
+//REPORTS
+.get(`${process.env.V1_PREFIX}/reports/*`, async (res, req) => {
+  let comms = {res, req};
+  try {
+    comms.params = router.report.parse(req.getUrl());
+    new RestRoute(comms).authorizeUser('msgxc_admin,admin').getReport()
   } catch (ex) {
     debugHTTP(ex)
     nats.natsLogger.error({...comms, error: ex});

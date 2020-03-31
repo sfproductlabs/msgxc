@@ -175,7 +175,7 @@ class Route {
     async xasDbVersion() {
         let version = 0;
         try {
-            version = await ReportsController.xasDbVersion(this.comms);
+            version = await StatusController.xasDbVersion(this.comms);
         } catch (ex) {
             let errMsg = "Unknown error occurred getting xas version";
             console.warn(errMsg, ex);
@@ -402,6 +402,30 @@ class RestRoute extends Route {
             result = await ThreadController.unsubscribe(this.comms);
         } catch (ex) {
             let errMsg = "Unknown error unsubscribing";
+            console.warn(errMsg, ex);
+            if (!this.comms.error) {
+                this.comms.error = {
+                    code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                    msg: ex.msg || errMsg
+                };
+            }
+        }
+        this.respond(result);
+    }
+
+    async getReport() {
+        let result = null;
+        try {  
+            switch (this.comms.params.report) {
+                case "messages_recent":
+                    result = await ReportsController.getRecentMessages(this.comms);
+                    break;
+                default:
+                    result = []
+                    break;
+            }          
+        } catch (ex) {
+            let errMsg = "Unknown error generating report";
             console.warn(errMsg, ex);
             if (!this.comms.error) {
                 this.comms.error = {

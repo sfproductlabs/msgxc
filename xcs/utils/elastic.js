@@ -1,10 +1,10 @@
-const elasticsearch = require('elasticsearch');
+const elasticsearch = require('@elastic/elasticsearch');
 const fs = require('fs');
 const R = require('ramda');
 
 const opts = {
     apiVersion: '5.6',
-    hosts: process.env.CASSANDRA_HOSTS.split(",").map(host => `http${process.env.CASSANDRA_VERIFY_SERVER ? 's' : ''}://${host}:${process.env.ELASTIC_PORT || '443'}`),
+    nodes: process.env.CASSANDRA_HOSTS.split(",").map(host => `http${process.env.CASSANDRA_VERIFY_SERVER ? 's' : ''}://${host}:${process.env.ELASTIC_PORT || '443'}`),
     selector: 'roundRobin',
     requestTimeout: 15000,
     pingTimeout: 3000,

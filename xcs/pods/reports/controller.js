@@ -5,18 +5,19 @@ const httpCodes = require('../../utils/httpStatusCodes')
 
 class ReportsController {
 
-
-    static async xasDbVersion(comms) {
+    static async getRecentMessages(comms) {
         try {
-            return await Reports.xasDbVersion(comms);            
+            return await Reports.getRecentMessages(comms);            
         } catch (ex) {
             comms.error = {
                 code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
-                msg: ex.msg || "Unknown server error getting db version."
+                msg: ex.msg || "Unknown server error getting recent messages."
             };            
             throw ex;
         }
     }
+
+
 
 
 }
