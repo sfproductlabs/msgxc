@@ -70,7 +70,7 @@ create table users (
   ips set<text>,
   params map<text,text>, --experiment params
   cohorts set<text>, --exp cohorts
-  splits map<text,text>, --experimentid : splitid
+  splits map<text,text>, --experimentid : split (xid_splitname)
   lang text,
   created timestamp,
   org uuid,
@@ -286,15 +286,37 @@ CREATE TABLE mthreads (
     openp boolean, --publicly publishable, still add uid to pubs [Default: false]
     --Priority LOW
     perms set<frozen<perm>>, --additional perms
+  --TRACKING
+    app text, --app 
+    rel text, 
+    ver int, --version
+    ptyp text, 
+    etyp text,
+    ename text,
+    auth text, --author
+    xid text, --experiment id 
+    cohorts set<text>,
+    splits map<text,int>, --split=(xid_splitname) : number of participants
+    source text,
+    medium text,
+    campaign text,
+    term text, 
+    promo text, --promo code to pass through
+    ref uuid, --referrer uid (Select)
+    aff text, --affiliate uname or code (Select)
   --RECIPIENTS
     broadcast boolean,
+    derive boolean, --update subs based on cohorts/splits
+    sent set<uuid>, --outstanding uids left to publish to for this experiment
+    outs set<uuid>, --outstanding uids left to publish to for this experiment
     subs set<uuid>, --admins+writers+subs=subs (only this index required to subscribe)
     pubs set<uuid>, --uids who can publish to admins+pubs=pubs (only this index required to publish)
     prefs map<uuid, frozen<set<text>>>, --msg preferences (user,mtypes) apn,~,wpn etc.  
     ftrack boolean, --track failed deliveries
     strack boolean, --track successful deliveries
   --INTEREST
-    interest map<text, int>, -- Ex. { hearts : 44 , views : 55, clicks etc.}  
+    interest map<text, int>, -- Ex. { attempted: 542, sent: 500, hearts : 44 , views : 55, clicks etc.}  
+    perf map<text,double>, --Performance. {sink : score}
   --OWNER
     deleted timestamp,
     created timestamp,
@@ -337,25 +359,7 @@ create table mtriage (
   deliveries set<uuid>, --uid delivered, update after ACK of wsocket
   failures set<uuid>, --uid failures
   --TRACKING
-  app text, --app 
-  rel text, 
-  ver int, --version
-  ptyp text, 
-  etyp text,
-  ename text,
-  auth text, --author
-  xid text, --experiment id 
-  cohorts set<text>,
-  split decimal, --% random 1=1%
-  source text,
-  medium text,
-  campaign text,
-  term text, 
-  sink text,
-  score double,
-  promo text, --promo code to pass through
-  ref uuid, --referrer uid (Select)
-  aff text, --affiliate uname or code (Select)
+  split text,
   --PERMISSIONS
   perms set<frozen<perm>>, --additional perms 
   --OWNERSHIP
@@ -395,7 +399,7 @@ create table mstore (
   qid timeuuid, --executing queue id -- IMPORTANT !!!!
   srcid timeuuid, --source id Ex. message-id
   srckey text, --source id, audit id, inc. external Ex. SES message-id
-  meta map<text,text>, --METADATA, SPLIT etc.
+  meta map<text,text>, --METADATA etc.
   planned timestamp,
   scheduled timestamp, --scheduled is removed once processed to limit index size
   started timestamp,
@@ -406,25 +410,7 @@ create table mstore (
   deliveries set<uuid>, --uid delivered, update after ACK of wsocket
   failures set<uuid>, --uid failures
   --TRACKING
-  app text, --app 
-  rel text, 
-  ver int, --version
-  ptyp text, 
-  etyp text,
-  ename text,
-  auth text, --author
-  xid text, --experiment id 
-  cohorts set<text>,
-  split decimal, --% random 1=1%
-  source text,
-  medium text,
-  campaign text,
-  term text, 
-  sink text,
-  score double,
-  promo text, --promo code to pass through
-  ref uuid, --referrer uid (Select)
-  aff text, --affiliate uname or code (Select)
+  split text,
   --PERMISSIONS
   perms set<frozen<perm>>, --additional perms 
   --OWNERSHIP
@@ -437,7 +423,8 @@ create table mstore (
   updated timestamp,
   updater uuid, 
   --ADDITIONAL FIELDS
-  interest map<text, int>, -- Ex. { hearts : 44 , views : 55, clicks etc.} 
+  interest map<text, int>, -- Ex. { attempted: 542, sent: 500, hearts : 44 , views : 55, clicks etc.} 
+  perf map<text,double>, --Performance. {sink : score}
   hide timestamp, --use ephemeral value in thread
   hidden boolean, --REQUIRED: set to false
   PRIMARY KEY ((tid), mid)
