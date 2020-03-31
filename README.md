@@ -253,7 +253,8 @@ https://github.com/sfproductlabs/msgxc/blob/master/xcs/README.md#a-deeper-look-a
 Written in collaboration with the wonderful people...
 
 ## TODO
-
+- [ ] Facebook Messenger
+- [ ] LinkedIn
 - [ ] Integrate with Apache Superset.
 - [ ] Triage. Request -> Prioritization -> Triage (write [messageid/dateuuid, owner]; [owner, msgs], [option Realtime, Nearline, scheduled, failed], [tracking,capture,reporting,recall])
 - [ ] Scheduler
