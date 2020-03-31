@@ -32,7 +32,9 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:92
     "mappings": {
         "mstore": {
             "properties" : {
+                "tid": { "type": "keyword", "index": true, "cql_collection": "singleton" },
                 "mid": { "type": "keyword", "index": true, "cql_collection": "singleton" },
+                "pmid": { "type": "keyword", "index": true, "cql_collection": "singleton" },
                 "subject": { "type": "keyword", "index": true, "cql_collection": "singleton" },
                 "completed": { "type": "date", "index": true, "cql_collection": "singleton" },
                 "sys": { "type": "boolean", "index": true, "cql_collection": "singleton" },

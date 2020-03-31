@@ -274,6 +274,7 @@ CREATE TABLE mthreads (
     fmtypes set<text>, --  specific faluire / fallback mtypes (to override app defaults)
     cmtypes set<text>, --  specific mtypes for anything with a pmid (child messages, to override app defaults)
     urgency int,   
+    sys boolean, --system message
     ephemeral int, --seconds until expiry (null == keep)
     archived boolean,
   --PERMISSIONS

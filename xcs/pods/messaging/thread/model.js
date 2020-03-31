@@ -24,6 +24,7 @@ class Threading {
 
   static async publish(comms) {
     const db = new cxn();
+    const now = Date.now();
     try {
       if (!comms.user || !comms.obj.tid) {
         return false;
@@ -66,6 +67,52 @@ class Threading {
 
       if (!checked) {
         return false;
+      }
+
+      //TODO: Persist to the MSTORE
+      const mid = uuidv1();
+      await db.client.execute(
+        `insert into mstore (
+            tid,         
+            mid,
+            pmid,
+            subject,
+            sys,
+            broadcast,
+            scheduled,
+            msg,
+            createdms,
+            created,
+
+            org,
+            owner,
+            updated,
+            updater
+          ) values (
+            ?,?,?,?,?,?,?,?,?,? ,?,?,?,?
+          )`, [
+            comms.obj.tid,
+            mid,
+            comms.obj.pmid,
+            thread.sys ? thread.alias : comms.obj.subject,
+            thread.sys && comms.obj.sys && !comms.obj.pmid,
+            thread.broadcast && comms.obj.broadcast && !comms.obj.pmid,
+            comms.obj.scheduled,
+            comms.obj.msg,
+            now,
+            now,
+
+            undefined,        
+            comms.user.uid,
+            now,
+            comms.user.uid
+      ], {
+        prepare: true
+      });
+
+      //Check if scheduled for later
+      if (comms.obj.scheduled && comms.obj.scheduled > now) {
+        return true;
       }
 
       //////////////////////////

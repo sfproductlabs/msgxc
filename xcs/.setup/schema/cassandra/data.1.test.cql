@@ -13,7 +13,8 @@ insert into mthreads (
     opens,
     admins,
     subs,
-    pubs
+    pubs,
+    sys
 ) values (
     5ae3c890-5e55-11ea-9283-4fa18a847130, 
     'native:dailypulse', 
@@ -23,6 +24,7 @@ insert into mthreads (
     true,
     {14fb0860-b4bf-11e9-8971-7b80435315ac},
     {14fb0860-b4bf-11e9-8971-7b80435315ac},
-    {14fb0860-b4bf-11e9-8971-7b80435315ac}
+    {14fb0860-b4bf-11e9-8971-7b80435315ac},
+    true
 );
 
