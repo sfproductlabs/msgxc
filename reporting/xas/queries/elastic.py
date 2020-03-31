@@ -3,7 +3,7 @@ from elasticsearch import Elasticsearch
 # TODO: Not implemented yet
 es = Elasticsearch(["localhost"], sniff_on_connection_fail=True, sniffer_timeout=60)
 
-def threads():
+def threads_all():
     res = es.search(index="mthreads", body={"query": {"match_all": {}}})
     print("Got %d Hits:" % res['hits']['total'])
     # for hit in res['hits']['hits']:

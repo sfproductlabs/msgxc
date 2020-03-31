@@ -112,6 +112,12 @@ def index():
 def mirror():
     return jsonify(request.get_json(force=True))
 
+@app.route('/version', methods=['GET'])
+def version(name=None):
+    resp = make_response(queries.version(),200)   
+    resp.content_type = "application/json" 
+    return resp
+
 @app.route(f'{V1_PREFIX}/q/')
 @app.route(f'{V1_PREFIX}/q/<name>', methods=['GET'])
 def q(name=None):
@@ -127,8 +133,15 @@ def q(name=None):
     if name == 'sequences':
         resp = make_response(queries.sequences(),200)   
         resp.content_type = "application/json" 
+    elif name == 'messages_recent':
+        resp = make_response(queries.messages_recent(),200)   
+        resp.content_type = "application/json" 
+    elif name == 'version':
+        resp = make_response(queries.version(),200)   
+        resp.content_type = "application/json"         
     else:
-        pass
+        resp = make_response(make_error({"code": 400, "msg": "bad url"}), 400)   
+        resp.content_type = "application/json" 
     return resp
 
 if __name__ == "__main__":
