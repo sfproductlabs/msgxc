@@ -112,7 +112,7 @@ def index():
 def mirror():
     return jsonify(request.get_json(force=True))
 
-@app.route('/version', methods=['GET'])
+@app.route(f'{V1_PREFIX}/version', methods=['GET'])
 def version(name=None):
     resp = make_response(queries.version(),200)   
     resp.content_type = "application/json" 
@@ -136,7 +136,7 @@ def q(name=None):
     elif name == 'messages_recent':
         resp = make_response(queries.messages_recent(),200)   
         resp.content_type = "application/json" 
-    elif name == 'version':
+    elif name == 'version':        
         resp = make_response(queries.version(),200)   
         resp.content_type = "application/json"         
     else:

@@ -6,9 +6,9 @@ const httpCodes = require('../../utils/httpStatusCodes')
 class ReportsController {
 
 
-    static async getDbVersion(comms) {
+    static async xasDbVersion(comms) {
         try {
-            return await Reports.getDbVersion();            
+            return await Reports.xasDbVersion(comms);            
         } catch (ex) {
             comms.error = {
                 code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,

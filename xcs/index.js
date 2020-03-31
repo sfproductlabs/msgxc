@@ -191,6 +191,16 @@ const app = uApp({
     Route.abort(res, ex);
   }
 })
+.get(`${process.env.V1_PREFIX}/status/xasver`, async (res, req) => {
+  let comms = {res, req};
+  try {
+    new RestRoute(comms).xasDbVersion()
+  } catch (ex) {
+    debugHTTP(ex)
+    nats.natsLogger.error({...comms, error: ex});
+    Route.abort(res, ex);
+  }
+})
 .get(`${process.env.V1_PREFIX}/ping`, (res) => {
   res.writeStatus(httpCodes.OK);       
   res.end(httpCodes.OK);  

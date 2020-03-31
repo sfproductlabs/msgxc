@@ -7,23 +7,32 @@
 'use strict';
 
 const cxn = require('../../utils/cassandra');
+const axios = require('axios');
 
 class Reports {
 
-    static async getDbVersion() {
-        const db = new cxn();
+    static async xasDbVersion(comms) {
         try {
-            return (await db.client.execute(
-                `select seq as version from sequences where name=?`, [
-                    'MSGXC_VER'
-                ], {
-                    prepare: true
-                })).first()
+            let opts = {
+                url: `${process.env.XAS_URL}/version`,
+                method: "get",
+                headers: {
+                }
+            };
+            if (comms.headers.cookie)
+                opts.headers.Cookie = comms.headers.cookie;
+            if (comms.headers.authorization)
+                opts.headers.Authorization = comms.headers.authorization;
+            const result = await axios.request(opts)
+            if (result && result.data && result.data.length > 0)
+                return result.data[0];
+            else 
+                return null;
         } catch (ex) {
             console.error(ex)
             return null;
         }
-    }  
+    }
 
 }
 

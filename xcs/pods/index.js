@@ -16,6 +16,7 @@ const ThreadController = require('./messaging/thread/controller');
 const ThreadRealtime = require('./messaging/thread/realtime');
 const AuthController = require('./auth/controller');
 const StatusController = require('./status/controller');
+const ReportsController = require('./reports/controller');
 
 
 
@@ -160,6 +161,23 @@ class Route {
             version = await StatusController.getDbVersion();
         } catch (ex) {
             let errMsg = "Unknown error occurred getting database version";
+            console.warn(errMsg, ex);
+            if (!this.comms.error) {
+                this.comms.error = {
+                    code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                    msg: ex.msg || errMsg
+                };
+            }
+        }
+        this.respond(version);
+    }
+
+    async xasDbVersion() {
+        let version = 0;
+        try {
+            version = await ReportsController.xasDbVersion(this.comms);
+        } catch (ex) {
+            let errMsg = "Unknown error occurred getting xas version";
             console.warn(errMsg, ex);
             if (!this.comms.error) {
                 this.comms.error = {
