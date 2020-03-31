@@ -16,3 +16,10 @@ export function toPercent(num, den) {
     return (Number((Number(num) / Number(den)).toFixed(2))*100).toFixed(0) + "%";
 }
   
+export function format2(str) {
+    if (!str) return '00';
+    if ((str + '').length == 0) return '00';
+    if ((str + '').length == 1) return '0' + str;
+    if ((str + '').length == 2) return str;
+    throw 'not formattable'
+}

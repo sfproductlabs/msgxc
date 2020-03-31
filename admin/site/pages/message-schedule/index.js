@@ -1,5 +1,4 @@
 import React from 'reactn';
-import Messages from '../../components/messages/messages';
 import Request from '../../utils/request'
 import Input from '../../../libs/elements/input'
 import Layout from '../../../libs/elements/layout'
@@ -8,7 +7,9 @@ import { DatePicker, TimeSelect } from '../../../libs/elements/date-picker'
 import Form from '../../../libs/elements/form'
 import Button from '../../../libs/elements/button'
 import Notification from '../../../libs/elements/notification'
+import moment from 'moment';
 
+import { format2 } from '../../utils/strings'
 
 export default class SendMessage extends React.PureComponent {
 
@@ -42,11 +43,36 @@ export default class SendMessage extends React.PureComponent {
         e.preventDefault();
         this.refs.form.validate((valid) => {
             if (valid) {
-                Notification({
-                    title: 'Success',
-                    message: 'Message scheduled',
-                    type: 'success'
-                });
+                const date = this.state.form.date;
+                const time = this.state.form.time;
+                const dt = `${date.getFullYear()}-${format2(date.getMonth() + 1)}-${format2(date.getDate())} ${format2(time.getHours())}:${format2(time.getMinutes())}:00`;
+                Request(`${process.env.XCS_URL}${process.env.V1_PREFIX}/publish`, {
+                    method : 'post',
+                    body : {
+                        tid : this.state.form.tid,
+                        msg : this.state.form.msg,
+                        scheduled : moment(dt).utc().toISOString()
+                    }
+                })
+                .then(response => {
+                    if (!response) {
+                        throw 'Could not schedule'
+                    }
+                    Notification({
+                        title: 'Success',
+                        message: 'Message scheduled',
+                        type: 'success'
+                    });
+                    this.resetForm();
+                })
+                .catch(ex => {
+                    Notification.error({
+                        title: 'Error',
+                        message: 'Message scheduling faled',
+                    });
+                    console.warn(ex)
+                })
+
             } else {
                 console.log('error submit!!');
                 return false;
@@ -54,8 +80,8 @@ export default class SendMessage extends React.PureComponent {
         });
     }
 
-    handleReset(e) {
-        e.preventDefault();
+
+    resetForm() {
         this.refs.form.resetFields();
         this.setState({
             form:
@@ -66,6 +92,11 @@ export default class SendMessage extends React.PureComponent {
             }
         })
         this.forceUpdate();
+    }
+
+    handleReset(e) {
+        e.preventDefault();
+        this.resetForm();
     }
 
     onChange(key, value) {

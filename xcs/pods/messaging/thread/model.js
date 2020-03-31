@@ -26,7 +26,7 @@ class Threading {
     const db = new cxn();
     const now = Date.now();
     try {
-      if (!comms.user || !comms.obj.tid) {
+      if (!comms.user || !comms.obj.tid || !comms.obj.msg || comms.obj.msg.length < 2) {
         return false;
       }
 
