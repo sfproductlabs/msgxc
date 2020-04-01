@@ -18,10 +18,11 @@ const cxn = require('../../../utils/cassandra');
 const httpCodes = require('../../../utils/httpStatusCodes')
 const AuthController = require('../../auth/controller');
 const debugThread = require('debug')('thread')
+const nats = require('../../../utils/nats')
 
 class Threading {
 
-  static async send(message, thread=null, refetch=false) {
+  static async send(comms, message, thread=null, refetch=false) {
     const db = new cxn();
     const now = Date.now();
     const tid = R.path(['tid'],thread) || R.path(['tid'],message);
@@ -30,7 +31,7 @@ class Threading {
     const svc = R.path(['svc'],message);
 
     if (!tid || !mid) {
-      debugThread('Missing tid/mid')
+      nats.natsLogger.info({...comms, error: { code : '200', msg : 'Missing tid/mid'}});
       return false;
     }
 
@@ -44,7 +45,7 @@ class Threading {
       })).first()
     }
     if (!thread || !thread.tid) {
-      debugThread('Could not load thread during send')
+      nats.natsLogger.info({...comms, error: { code : '200', msg : 'Could not load thread during send'}});
       return false;
     }
 
@@ -60,14 +61,14 @@ class Threading {
     }
 
     if (!message || !message.tid || !message.mid || !message.msg || message.completed) {
-      debugThread('Could not load valid message during send')
+      nats.natsLogger.info({...comms, error: { code : '200', msg : 'Could not load valid message during send'}});
       return false;
     }
 
     if (message.qid != qid && qid) {
       //Already worked on
       if (message.qid) {
-        debugThread('Service is already sending this message')
+        nats.natsLogger.info({...comms, error: { code : '200', msg : 'Service is already sending this message'}});
         return false;
       }      
       //SEAL MESSAGE
@@ -217,6 +218,7 @@ class Threading {
       return true;
 
     } else {
+      nats.natsLogger.info({...comms, error: { code : '200', msg : 'No subscribers for message'}});
       return false;
     }
   }
@@ -230,11 +232,11 @@ class Threading {
 
       //TODO: cancel only supports messages (mid) atm
       if (!comms.obj.tid || !comms.obj.mid) {
-        debugThread(`Missing parameters in request`)
+        nats.natsLogger.info({...comms, error: { code : '200', msg : `Missing parameters in request`}});
         return false;
       }
 
-      return await Threading.send({...comms.obj, qid : comms.obj.qid || qid, svc: comms.obj.svc || 'xcs' })
+      return await Threading.send(comms, {...comms.obj, qid : comms.obj.qid || qid, svc: comms.obj.svc || 'xcs' })
 
     } catch (ex) {
       console.warn(ex);
@@ -251,7 +253,7 @@ class Threading {
     const now = Date.now();
     try {
       if (!comms.user || !comms.obj.tid || !comms.obj.msg || comms.obj.msg.length < 2) {
-        debugThread(`Missing parameters in request`)
+        nats.natsLogger.info({...comms, error: { code : '200', msg : `Missing parameters in request`}});
         return false;
       }
 
@@ -263,13 +265,13 @@ class Threading {
       })).first()
 
       if (!thread) {
-        debugThread(`Missing thread`)
+        nats.natsLogger.info({...comms, error: { code : '200', msg : `Missing thread`}});
         return false;
       }
 
       //Check the thread
       if (thread.mtypes && thread.mtypes.find(e => e == "~")) {
-        debugThread(`Thread disabled`)
+        nats.natsLogger.info({...comms, error: { code : '200', msg : `Thread disabled`}});
         return true; //We can use this to temporarily disable the thread notifications.
       }
 
@@ -293,7 +295,7 @@ class Threading {
       }
 
       if (!checked) {
-        debugThread(`Security on thread ${comms.obj.tid} prevented action for user ${comms.user.uid}`)
+        nats.natsLogger.info({...comms, error: { code : '200', msg : `Security on thread ${comms.obj.tid} prevented action for user ${comms.user.uid}`}});
         return false;
       }
 
@@ -349,11 +351,11 @@ class Threading {
 
       //Check if scheduled for later
       if (comms.obj.scheduled && new Date(comms.obj.scheduled).getTime() > now) {
-        debugThread(`Postponing message via schedule`)
+        nats.natsLogger.info({...comms, error: { code : '200', msg : `Postponing message via schedule`}});
         return true;
       }
 
-      return await Threading.send(comms.obj, thread, false)
+      return await Threading.send(comms, comms.obj, thread, false)
 
     } catch (ex) {
       console.warn(ex);
@@ -370,7 +372,7 @@ class Threading {
     try {
 
       if (!comms.user || !comms.user.uid || !comms.obj.tid) {
-        debugThread(`Missing parameters in request`)
+        nats.natsLogger.info({...comms, error: { code : '200', msg : `Missing parameters in request`}});
         return false;
       }
 
@@ -381,7 +383,7 @@ class Threading {
         prepare: true
       })).first()
       if (!threadPerms) {
-        debugThread(`Missing thread`)
+        nats.natsLogger.info({...comms, error: { code : '200', msg : `Missing thread`}});
         return false;
       }
 
@@ -405,8 +407,10 @@ class Threading {
           prepare: true
         })
 
+        nats.natsLogger.info({...comms, error: { code : '200', msg : `User ${comms.user.uid} subscribed to ${comms.obj.tid}`}});
         return true;
       } else {
+        nats.natsLogger.info({...comms, error: { code : '200', msg : `[FAILED] User ${comms.user.uid} not subscribed to ${comms.obj.tid}. Permission error.`}});
         return false;
       }
 
@@ -425,7 +429,7 @@ class Threading {
     try {
 
       if (!comms.user || !comms.user.uid || !comms.obj.tid) {
-        debugThread(`Missing parameters in request`)
+        nats.natsLogger.info({...comms, error: { code : '200', msg : `Missing parameters in request`}});
         return false;
       }
 
@@ -437,6 +441,8 @@ class Threading {
       ], {
         prepare: true
       })
+
+      nats.natsLogger.info({...comms, error: { code : '200', msg : `User ${comms.user.uid} unsubscribed to ${comms.obj.tid}`}});
 
       return true;
 
@@ -457,7 +463,7 @@ class Threading {
 
       //TODO: cancel only supports messages (mid) atm
       if (!comms.user || !comms.user.uid || !comms.obj.tid || !comms.obj.mid) {
-        debugThread(`Missing parameters in request`)
+        nats.natsLogger.info({...comms, error: { code : '200', msg : `Missing parameters in request`}});
         return false;
       }
 
@@ -472,6 +478,8 @@ class Threading {
       ], {
         prepare: true
       })
+
+      nats.natsLogger.info({...comms, error: { code : '200', msg : `User ${comms.user.uid} canceled ${comms.obj.mid} to ${comms.obj.tid}`}});
 
       return true;
 

@@ -9,6 +9,7 @@ const nano = require('nano-seconds');
 const R = require('ramda');
 const Nats = require("nats");
 const { req2ip } = require('./networking'); 
+const debugGeneral = require('debug')('general')
 
 const hostname = os.hostname();
 let hostip = null;
@@ -106,21 +107,23 @@ const logNats = (obj, levelType, level, ip, name='generic') => {
         {
             let parsed = parseObj(obj);   
             let topic = `${prefixLog}${process.env.APP_NAME}.${levelType}`.toLowerCase();
+            let log = JSON.stringify({
+                name: name, //for filtering in admin, fixed value per backend
+                topic: topic,          //for filtering in admin, usually 'generic' unless custom debug logging
+                level: parsed.level || level,
+                ltimenss: String(ns), //ltime nanosecond string
+                ldate: now.match(/(.*)T/i)[1],
+                msg: parsed.msg || null,
+                hostname : hostname,
+                host: hostip,
+                ip : ip || parsed.ip || null,
+                params : parsed.params,
+                owner: parsed.owner
+            });
+            debugGeneral(log)
             nats.publish(
                 topic, 
-                JSON.stringify({
-                    name: name, //for filtering in admin, fixed value per backend
-                    topic: topic,          //for filtering in admin, usually 'generic' unless custom debug logging
-                    level: parsed.level || level,
-                    ltimenss: String(ns), //ltime nanosecond string
-                    ldate: now.match(/(.*)T/i)[1],
-                    msg: parsed.msg || null,
-                    hostname : hostname,
-                    host: hostip,
-                    ip : ip || parsed.ip || null,
-                    params : parsed.params,
-                    owner: parsed.owner
-                })
+                log
             );        
         }
     } catch (ex) {

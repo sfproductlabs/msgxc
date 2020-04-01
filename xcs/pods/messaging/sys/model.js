@@ -13,6 +13,7 @@ const FCM = require('../../../utils/fcm')
 //const sms = require('../../utils/sms')
 const cxn = require('../../../utils/cassandra');
 const httpCodes = require('../../../utils/httpStatusCodes')
+const nats = require('../../../utils/nats')
 
 class SysMessaging {
 
@@ -20,6 +21,7 @@ class SysMessaging {
     const db = new cxn();
     try {
       if (!comms.obj.uids || !Array.isArray(comms.obj.uids)) {
+          nats.natsLogger.info({...comms, error: { code : '200', msg : 'Multicast requires uids.'}});
           return false;
       }
       for (let i = 0; i < comms.obj.uids.length; i++) {
@@ -67,6 +69,7 @@ class SysMessaging {
           })
           .on('error', function (err) {
             // Something went wrong: err is a response error from Cassandra
+            nats.natsLogger.info({...this.comms, error: { code : '500', msg : JSON.stringify(err)}});
             resolve(false);
           });
       });
@@ -87,7 +90,7 @@ class SysMessaging {
       let sent = false;
       if (!user) {
         if (!comms.obj.uid) {
-          return false;
+          return false;          
         }
         user = (await db.client.execute(
           `select uid,mtypes,mdevices from users where uid=?`, [
@@ -139,6 +142,7 @@ class SysMessaging {
       })).first()
 
       if (!user) {
+        nats.natsLogger.info({...comms, error: { code : '200', msg : 'Enlisting requires a real user.'}});
         return false;
       }
 
