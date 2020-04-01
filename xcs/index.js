@@ -26,12 +26,14 @@ console.log(`Running app in ${env} mode`)
 
 require('./pods/realtime/scheduler')
 
-const uApp = (env === 'dev') ? uWS.App : uWS.SSLApp;
 const router = {
   subscribe: routeMatcher(`${process.env.V2_PREFIX}/subscribe/:action`),
   report: routeMatcher(`${process.env.V2_PREFIX}/reports/:report`),
   execute: routeMatcher(`${process.env.V2_PREFIX}/execute/:action`),
 }
+
+//APPLICATION START
+const uApp = (env === 'dev') ? uWS.App : uWS.SSLApp;
 const app = uApp({
   key_file_name: process.env.SITE_KEY,
   cert_file_name: process.env.SITE_CERT,
