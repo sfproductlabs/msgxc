@@ -27,6 +27,10 @@ Tracking messaging like we do the rest of internet traffic is essential to under
 
 Using the schema https://github.com/sfproductlabs/msgxc/tree/master/xcs/.setup/schema/cassandra and example data https://github.com/sfproductlabs/msgxc/blob/master/xcs/.setup/schema/cassandra/data.1.test.cql  (see also https://github.com/sfproductlabs/msgxc/blob/master/xcs/README.md#a-deeper-look-at-the-schema).
 
+### Admin UI
+
+A rudimentary [administration user interface](https://github.com/sfproductlabs/msgxc/tree/master/admin) written (and extendable) in react is available for use. It's especially useful for testing and sending system messages.
+
 ### Quickstart
 
 **Run dependencies**
