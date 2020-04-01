@@ -64,3 +64,4 @@ typings/
 crypt.json
 
 .DS_Store
+.idea

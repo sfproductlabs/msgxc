@@ -6,9 +6,10 @@ const basePath = path.resolve(__dirname, '../../');
 const dotenv = require('dotenv');
 const fs = require("fs");
 
+
 const configPromise = new Promise(function (resolve, reject) {
   new Promise((res) => {
-    fs.readFile(basePath + '/.env', function (err, data) {
+    fs.readFile(basePath + '/.env' + (process.env.BUILD_ENV_SUFFIX || '') , function (err, data) {
       if (err) throw err;
       res(data)
     });

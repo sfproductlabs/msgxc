@@ -6,7 +6,7 @@ var apnProvider = new apn.Provider({
         keyId: process.env.APPLE_KEY_PUSH_ID,
         teamId: process.env.APPLE_TEAM_ID
     },
-    production: false
+    production: process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging'
 });
 
 
