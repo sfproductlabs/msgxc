@@ -18,7 +18,7 @@ const opts = {
     sniffInterval: false,
     sniffEndpoint: '_nodes/_all/http'
 };
-
+ 
 if (process.env.ELASTIC_VERIFY_SERVER) {
     opts.ssl = {
         key: fs.readFileSync(process.env.CASSANDRA_SERVER_KEY),
