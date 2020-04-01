@@ -105,7 +105,7 @@ const logNats = (obj, levelType, level, ip, name='generic') => {
         if (level >= appLogLevel)
         {
             let parsed = parseObj(obj);   
-            let topic = `${prefixLog}${process.env.APP_NAME}.${levelType}`;
+            let topic = `${prefixLog}${process.env.APP_NAME}.${levelType}`.toLowerCase();
             nats.publish(
                 topic, 
                 JSON.stringify({

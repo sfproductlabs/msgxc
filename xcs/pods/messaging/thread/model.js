@@ -59,8 +59,8 @@ class Threading {
       })).first()
     }
 
-    if (!message || !message.tid || !message.mid || !message.msg) {
-      debugThread('Could not load message during send')
+    if (!message || !message.tid || !message.mid || !message.msg || message.completed) {
+      debugThread('Could not load valid message during send')
       return false;
     }
 

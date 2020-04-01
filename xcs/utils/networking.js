@@ -46,7 +46,7 @@ const req2ip = function(comms) {
     if (comms && comms.res) {
         try {
             return ab2ip6(comms.res.getRemoteAddress());
-        } catch {
+        } catch (ex) {
             console.warn(ex);
             return null;
         }

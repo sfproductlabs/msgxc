@@ -208,8 +208,8 @@ class RestRoute extends Route {
             this.comms.headers[k] = v;
         });
         this.comms.res.onAborted(() => {
-            //this.comms.res.writeStatus(httpCodes.METHOD_FAILURE);
-            console.warn("Connection Aborted")
+            nats.natsLogger.error({...this.comms, error: this.comms.error || { code : '500', msg : '[ABORTED] Unknown server error.'}});
+            console.warn(`Connection Aborted ${JSON.stringify(this.comms)}`)
             //TODO kafka
             this.comms.res.aborted = true;
         });
