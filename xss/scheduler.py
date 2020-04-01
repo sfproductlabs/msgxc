@@ -1,5 +1,6 @@
 import settings
-import schedules.messages
+import schedules.messages as messages
 
+#TODO: Multiprocessing, Real Scheduling
 if __name__ == "__main__":
-    print('done')
+    messages.process_scheduled_messages()
