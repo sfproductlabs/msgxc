@@ -13,6 +13,8 @@ import Table from '../../../libs/elements/table'
 import Loading from '../../../libs/elements/loading'
 import moment from 'moment';
 
+import './style.scss';
+
 export default class MessagesUpcoming extends React.PureComponent {
 
     constructor(props) {
@@ -127,6 +129,13 @@ export default class MessagesUpcoming extends React.PureComponent {
         .catch(console.warn)
     }
 
+    rowClassName(row, index) {
+        if (row.qid) {
+            return 'processing-row';
+        }
+        return '';
+    }
+
     render() {
         return (
             <React.Fragment>
@@ -137,6 +146,7 @@ export default class MessagesUpcoming extends React.PureComponent {
                             style={{ width: '100%' }}
                             columns={this.state.columns}
                             data={this.state.data}
+                            rowClassName={this.rowClassName.bind(this)}
                             border={true}
                             height={400}
                             stripe={true}

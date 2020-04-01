@@ -26,6 +26,8 @@ class Threading {
     const now = Date.now();
     const tid = R.path(['tid'],thread) || R.path(['tid'],message);
     const mid = R.path(['mid'],message);
+    const qid = R.path(['qid'],message);
+    const svc = R.path(['svc'],message);
 
     if (!tid || !mid) {
       debugThread('Missing tid/mid')
@@ -60,6 +62,26 @@ class Threading {
     if (!message || !message.tid || !message.mid || !message.msg) {
       debugThread('Could not load message during send')
       return false;
+    }
+
+    if (message.qid != qid && qid) {
+      //Already worked on
+      if (message.qid) {
+        debugThread('Service is already sending this message')
+        return false;
+      }      
+      //SEAL MESSAGE
+      await db.client.execute(
+        `update mstore set qid=?,svc=? where tid=? and mid=?`, [
+        qid,
+        svc || message.svc,
+        tid,
+        mid
+      ], {
+        prepare: true
+      });
+      message.qid = qid;
+      message.svc = svc || message.svc;
     }
 
     message.opts = message.opts || R.tryCatch(JSON.parse, (_, value) => (value))(message.data);
@@ -176,13 +198,14 @@ class Threading {
 
       const completed = Date.now();
       
-      //SEAL MESSAGE      
+      //CLOSE MESSAGE      
       await db.client.execute(
-        `update mstore set scheduled=?, started=?, completed=?,updated=? where tid=? and mid=?`, [
+        `update mstore set scheduled=?, started=?, completed=?,updated=?,qid=? where tid=? and mid=?`, [
         null,
         now,
         completed,
         completed,
+        null,
         tid,
         mid
       ], {
@@ -202,13 +225,16 @@ class Threading {
   static async execute(comms) {
     try {
 
+      //Create an artificial Queue
+      const qid = uuidv1();
+
       //TODO: cancel only supports messages (mid) atm
       if (!comms.obj.tid || !comms.obj.mid) {
         debugThread(`Missing parameters in request`)
         return false;
       }
 
-      return await Threading.send(comms.obj)
+      return await Threading.send({...comms.obj, qid : comms.obj.qid || qid, svc: comms.obj.svc || 'xcs' })
 
     } catch (ex) {
       console.warn(ex);
