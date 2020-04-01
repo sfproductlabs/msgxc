@@ -67,7 +67,7 @@ const app = uApp({
       comms.isBinary = isBinary;
       debugWS(`Request (ws) ${comms.obj.slug}`);  
       switch (true) {
-        case /^\/api\/v1\/subscribe\//.test(comms.obj.slug):           
+        case /^\/api\/v2\/subscribe\//.test(comms.obj.slug):           
           try {            
             comms.params = router.subscribe.parse(comms.obj.slug);
             new WSRoute(comms).authorizeUser().subscribeWebsocket()            
@@ -77,14 +77,14 @@ const app = uApp({
             Route.abort(ws, ex);
           }            
           return;
-        case /^\/api\/v1\/publish/.test(comms.obj.slug):
+        case /^\/api\/v2\/publish/.test(comms.obj.slug):
           //TODO, only allow trusted publish to friends 
           ws.send(`{ "error" : "${httpCodes.NOT_IMPLEMENTED}" }`, isBinary);  
           return;        
-        case /^\/api\/v1\/unsubscribe/.test(comms.obj.slug):   
+        case /^\/api\/v2\/unsubscribe/.test(comms.obj.slug):   
           ws.send(`{ "error" : "${httpCodes.NOT_IMPLEMENTED}" }`, isBinary);  
           return;
-        case /^\/api\/v1\/admin/.test(comms.obj.slug):   
+        case /^\/api\/v2\/admin/.test(comms.obj.slug):   
           ws.send(`{ "error" : "${httpCodes.NOT_IMPLEMENTED}" }`, isBinary);  
           return;
         case /^\/ping$/.test(comms.obj.slug): 
