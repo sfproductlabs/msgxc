@@ -59,6 +59,19 @@ class ThreadController {
         }
     }
 
+    static async execute(comms) {
+        try {
+            return await Threading.execute(comms);            
+        } catch (ex) {
+            console.warn(ex);
+            comms.error = {
+                code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                msg: ex.msg || "Unknown server executing message."
+            };
+            throw comms.error;
+        }
+    }
+
 
 }
 

@@ -103,7 +103,7 @@ create table sequences (
   seq int,
   PRIMARY KEY (name)
 );
-insert into sequences (name, seq) values('MSGXC_VER',1);
+insert into sequences (name, seq) values('MSGXC_VER',2);
 
 --INTERNAL & EXTERNAL SERVICES
 create table services (
@@ -347,8 +347,8 @@ create table mtriage (
   --SCHEDULE
   svc text, --Ex. SES, 'message', 'sms, 'action'
   qid timeuuid, --executing queue id -- IMPORTANT !!!!
-  srcid timeuuid, --source id Ex. message-id
-  srckey text, --source id, audit id, inc. external Ex. SES message-id
+  rid uuid, --Relation id id Ex. message-id
+  relation text, --Relation source audit id, inc. external Ex. xcs.mthread
   meta map<text,text>, --METADATA, SPLIT etc.
   scheduled timestamp,
   started timestamp,
@@ -359,6 +359,7 @@ create table mtriage (
   deliveries set<uuid>, --uid delivered, update after ACK of wsocket
   failures set<uuid>, --uid failures
   --TRACKING
+  xid text,
   split text,
   --PERMISSIONS
   perms set<frozen<perm>>, --additional perms 
@@ -397,8 +398,8 @@ create table mstore (
   --SCHEDULE
   svc text, --Ex. SES, 'message', 'sms, 'action'
   qid timeuuid, --executing queue id -- IMPORTANT !!!!
-  srcid timeuuid, --source id Ex. message-id
-  srckey text, --source id, audit id, inc. external Ex. SES message-id
+  rid uuid, --Relation id id Ex. message-id
+  relation text, --Relation source audit id, inc. external Ex. xcs.mthread
   meta map<text,text>, --METADATA etc.
   planned timestamp,
   scheduled timestamp, --scheduled is removed once processed to limit index size
@@ -410,6 +411,7 @@ create table mstore (
   deliveries set<uuid>, --uid delivered, update after ACK of wsocket
   failures set<uuid>, --uid failures
   --TRACKING
+  xid text,
   split text,
   --PERMISSIONS
   perms set<frozen<perm>>, --additional perms 

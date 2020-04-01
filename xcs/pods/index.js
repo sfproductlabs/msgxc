@@ -431,6 +431,31 @@ class RestRoute extends Route {
         this.respond(result);
     }
 
+    async execute() {
+        let result = null;
+        try {  
+            await this.processPayload();
+            switch (this.comms.params.action) {
+                case "message":
+                    result = await ThreadController.execute(this.comms);
+                    break;                 
+                default:
+                    result = false
+                    break;
+            }          
+        } catch (ex) {
+            let errMsg = `Unknown error executing ${this.comms.params.action}`;
+            console.warn(errMsg, ex);
+            if (!this.comms.error) {
+                this.comms.error = {
+                    code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
+                    msg: ex.msg || errMsg
+                };
+            }
+        }
+        this.respond(result);
+    }
+
     async getReport() {
         let result = null;
         try {  

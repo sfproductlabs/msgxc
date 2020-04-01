@@ -27,7 +27,7 @@ export default class MessagesRecent extends React.PureComponent {
                 fixed: 'left',
                 render: (el)=>{
                     return <span>{moment(el.updated).format('LLLL')}</span>
-                  }
+                }
               },
               {
                 label: "Message",
@@ -38,6 +38,14 @@ export default class MessagesRecent extends React.PureComponent {
                 label: "Subject",
                 prop: "subject",
                 width: 120
+              },
+              {
+                label: "Completed",
+                prop: "completed",
+                width: 180,
+                render: (el)=>{
+                    return <span>{moment(el.updated).fromNow()}</span>
+                }
               },
               {
                 label: "Meta",
