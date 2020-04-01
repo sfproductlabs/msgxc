@@ -123,8 +123,7 @@ export default class MessagesUpcoming extends React.PureComponent {
             //this.setGlobal({ messages: data });
             const table = (R.path(['hits', 'hits'], data || body) || []).map(f => {
                 return f.Source;
-            });
-            console.log(table)
+            });            
             this.setState({ data: table, loading: false });
         })
         .catch(console.warn)

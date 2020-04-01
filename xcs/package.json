@@ -35,7 +35,7 @@
     "vapid": "web-push generate-vapid-keys"
   },
   "dependencies": {
-    "@elastic/elasticsearch": "^6.8.6",
+    "@elastic/elasticsearch": "^5.6.16",
     "@sendgrid/mail": "^6.3.1",
     "apn": "^2.2.0",
     "aws-sdk": "^2.553.0",

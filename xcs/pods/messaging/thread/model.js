@@ -277,22 +277,23 @@ class Threading {
       if (comms.user.method === 'svc') {
         checked = true;
       } else if (comms.user.uid) {
-        checked = threadPerms.openp;
+        checked = thread.openp;
         if (!checked) {
-          checked = threadPerms.owner.toString() === comms.user.uid;
+          checked = thread.owner.toString() === comms.user.uid;
         }
         if (!checked) {
-          checked = threadPerms.admins && threadPerms.admins.some(f => f.toString() === comms.user.uid);
+          checked = thread.admins && thread.admins.some(f => f.toString() === comms.user.uid);
         }
         if (!checked) {
-          checked = threadPerms.pubs && threadPerms.pubs.some(f => f.toString() === comms.user.uid);
+          checked = thread.pubs && thread.pubs.some(f => f.toString() === comms.user.uid);
         }
-        if (threadPerms.perms) {
-          checked = AuthController.checkPerms(comms, threadPerms.perms, 'thread', 'subscribe');
+        if (thread.perms) {
+          checked = AuthController.checkPerms(comms, thread.perms, 'thread', 'subscribe');
         }
       }
 
       if (!checked) {
+        debugThread(`Security on thread ${comms.obj.tid} prevented action for user ${comms.user.uid}`)
         return false;
       }
 
