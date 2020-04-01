@@ -232,10 +232,6 @@ const app = uApp({
     Route.abort(res, ex);
   }
 })
-.get(`${process.env.V2_PREFIX}/ping`, (res) => {
-  res.writeStatus(httpCodes.OK);       
-  res.end(httpCodes.OK);  
-})
 //OPTIONS - CORS
 .options(`${process.env.V2_PREFIX}/*`, (res, req) => {
   res.writeStatus(httpCodes.OK);       
@@ -259,6 +255,10 @@ const app = uApp({
     nats.natsLogger.error({...comms, error: ex});
     res.writeStatus(httpCodes.NOT_IMPLEMENTED);       
     res.end(httpCodes.NOT_IMPLEMENTED);  
+})
+.get(`/ping`, (res) => {
+  res.writeStatus(httpCodes.OK);       
+  res.end(httpCodes.OK);  
 })
 .any('/*', (res, req) => {
     let comms = {res, req};
