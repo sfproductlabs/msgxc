@@ -85,7 +85,9 @@ class Threading {
       message.svc = svc || message.svc;
     }
 
+    //Fix up data for pass-through
     message.opts = message.opts || R.tryCatch(JSON.parse, (_, value) => (value))(message.data);
+    if (!message.opts) message.opts = {};
 
     //////////////////////////
     //SEND BROADCASTS
@@ -128,6 +130,11 @@ class Threading {
         ], {
           prepare: true
         })).first()
+
+        if (!user) {
+          continue; //TODO: Prune from subscribers
+        }
+        
         if (user.mtypes) {
           if (user.mtypes.includes('~')) {
             continue;

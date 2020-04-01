@@ -66,7 +66,7 @@ class ThreadController {
             console.warn(ex);
             comms.error = {
                 code: ex.code || httpCodes.INTERNAL_SERVER_ERROR,
-                msg: ex.msg || "Unknown server executing message."
+                msg: ex.msg || "Unknown server error executing message."
             };
             throw comms.error;
         }
