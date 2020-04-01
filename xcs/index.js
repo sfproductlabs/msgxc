@@ -105,68 +105,6 @@ const app = uApp({
     debugWS('WebSocket closed, sockets open:', sockets.size);
   }
 })
-///////////////////////////////////////////////////////////////////
-/// V1 DEPRECATION 
-/// TODO: REMOVE
-.post(`${process.env.V1_PREFIX}/multicast`, async (res, req) => {
-  let comms = {res, req};
-  try {
-    new RestRoute(comms).authorizeUser('msgxc_admin,admin').multicast()
-  } catch (ex) {
-    debugHTTP(ex)
-    nats.natsLogger.error({...comms, error: ex});
-    Route.abort(res, ex);
-  }
-})
-.post(`${process.env.V1_PREFIX}/broadcast`, async (res, req) => {
-  let comms = {res, req};
-  try {
-    new RestRoute(comms).authorizeUser('msgxc_admin,admin').broadcast()
-  } catch (ex) {
-    debugHTTP(ex)
-    nats.natsLogger.error({...comms, error: ex});
-    Route.abort(res, ex);
-  }
-})
-.post(`${process.env.V1_PREFIX}/send`, async (res, req) => {
-  let comms = {res, req};
-  try {
-    checkMaintenanceMode(res);
-    new RestRoute(comms).authorizeUser().send()
-  } catch (ex) {
-    debugHTTP(ex)
-    nats.natsLogger.error({...comms, error: ex});
-    Route.abort(res, ex);
-  }
-})
-.post(`${process.env.V1_PREFIX}/native/subscribe`, async (res, req) => {
-  let comms = {res, req};
-  try {
-    checkMaintenanceMode(res);
-    new RestRoute(comms).authorizeUser().enlist()
-  } catch (ex) {
-    debugHTTP(ex)
-    nats.natsLogger.error({...comms, error: ex});
-    Route.abort(res, ex);
-  }
-})
-//STATUS
-.get(`${process.env.V1_PREFIX}/status/dbver`, async (res, req) => {
-  let comms = {res, req};
-  try {
-    new RestRoute(comms).getDbVersion()
-  } catch (ex) {
-    debugHTTP(ex)
-    nats.natsLogger.error({...comms, error: ex});
-    Route.abort(res, ex);
-  }
-})
-.get(`${process.env.V1_PREFIX}/ping`, (res) => {
-  res.writeStatus(httpCodes.OK);
-  res.end(httpCodes.OK);
-})
-/// EOF V1 DEPRECATION 
-///////////////////////////////////////////////////////////////////
 //SYSTEM MESSAGING
 .post(`${process.env.V2_PREFIX}/multicast`, async (res, req) => {
   let comms = {res, req};
