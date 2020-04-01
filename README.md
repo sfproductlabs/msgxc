@@ -3,7 +3,7 @@
 - This project is a work in progress. Please come back shortly.
 ```
 
-# Messaging Exchange for Node.js
+# Messaging Exchange
 
 **Essentially this is Optimizely for messaging**
 
