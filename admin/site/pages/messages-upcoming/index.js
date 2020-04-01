@@ -124,13 +124,14 @@ export default class MessagesUpcoming extends React.PureComponent {
             const table = (R.path(['hits', 'hits'], data || body) || []).map(f => {
                 return f.Source;
             });
+            console.log(table)
             this.setState({ data: table, loading: false });
         })
         .catch(console.warn)
     }
 
     rowClassName(row, index) {
-        if (row.qid) {
+        if (row && row.qid) {
             return 'processing-row';
         }
         return '';

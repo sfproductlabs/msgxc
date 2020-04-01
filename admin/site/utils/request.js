@@ -50,23 +50,20 @@ function catchError(err) {
     throw err;
 }
 
+//ONLY USE THIS FOR INTERNAL FETCHES
 export default function request(url, options) {
-    let jwt = R.defaultTo(null)(Cookies.getJSON(process.env.CLIENT_AUTH_COOKIE));
-    let auth = (typeof jwt !== null && typeof jwt === 'object') ? { "Authorization": "Bearer " + JSON.stringify(jwt) } : {};
+    let token = Cookies.get(process.env.CLIENT_AUTH_COOKIE);
     let opts = R.defaultTo({})(options);
     let track = R.defaultTo(false)(opts.track);
     let camelize = R.defaultTo(true)(opts.camelize);
+    let jwt = token ? { "Authorization": "Bearer " + token } : {};
     if (track) {
-        setTimeout(function () {
-            let tj = R.defaultTo(null)(Cookies.getJSON(process.env.CLIENT_AUTH_COOKIE));
-            if (tj !== null && typeof jwt === 'object') {
-                let ta = { "Authorization": "Bearer " + JSON.stringify(tj) };
-                fetch(process.env.TRACK_URL, {
-                    method: "POST",
-                    body: JSON.stringify(track),
-                    headers: ta
-                });
-            }
+        setTimeout(function () {                    
+            fetch(process.env.TRACK_URL, {
+                method: "POST",
+                body: JSON.stringify(track),
+                headers: jwt
+            });
         }, 3000);
         delete opts.track;
     }
@@ -77,8 +74,9 @@ export default function request(url, options) {
     opts.headers = {
         "Content-Type":"text/plain",
         ...opts.headers,
-        ...auth
+        ...jwt
     };
+    if (opts.noAuth) delete opts.headers.Authorization;    
     if (camelize)
         return fetch(url, opts)
             .then(checkStatus)

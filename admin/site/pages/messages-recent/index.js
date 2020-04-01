@@ -85,7 +85,7 @@ export default class MessagesRecent extends React.PureComponent {
 
 
     rowClassName(row, index) {
-        if (row.qid) {
+        if (row && row.qid) {
             return 'processing-row';
         }
         return '';
