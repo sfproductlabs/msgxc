@@ -1,9 +1,3 @@
-
-//const host = location.origin.replace(/^http/, 'ws')
-//  var ws = new WebSocket('ws://localhost:9001/')
-//  ws.onmessage = msg => console.log(msg)
-// // ws.send('WebSockets are awesome!')
-// ws.onerror = evt => console.error("WebSocket error observed:", event)
 const ePath = process.env.PROJECT ? `${__dirname}/.env.${process.env.PROJECT}` : `${__dirname}/.env`
 require('dotenv').config({path: ePath})
 const R = require('ramda');
