@@ -256,7 +256,7 @@ class Threading {
       }
 
       let thread = (await db.client.execute(
-        `select broadcast,owner,admins,openp,perms,org,pubs,prefs,subs,mtypes,alias,name from mthreads where tid=?`, [
+        `select tid,broadcast,owner,admins,openp,perms,org,pubs,prefs,subs,mtypes,alias,name from mthreads where tid=?`, [
         comms.obj.tid
       ], {
         prepare: true
@@ -301,8 +301,8 @@ class Threading {
       comms.obj.subject = comms.obj.subject || thread.name;
       comms.obj.data = typeof comms.obj.opts === 'string' ? comms.obj.opts : typeof comms.obj.opts === 'object' ? JSON.stringify(comms.obj.opts) : null
       comms.obj.broadcast = thread.broadcast && comms.obj.broadcast && !comms.obj.pmid
+      comms.obj.mid = uuidv1();
       //TODO: Persist to the MSTORE
-      const mid = uuidv1();
       await db.client.execute(
         `insert into mstore (
             tid,         
@@ -326,7 +326,7 @@ class Threading {
             ?,?,?,?,?,?,?,?,?,? ,?,?,?,?,?,?
           )`, [
         comms.obj.tid,
-        mid,
+        comms.obj.mid,
         comms.obj.pmid,
         comms.obj.subject,
         comms.obj.sys,
