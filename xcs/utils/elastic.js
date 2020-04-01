@@ -4,7 +4,7 @@ const R = require('ramda');
 
 const opts = {
     apiVersion: '5.6',
-    nodes: process.env.CASSANDRA_HOSTS.split(",").map(host => `http${process.env.CASSANDRA_VERIFY_SERVER || process.env.NODE_ENV === 'staging' || process.env.NODE_ENV === 'production' ? 's' : ''}://${host}:${process.env.ELASTIC_PORT || '443'}`),
+    nodes: process.env.CASSANDRA_HOSTS.split(",").map(host => `http${process.env.ELASTIC_VERIFY_SERVER ? 's' : ''}://${host}:${process.env.ELASTIC_PORT || '443'}`),
     selector: 'roundRobin',
     requestTimeout: 15000,
     pingTimeout: 3000,
@@ -19,12 +19,12 @@ const opts = {
     sniffEndpoint: '_nodes/_all/http'
 };
 
-if (process.env.CASSANDRA_VERIFY_SERVER) {
+if (process.env.ELASTIC_VERIFY_SERVER) {
     opts.ssl = {
         key: fs.readFileSync(process.env.CASSANDRA_SERVER_KEY),
         cert: fs.readFileSync(process.env.CASSANDRA_SERVER_CERT),
         ca: [fs.readFileSync(process.env.CASSANDRA_CA_CERT)],
-        rejectUnauthorized: process.env.CASSANDRA_VERIFY_SERVER
+        rejectUnauthorized: process.env.ELASTIC_VERIFY_SERVER
     }
 }
 
