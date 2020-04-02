@@ -266,6 +266,7 @@ CREATE TABLE mthreads (
     tid timeuuid, --thread id
     alias text, --human identifier
     name text, --human readable name
+    ddata text, --default data to send
     post text, --note/description of thread/post
     mtempl map<text, text>, --default template eg. {email,00001} --template text, --use a url for now
     mcert mcert,
