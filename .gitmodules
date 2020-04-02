@@ -1,0 +1,3 @@
+[submodule "xadmin"]
+	path = xadmin
+	url = git@github.com:sfproductlabs/xadmin.git
