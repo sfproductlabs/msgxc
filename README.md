@@ -257,6 +257,8 @@ https://github.com/sfproductlabs/msgxc/blob/master/xcs/README.md#a-deeper-look-a
 Written in collaboration with the wonderful people...
 
 ## TODO
+- [ ] Facebook Ads
+- [ ] Google Ads
 - [ ] Facebook Messenger
 - [ ] LinkedIn
 - [ ] Integrate with Apache Superset.
