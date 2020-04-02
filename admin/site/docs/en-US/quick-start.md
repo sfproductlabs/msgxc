@@ -1,3 +1,0 @@
-## Quick start
-
-Coming soon...
