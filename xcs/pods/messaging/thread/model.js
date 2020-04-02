@@ -22,16 +22,16 @@ const nats = require('../../../utils/nats')
 
 class Threading {
 
-  static async send(comms, message, thread=null, refetch=false) {
+  static async send(comms, message, thread = null, refetch = false) {
     const db = new cxn();
     const now = Date.now();
-    const tid = R.path(['tid'],thread) || R.path(['tid'],message);
-    const mid = R.path(['mid'],message);
-    const qid = R.path(['qid'],message);
-    const svc = R.path(['svc'],message);
+    const tid = R.path(['tid'], thread) || R.path(['tid'], message);
+    const mid = R.path(['mid'], message);
+    const qid = R.path(['qid'], message);
+    const svc = R.path(['svc'], message);
 
     if (!tid || !mid) {
-      nats.natsLogger.info({...comms, error: { code : '200', msg : 'Missing tid/mid'}});
+      nats.natsLogger.info({ ...comms, error: { code: '200', msg: 'Missing tid/mid' } });
       return false;
     }
 
@@ -45,7 +45,7 @@ class Threading {
       })).first()
     }
     if (!thread || !thread.tid) {
-      nats.natsLogger.info({...comms, error: { code : '200', msg : 'Could not load thread during send'}});
+      nats.natsLogger.info({ ...comms, error: { code: '200', msg: 'Could not load thread during send' } });
       return false;
     }
 
@@ -61,16 +61,16 @@ class Threading {
     }
 
     if (!message || !message.tid || !message.mid || !message.msg || message.completed) {
-      nats.natsLogger.info({...comms, error: { code : '200', msg : 'Could not load valid message during send'}});
+      nats.natsLogger.info({ ...comms, error: { code: '200', msg: 'Could not load valid message during send' } });
       return false;
     }
 
     if (message.qid != qid && qid) {
       //Already worked on
       if (message.qid) {
-        nats.natsLogger.info({...comms, error: { code : '200', msg : 'Service is already sending this message'}});
+        nats.natsLogger.info({ ...comms, error: { code: '200', msg: 'Service is already sending this message' } });
         return false;
-      }      
+      }
       //SEAL MESSAGE
       await db.client.execute(
         `update mstore set qid=?,svc=? where tid=? and mid=?`, [
@@ -107,105 +107,112 @@ class Threading {
       const notified = [];
       //Send to subscribers (subs)
       for (let i = 0; i < thread.subs.length; i++) {
-        let sent = false;
+        try {
+          let sent = false;
 
-        //First check thread.prefs and user.mtypes and thread.mtypes
-        let sendTypes = thread.mtypes ? thread.mtypes.slice() : null; //null means sendall
+          //First check thread.prefs and user.mtypes and thread.mtypes
+          let sendTypes = thread.mtypes ? thread.mtypes.slice() : null; //null means sendall
 
-        //Check the thread specific user preferences
-        if (thread.prefs) {
-          const userThreadPrefs = thread.prefs[thread.subs[i]];
-          if (userThreadPrefs) {
-            if (userThreadPrefs.includes('~')) {
+          //Check the thread specific user preferences
+          if (thread.prefs) {
+            const userThreadPrefs = thread.prefs[thread.subs[i]];
+            if (userThreadPrefs) {
+              if (userThreadPrefs.includes('~')) {
+                continue;
+              }
+              sendTypes = sendTypes ? sendTypes.filter(v => userThreadPrefs.includes(v)) : userThreadPrefs.slice();
+            }
+          }
+
+          //Check the user
+          let user = (await db.client.execute(
+            `select cell,uid,mtypes,mdevices,email from users where uid=?`, [
+            thread.subs[i]
+          ], {
+            prepare: true
+          })).first()
+
+          if (!user) {
+            continue; //TODO: Prune from subscribers
+          }
+
+          if (user.mtypes) {
+            if (user.mtypes.includes('~')) {
               continue;
             }
-            sendTypes = sendTypes ? sendTypes.filter(v => userThreadPrefs.includes(v)) : userThreadPrefs.slice();
-          }
-        }
-
-        //Check the user
-        let user = (await db.client.execute(
-          `select cell,uid,mtypes,mdevices,email from users where uid=?`, [
-          thread.subs[i]
-        ], {
-          prepare: true
-        })).first()
-
-        if (!user) {
-          continue; //TODO: Prune from subscribers
-        }
-        
-        if (user.mtypes) {
-          if (user.mtypes.includes('~')) {
-            continue;
-          }
-          sendTypes = sendTypes ? sendTypes.filter(v => user.mtypes.includes(v)) : user.mtypes.slice();
-        }
-
-
-        //////////////////////////
-        //SEND OTHERS
-        //TODO: Triage!
-        //TODO: Add retries for realtime
-        //TODO: ScheduleDegraded() and include nearline messaging emd, emm , emw (email summaries)
-        notified.push(thread.subs[i]);
-        if (user.mdevices) {
-          //APN
-          if (!sendTypes || sendTypes.includes('apn')) {
-            const apns = user.mdevices.filter(device => device.mtype === 'apn');
-            apns.map(async mdevice => {
-              const results = await APN.send(mdevice.did, message.msg, message.opts);
-              //TODO: AG Manage Failures, Triage             
-            });
-          }
-          //FCM
-          if (!sendTypes || sendTypes.includes('fcm')) {
-            const fcms = user.mdevices.filter(device => device.mtype === 'fcm');
-            fcms.map(async mdevice => {
-              const results = await FCM.send(mdevice.did, message.msg, message.opts);
-              //TODO: AG Manage Failures, Triage            
-            });
-          }
-          //WPN
-          if (!sendTypes || sendTypes.includes('wpn')) {
-            const wpns = user.mdevices.filter(device => device.mtype === 'wpn');
-            wpns.map(async mdevice => {
-              const result = await WPN.send(mdevice.did, { ...message.opts, msg: message.msg, ok: true, slug: `/thread/${message.tid}` });
-              if (!result) {
-                db.client.execute(
-                  `update users set mdevices = mdevices - ? where uid = ? ;`, [
-                  [mdevice],
-                  thread.subs[i]
-                ], {
-                  prepare: true
-                }).catch(error => {
-                  console.error(error);
-                })
-              }
-              //TODO: AG Manage Failures, Triage            
-            });
+            sendTypes = sendTypes ? sendTypes.filter(v => user.mtypes.includes(v)) : user.mtypes.slice();
           }
 
 
-        }
+          //////////////////////////
+          //SEND OTHERS
+          //TODO: Triage!
+          //TODO: Add retries for realtime
+          //TODO: ScheduleDegraded() and include nearline messaging emd, emm , emw (email summaries)
+          notified.push(thread.subs[i]);
+          if (user.mdevices) {
+            //APN
+            if (!sendTypes || sendTypes.includes('apn')) {
+              const apns = user.mdevices.filter(device => device.mtype === 'apn');
+              apns.map(async mdevice => {
+                const results = await APN.send(mdevice.did, message.msg, message.opts);
+                //TODO: AG Manage Failures, Triage     
+                if (process.env.NODE_ENV == 'dev') debugThread(`[APN RESULT] ${JSON.stringify(results)}`)
+              });
+            }
+            //FCM
+            if (!sendTypes || sendTypes.includes('fcm')) {
+              const fcms = user.mdevices.filter(device => device.mtype === 'fcm');
+              fcms.map(async mdevice => {
+                const results = await FCM.send(mdevice.did, message.msg, message.opts);
+                //TODO: AG Manage Failures, Triage            
+                if (process.env.NODE_ENV == 'dev') debugThread(`[FCM RESULT] ${JSON.stringify(results)}`)
+              });
+            }
+            //WPN
+            if (!sendTypes || sendTypes.includes('wpn')) {
+              const wpns = user.mdevices.filter(device => device.mtype === 'wpn');
+              wpns.map(async mdevice => {
+                const result = await WPN.send(mdevice.did, { ...message.opts, msg: message.msg, ok: true, slug: `/thread/${message.tid}` });
+                if (process.env.NODE_ENV == 'dev') debugThread(`[WPN RESULT] ${typeof result === 'object' ? JSON.stringify(result) : result}`)
+                if (!result) {
+                  db.client.execute(
+                    `update users set mdevices = mdevices - ? where uid = ? ;`, [
+                    [mdevice],
+                    thread.subs[i]
+                  ], {
+                    prepare: true
+                  }).catch(error => {
+                    console.error(error);
+                  })
+                }
+                //TODO: AG Manage Failures, Triage            
+              });
+            }
+          }
 
-        //SMS
-        if (user.cell && (!sendTypes || sendTypes.includes('sms'))) {
-          SMS.send(user.cell, message.msg);
-          //TODO: AG Manage Failures, Triage 
-        }
+          //SMS
+          if (user.cell && (!sendTypes || sendTypes.includes('sms'))) {
+            const result = await SMS.send(user.cell, message.msg);
+            //TODO: AG Manage Failures, Triage 
+            if (process.env.NODE_ENV == 'dev') debugThread(`[SMS RESULT] ${result}`)
+          }
 
-        //EMAIL
-        if (user.email && (!sendTypes || sendTypes.includes('em'))) {
-          EMAIL.send({ to: user.email, subject: `New message in thread ${thread.name || thread.alias}`, text: message.msg });
-          //TODO: AG Manage Failures, Triage 
+          //EMAIL
+          if (user.email && (!sendTypes || sendTypes.includes('em'))) {
+            const result = await EMAIL.send({ to: user.email, subject: `New message in thread ${thread.name || thread.alias}`, text: message.msg });
+            //TODO: AG Manage Failures, Triage 
+            if (process.env.NODE_ENV == 'dev') debugThread(`[EMAIL RESULT] ${JSON.stringify(result)}`)
+          }
+        } catch (ex) {
+          nats.natsLogger.info({ ...comms, error: { code: '500', msg: `[FAILED] Message sent to user ${thread.subs[i]}. Ex: ${JSON.stringify(ex)}` } });
         }
       }
 
       debugThread(`Successfully sent message ${tid}.${mid}`)
 
       const completed = Date.now();
-      
+
       //CLOSE MESSAGE      
       await db.client.execute(
         `update mstore set scheduled=?, started=?, completed=?,updated=?,qid=? where tid=? and mid=?`, [
@@ -225,7 +232,7 @@ class Threading {
       return true;
 
     } else {
-      nats.natsLogger.info({...comms, error: { code : '200', msg : 'No subscribers for message'}});
+      nats.natsLogger.info({ ...comms, error: { code: '200', msg: 'No subscribers for message' } });
       return false;
     }
   }
@@ -239,11 +246,11 @@ class Threading {
 
       //TODO: cancel only supports messages (mid) atm
       if (!comms.obj.tid || !comms.obj.mid) {
-        nats.natsLogger.info({...comms, error: { code : '200', msg : `Missing parameters in request`}});
+        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Missing parameters in request` } });
         return false;
       }
 
-      return await Threading.send(comms, {...comms.obj, qid : comms.obj.qid || qid, svc: comms.obj.svc || 'xcs' })
+      return await Threading.send(comms, { ...comms.obj, qid: comms.obj.qid || qid, svc: comms.obj.svc || 'xcs' })
 
     } catch (ex) {
       console.warn(ex);
@@ -260,7 +267,7 @@ class Threading {
     const now = Date.now();
     try {
       if (!comms.user || !comms.obj.tid || !comms.obj.msg || comms.obj.msg.length < 2) {
-        nats.natsLogger.info({...comms, error: { code : '200', msg : `Missing parameters in request`}});
+        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Missing parameters in request` } });
         return false;
       }
 
@@ -272,13 +279,13 @@ class Threading {
       })).first()
 
       if (!thread) {
-        nats.natsLogger.info({...comms, error: { code : '200', msg : `Missing thread`}});
+        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Missing thread` } });
         return false;
       }
 
       //Check the thread
       if (thread.mtypes && thread.mtypes.find(e => e == "~")) {
-        nats.natsLogger.info({...comms, error: { code : '200', msg : `Thread disabled`}});
+        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Thread disabled` } });
         return true; //We can use this to temporarily disable the thread notifications.
       }
 
@@ -302,7 +309,7 @@ class Threading {
       }
 
       if (!checked) {
-        nats.natsLogger.info({...comms, error: { code : '200', msg : `Security on thread ${comms.obj.tid} prevented action for user ${comms.user.uid}`}});
+        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Security on thread ${comms.obj.tid} prevented action for user ${comms.user.uid}` } });
         return false;
       }
 
@@ -358,7 +365,7 @@ class Threading {
 
       //Check if scheduled for later
       if (comms.obj.scheduled && new Date(comms.obj.scheduled).getTime() > now) {
-        nats.natsLogger.info({...comms, error: { code : '200', msg : `Postponing message via schedule`}});
+        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Postponing message via schedule` } });
         return true;
       }
 
@@ -379,7 +386,7 @@ class Threading {
     try {
 
       if (!comms.user || !comms.user.uid || !comms.obj.tid) {
-        nats.natsLogger.info({...comms, error: { code : '200', msg : `Missing parameters in request`}});
+        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Missing parameters in request` } });
         return false;
       }
 
@@ -390,7 +397,7 @@ class Threading {
         prepare: true
       })).first()
       if (!threadPerms) {
-        nats.natsLogger.info({...comms, error: { code : '200', msg : `Missing thread`}});
+        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Missing thread` } });
         return false;
       }
 
@@ -414,10 +421,10 @@ class Threading {
           prepare: true
         })
 
-        nats.natsLogger.info({...comms, error: { code : '200', msg : `User ${comms.user.uid} subscribed to ${comms.obj.tid}`}});
+        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `User ${comms.user.uid} subscribed to ${comms.obj.tid}` } });
         return true;
       } else {
-        nats.natsLogger.info({...comms, error: { code : '200', msg : `[FAILED] User ${comms.user.uid} not subscribed to ${comms.obj.tid}. Permission error.`}});
+        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `[FAILED] User ${comms.user.uid} not subscribed to ${comms.obj.tid}. Permission error.` } });
         return false;
       }
 
@@ -436,7 +443,7 @@ class Threading {
     try {
 
       if (!comms.user || !comms.user.uid || !comms.obj.tid) {
-        nats.natsLogger.info({...comms, error: { code : '200', msg : `Missing parameters in request`}});
+        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Missing parameters in request` } });
         return false;
       }
 
@@ -449,7 +456,7 @@ class Threading {
         prepare: true
       })
 
-      nats.natsLogger.info({...comms, error: { code : '200', msg : `User ${comms.user.uid} unsubscribed to ${comms.obj.tid}`}});
+      nats.natsLogger.info({ ...comms, error: { code: '200', msg: `User ${comms.user.uid} unsubscribed to ${comms.obj.tid}` } });
 
       return true;
 
@@ -470,7 +477,7 @@ class Threading {
 
       //TODO: cancel only supports messages (mid) atm
       if (!comms.user || !comms.user.uid || !comms.obj.tid || !comms.obj.mid) {
-        nats.natsLogger.info({...comms, error: { code : '200', msg : `Missing parameters in request`}});
+        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Missing parameters in request` } });
         return false;
       }
 
@@ -486,7 +493,7 @@ class Threading {
         prepare: true
       })
 
-      nats.natsLogger.info({...comms, error: { code : '200', msg : `User ${comms.user.uid} canceled ${comms.obj.mid} to ${comms.obj.tid}`}});
+      nats.natsLogger.info({ ...comms, error: { code: '200', msg: `User ${comms.user.uid} canceled ${comms.obj.mid} to ${comms.obj.tid}` } });
 
       return true;
 

@@ -29,7 +29,7 @@ const send = function (params) {
 		else
 			msg.html += msg.text;
 	};
-	sendgrid.sendMultiple(msg);
+	return sendgrid.sendMultiple(msg);
 };
 
 module.exports = {

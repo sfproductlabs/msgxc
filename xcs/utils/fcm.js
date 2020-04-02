@@ -28,7 +28,7 @@ class FCM {
 		var regTokens = [to];
 
 		// Actually send the message
-		return await new Promise(function (resolve, reject) {
+		return new Promise(function (resolve, reject) {
 			sender.send(message, { registrationTokens: regTokens }, function (err, response) {
 				if (err) {
 					console.error("[ERROR]:", err);

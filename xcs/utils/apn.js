@@ -23,7 +23,7 @@ class APN {
             note.payload = options.data || options.payload || {};
             note.topic = process.env.APPLE_BUNDLE_ID;
 
-            return await apnProvider.send(note, to);
+            return apnProvider.send(note, to);
 
     }
 }

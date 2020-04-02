@@ -20,14 +20,14 @@ class WPN {
                     payload = JSON.stringify(payload)
                 } catch {}
             } 
-            return await new Promise(function (resolve, reject) {
+            return new Promise(function (resolve, reject) {
                 webpush.sendNotification(subscription, payload)
                 .then(result => {
-                    resolve(true);
+                    resolve(result);
                 })
                 .catch(error => {
                     //console.error(error.stack);
-                    resolve(false);
+                    reject(error);
                 });
                 
             });

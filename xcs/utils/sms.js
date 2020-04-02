@@ -20,7 +20,7 @@ class SMS {
             return null;
         }
 
-        return await new Promise(function (resolve, reject) {
+        return new Promise(function (resolve, reject) {
             twilio.messages.create({
                 to: to,
                 from: process.env.TWILIO_SENDER_NUMBER,
