@@ -149,7 +149,6 @@ export default class MessagesUpcoming extends React.PureComponent {
                             rowClassName={this.rowClassName.bind(this)}
                             border={true}
                             height={400}
-                            stripe={true}
                         />
                     </Loading>
                 </div>
