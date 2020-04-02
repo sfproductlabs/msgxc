@@ -38,7 +38,7 @@ class Threading {
     if (!thread || refetch) {
       //Load the thread again
       thread = (await db.client.execute(
-        `select tid,broadcast,owner,admins,openp,perms,org,pubs,prefs,subs,mtypes,alias,name from mthreads where tid=?`, [
+        `select tid,broadcast,owner,admins,openp,perms,org,pubs,prefs,subs,mtypes,alias,name,ddata from mthreads where tid=?`, [
         tid
       ], {
         prepare: true
@@ -87,7 +87,7 @@ class Threading {
 
     //Fix up data for pass-through
     message.opts = message.opts || R.tryCatch(JSON.parse, (_, value) => (value))(message.data);
-    if (!message.opts) message.opts = {};
+    if (!message.opts) message.opts = R.tryCatch(JSON.parse, (_, value) => (value))(thread.ddata) || {};
 
     //////////////////////////
     //SEND BROADCASTS
@@ -265,7 +265,7 @@ class Threading {
       }
 
       let thread = (await db.client.execute(
-        `select tid,broadcast,owner,admins,openp,perms,org,pubs,prefs,subs,mtypes,alias,name from mthreads where tid=?`, [
+        `select tid,broadcast,owner,admins,openp,perms,org,pubs,prefs,subs,mtypes,alias,name,ddata from mthreads where tid=?`, [
         comms.obj.tid
       ], {
         prepare: true
