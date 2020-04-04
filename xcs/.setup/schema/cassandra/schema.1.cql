@@ -258,7 +258,8 @@ CREATE TABLE msec (
     updated timestamp,
     updater uuid,
     PRIMARY KEY ((tid), secid)
-);
+)
+WITH CLUSTERING ORDER BY (secid DESC);
 CREATE INDEX msec_pending_idx ON msec ( pending );
 
 CREATE TABLE mthreads (
