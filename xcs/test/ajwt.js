@@ -6,8 +6,8 @@ const fs = require('fs');
 var path = require("path");
 const compression = require('../utils/compression')
 const crypt = require('../utils/crypt')
-const pubKey = fs.readFileSync(path.join(__dirname, '../.setup/keys/') + 'staging/pub.key', 'utf8');
-const privKey = fs.readFileSync(path.join(__dirname, '../.setup/keys/') + 'staging/priv.key', 'utf8');
+const pubKey = fs.readFileSync(path.join(__dirname, '../.setup/keys/') + 'pub.key', 'utf8');
+const privKey = fs.readFileSync(path.join(__dirname, '../.setup/keys/') + 'priv.key', 'utf8');
 //const crypto = require('../crypt.json');
 const ajwt = require('../utils/ajwt')
 
