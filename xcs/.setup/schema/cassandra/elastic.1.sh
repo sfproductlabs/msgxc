@@ -3,8 +3,8 @@
 # setup
 # 
 
-curl -w "\n" -k -XDELETE "http://localhost:9200/msgxca"
-curl -XPUT -H 'Content-Type: application/json' http://localhost:9200/msgxca -d'{}'
+curl -w "\n" -k -XDELETE "http://localhost:9200/sfplx"
+curl -XPUT -H 'Content-Type: application/json' http://localhost:9200/sfplx -d'{}'
 
 curl -w "\n" -k -XDELETE "http://localhost:9200/mthreads"
 curl -w "\n" -k -XDELETE "http://localhost:9200/mtriage"
@@ -14,7 +14,7 @@ curl -w "\n" -k -XDELETE "http://localhost:9200/musers"
 
 # mthreads - wip
 curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:9200/mthreads/" -d '{
-    "settings" : { "keyspace" : "msgxc" },
+    "settings" : { "keyspace" : "sfpl" },
     "mappings": {
         "mthreads": {
             "properties" : {
@@ -28,7 +28,7 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:92
 
 # mstore - completed
 curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:9200/mstore/" -d '{
-    "settings" : { "keyspace" : "msgxc" },
+    "settings" : { "keyspace" : "sfpl" },
     "mappings": {
         "mstore": {
             "properties" : {
@@ -57,7 +57,7 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:92
 
 # mtriage - completed
 curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:9200/mtriage/" -d '{
-    "settings" : { "keyspace" : "msgxc" },
+    "settings" : { "keyspace" : "sfpl" },
     "mappings": {
         "mtriage": {
             "properties" : {
@@ -72,7 +72,7 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:92
 
 
 curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:9200/musers/" -d '{
-    "settings" : { "keyspace" : "msgxc" },
+    "settings" : { "keyspace" : "sfpl" },
     "mappings": {
         "users": {
             "properties" : {
@@ -95,7 +95,7 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:92
 }'
 
 # curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:9200/mcerts" -d '{
-#     "settings" : { "keyspace" : "msgxc" },
+#     "settings" : { "keyspace" : "sfpl" },
 #     "mappings": {
 #         "mcerts" : { "discover" : ".*" }
 #     }
@@ -103,7 +103,7 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:92
 
 # "cql_struct": "frozen<map>",
 curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:9200/mfailures/" -d '{
-    "settings" : { "keyspace" : "msgxc" },
+    "settings" : { "keyspace" : "sfpl" },
     "mappings": {
         "mfailures": {
             "properties" : {
@@ -126,11 +126,11 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPUT  "http://localhost:92
     }
 }'
 
-nodetool flush msgxc
-nodetool rebuild_index msgxc mthreads elastic_mthreads_idx
-nodetool rebuild_index msgxc mtriage elastic_mtriage_idx
-nodetool rebuild_index msgxc mfailures elastic_mfailures_idx
-nodetool rebuild_index msgxc musers elastic_users_idx
+nodetool flush sfpl
+nodetool rebuild_index sfpl mthreads elastic_mthreads_idx
+nodetool rebuild_index sfpl mtriage elastic_mtriage_idx
+nodetool rebuild_index sfpl mfailures elastic_mfailures_idx
+nodetool rebuild_index sfpl musers elastic_users_idx
 
 # OPTIONAL MERGE INDEXES
 curl -w "\n" -k -H 'Content-Type: application/json'  -XPOST  "http://localhost:9200/_reindex" -d '{
@@ -138,7 +138,7 @@ curl -w "\n" -k -H 'Content-Type: application/json'  -XPOST  "http://localhost:9
     "index": ["mtriage", "mfailures"]
   },
   "dest": {
-    "index": "msgxca"
+    "index": "sfplx"
   }
 }'
 
@@ -159,7 +159,7 @@ curl -XGET -H 'Content-Type: application/json' "http://localhost:9200/mthreads/_
 }'
 
 
-curl -XGET -H -k http://localhost:9200/msgxca/_search?pretty=true&q=*:*
+curl -XGET -H -k http://localhost:9200/sfplx/_search?pretty=true&q=*:*
 
 curl -XGET -H 'Content-Type: application/json' "http://localhost:9200/mtriage/_search?pretty" -d '
 {

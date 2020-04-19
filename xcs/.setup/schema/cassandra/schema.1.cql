@@ -5,9 +5,9 @@
 
 -- SF Product Labs MSGXC Schema
 --drop keyspace msgxc;
-CREATE KEYSPACE msgxc WITH replication = {'class': 'NetworkTopologyStrategy', 'DC1': '1'}  AND durable_writes = true;
+CREATE KEYSPACE sfpl WITH replication = {'class': 'NetworkTopologyStrategy', 'DC1': '1'}  AND durable_writes = true;
 
-use msgxc;
+use sfpl;
 
 --Merge with existing tables.
 
@@ -60,8 +60,8 @@ create table users (
   uhash       text, --username hash
   email       text,
   ehash       text, --email hash
-  roles      set<text>,
-  rights     set<text>,
+  roles      set<text>, --global noun = Ex. ADMIN
+  rights     set<text>, --global verb = Ex. EAT_BREAKFAST
   ref uuid, --referral
   aff text, --affiliate
   promo text, --promo code
