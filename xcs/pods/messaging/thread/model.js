@@ -9,6 +9,7 @@
 const R = require('ramda');
 const uuidv1 = require('uuid/v1');
 const { broadcastServers } = require('../../realtime/nats')
+const track = require('../../../utils/track')
 const APN = require('../../../utils/apn')
 const FCM = require('../../../utils/fcm')
 const WPN = require('../../../utils/wpn')
@@ -156,7 +157,28 @@ class Threading {
               const apns = user.mdevices.filter(device => device.mtype === 'apn');
               apns.map(async mdevice => {
                 const results = await APN.send(mdevice.did, message.msg, message.opts);
-                //TODO: AG Manage Failures, Triage     
+                //TODO: AG Manage Failures, Triage                  
+                if (results && results.sent && results.sent.length && results.sent.length > 0) {
+                  track({
+                    ename : "msent",
+                    etyp: "apn",
+                    ptyp: "mstore",
+                    uid: user.uid,
+                    vid: user.uid,
+                    rid: message.mid
+                  })
+                } else {
+                    const reason = R.path(['failed', '0', 'response', 'reason'], results || {});
+                    track({
+                      ename : "mfail",
+                      etyp: "apn",
+                      ptyp: "mstore",
+                      uid: user.uid,
+                      vid: user.uid,
+                      rid: message.mid,
+                      error: reason
+                    })
+                }
                 if (process.env.NODE_ENV == 'dev') debugThread(`[APN RESULT] ${JSON.stringify(results)}`)
               });
             }
@@ -165,7 +187,28 @@ class Threading {
               const fcms = user.mdevices.filter(device => device.mtype === 'fcm');
               fcms.map(async mdevice => {
                 const results = await FCM.send(mdevice.did, message.msg, message.opts);
-                //TODO: AG Manage Failures, Triage            
+                //TODO: AG Manage Failures, Triage 
+                if (results && results.success) {
+                  track({
+                    ename : "msent",
+                    etyp: "fcm",
+                    ptyp: "mstore",
+                    uid: user.uid,
+                    vid: user.uid,
+                    rid: message.mid
+                  })
+                } else {                      
+                  const reason = R.path(['results', '0', 'error'], results || {});                
+                  track({
+                    ename : "mfail",
+                    etyp: "fcm",
+                    ptyp: "mstore",
+                    uid: user.uid,
+                    vid: user.uid,
+                    rid: message.mid,
+                    error: reason
+                  })
+                }           
                 if (process.env.NODE_ENV == 'dev') debugThread(`[FCM RESULT] ${JSON.stringify(results)}`)
               });
             }
