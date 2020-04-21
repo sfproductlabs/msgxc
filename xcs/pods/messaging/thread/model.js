@@ -46,7 +46,7 @@ class Threading {
       })).first()
     }
     if (!thread || !thread.tid) {
-      nats.natsLogger.info({ ...comms, error: { code: '200', msg: 'Could not load thread during send' } });
+      nats.natsLogger.warn({ ...comms, error: { code: '200', msg: 'Could not load thread during send' } });
       return false;
     }
 
@@ -62,14 +62,14 @@ class Threading {
     }
 
     if (!message || !message.tid || !message.mid || !message.msg || message.completed) {
-      nats.natsLogger.info({ ...comms, error: { code: '200', msg: 'Could not load valid message during send' } });
+      nats.natsLogger.warn({ ...comms, error: { code: '200', msg: 'Could not load valid message during send' } });
       return false;
     }
 
     if (message.qid != qid && qid) {
       //Already worked on
       if (message.qid) {
-        nats.natsLogger.info({ ...comms, error: { code: '200', msg: 'Service is already sending this message' } });
+        nats.natsLogger.warn({ ...comms, error: { code: '200', msg: 'Service is already sending this message' } });
         return false;
       }
       //SEAL MESSAGE
@@ -275,7 +275,7 @@ class Threading {
       return true;
 
     } else {
-      nats.natsLogger.info({ ...comms, error: { code: '200', msg: 'No subscribers for message' } });
+      nats.natsLogger.info({ ...comms, msg: 'No subscribers for message' });
       return false;
     }
   }
@@ -289,7 +289,7 @@ class Threading {
 
       //TODO: cancel only supports messages (mid) atm
       if (!comms.obj.tid || !comms.obj.mid) {
-        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Missing parameters in request` } });
+        nats.natsLogger.warn({ ...comms, error: { code: '200', msg: `Missing parameters in request` } });
         return false;
       }
 
@@ -310,7 +310,7 @@ class Threading {
     const now = Date.now();
     try {
       if (!comms.user || !comms.obj.tid || !comms.obj.msg || comms.obj.msg.length < 2) {
-        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Missing parameters in request` } });
+        nats.natsLogger.warn({ ...comms, error: { code: '200', msg: `Missing parameters in request` } });
         return false;
       }
 
@@ -322,13 +322,13 @@ class Threading {
       })).first()
 
       if (!thread) {
-        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Missing thread` } });
+        nats.natsLogger.warn({ ...comms, error: { code: '200', msg: `Missing thread` } });
         return false;
       }
 
       //Check the thread
       if (thread.mtypes && thread.mtypes.find(e => e == "~")) {
-        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Thread disabled` } });
+        nats.natsLogger.warn({ ...comms, error: { code: '200', msg: `Thread disabled` } });
         return true; //We can use this to temporarily disable the thread notifications.
       }
 
@@ -352,7 +352,7 @@ class Threading {
       }
 
       if (!checked) {
-        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Security on thread ${comms.obj.tid} prevented action for user ${comms.user.uid}` } });
+        nats.natsLogger.warn({ ...comms, error: { code: '200', msg: `Security on thread ${comms.obj.tid} prevented action for user ${comms.user.uid}` } });
         return false;
       }
 
@@ -408,7 +408,7 @@ class Threading {
 
       //Check if scheduled for later
       if (comms.obj.scheduled && new Date(comms.obj.scheduled).getTime() > now) {
-        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Postponing message via schedule` } });
+        nats.natsLogger.info({ ...comms, msg: `Postponing message via schedule` });
         return true;
       }
 
@@ -429,7 +429,7 @@ class Threading {
     try {
 
       if (!comms.user || !comms.user.uid || !comms.obj.tid) {
-        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Missing parameters in request` } });
+        nats.natsLogger.warn({ ...comms, error: { code: '200', msg: `Missing parameters in request` } });
         return false;
       }
 
@@ -440,7 +440,7 @@ class Threading {
         prepare: true
       })).first()
       if (!threadPerms) {
-        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Missing thread` } });
+        nats.natsLogger.warn({ ...comms, error: { code: '200', msg: `Missing thread` } });
         return false;
       }
 
@@ -464,10 +464,10 @@ class Threading {
           prepare: true
         })
 
-        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `User ${comms.user.uid} subscribed to ${comms.obj.tid}` } });
+        nats.natsLogger.info({ ...comms, msg: `User ${comms.user.uid} subscribed to ${comms.obj.tid}` });
         return true;
       } else {
-        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `[FAILED] User ${comms.user.uid} not subscribed to ${comms.obj.tid}. Permission error.` } });
+        nats.natsLogger.error({ ...comms, error: { code: '200', msg: `[FAILED] User ${comms.user.uid} not subscribed to ${comms.obj.tid}. Permission error.` } });
         return false;
       }
 
@@ -486,7 +486,7 @@ class Threading {
     try {
 
       if (!comms.user || !comms.user.uid || !comms.obj.tid) {
-        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Missing parameters in request` } });
+        nats.natsLogger.warn({ ...comms, error: { code: '200', msg: `Missing parameters in request` } });
         return false;
       }
 
@@ -499,7 +499,7 @@ class Threading {
         prepare: true
       })
 
-      nats.natsLogger.info({ ...comms, error: { code: '200', msg: `User ${comms.user.uid} unsubscribed to ${comms.obj.tid}` } });
+      nats.natsLogger.info({ ...comms, msg: `User ${comms.user.uid} unsubscribed to ${comms.obj.tid}` });
 
       return true;
 
@@ -536,7 +536,7 @@ class Threading {
         prepare: true
       })
 
-      nats.natsLogger.info({ ...comms, error: { code: '200', msg: `User ${comms.user.uid} canceled ${comms.obj.mid} to ${comms.obj.tid}` } });
+      nats.natsLogger.info({ ...comms, msg: `User ${comms.user.uid} canceled ${comms.obj.mid} to ${comms.obj.tid}` });
 
       return true;
 
