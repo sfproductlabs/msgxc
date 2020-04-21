@@ -27,9 +27,9 @@ create type address (
 );
 
 create table orgs (
-  org      uuid,
-  parent   uuid,
-  root uuid,
+  org      timeuuid,
+  parent   timeuuid,
+  root timeuuid,
   lname text, --legal name
   hname text, --human name
   notes text,
@@ -41,9 +41,9 @@ create table orgs (
   hq address,
   addresses    map<text, frozen<address>>,
   created timestamp,
-  owner uuid,
+  owner timeuuid,
   updated timestamp,
-  updater uuid,
+  updater timeuuid,
   primary key (org)
 );
 
@@ -54,7 +54,7 @@ primary key (root, org)
 with clustering order by (root DESC, org ASC);
 
 create table users (
-  uid         uuid,
+  uid         timeuuid,
   uname       text,
   pwd         text,
   uhash       text, --username hash
@@ -62,7 +62,7 @@ create table users (
   ehash       text, --email hash
   roles      set<text>, --global noun = Ex. ADMIN
   rights     set<text>, --global verb = Ex. EAT_BREAKFAST
-  ref uuid, --referral
+  ref timeuuid, --referral
   aff text, --affiliate
   promo text, --promo code
   origin_url text,
@@ -73,10 +73,10 @@ create table users (
   splits map<text,text>, --experimentid : split (xid_splitname)
   lang text,
   created timestamp,
-  org uuid,
-  owner uuid,
+  org timeuuid,
+  owner timeuuid,
   updated timestamp,
-  updater uuid,
+  updater timeuuid,
   primary key       (uid)
 );
 CREATE INDEX user_cohorts_idx ON users ( cohorts );
@@ -85,7 +85,7 @@ CREATE INDEX user_cohorts_idx ON users ( cohorts );
 --Used for update/creation only
 create table user_emails (
   email       text,
-  uid         uuid,
+  uid         timeuuid,
   primary key       (email)
 ); 
 CREATE INDEX user_emails_uid_idx ON user_emails ( uid );
@@ -93,7 +93,7 @@ CREATE INDEX user_emails_uid_idx ON user_emails ( uid );
 --Used for update/creation only
 create table user_usernames (
   uname       text,
-  uid         uuid,
+  uid         timeuuid,
   primary key       (uname)
 );
 CREATE INDEX user_usernames_uid_idx ON user_usernames ( uid );
@@ -113,10 +113,10 @@ create table services (
   rights  set<text>,
   expiry date,
   created timestamp,
-  org uuid,
-  owner uuid,
+  org timeuuid,
+  owner timeuuid,
   updated timestamp,
-  updater uuid,
+  updater timeuuid,
   primary key       (svc)
 );
 
@@ -133,10 +133,10 @@ create table queues (
   started timestamp,
   completed timestamp,
   created timestamp,
-  org uuid,
-  owner uuid,
+  org timeuuid,
+  owner timeuuid,
   updated timestamp,
-  updater uuid,
+  updater timeuuid,
   PRIMARY KEY ((qid))
 )
 WITH default_time_to_live = 1209600; --2 week Tombstones
@@ -154,10 +154,10 @@ create table cohorts (
   started timestamp,
   completed timestamp,
   created timestamp,
-  org uuid,
-  owner uuid,
+  org timeuuid,
+  owner timeuuid,
   updated timestamp,
-  updater uuid,
+  updater timeuuid,
   PRIMARY KEY ((cohort))
 );
 
@@ -189,7 +189,7 @@ create table logs (
   name text, 
   host text, 
   hostname text, 
-  owner uuid,
+  owner timeuuid,
   ip inet,
   level int, 
   msg text,
@@ -234,10 +234,10 @@ create type mcert (
 
 --advanced permission (org and owner in everything else)
 create type perm (
-  org uuid,
-  role uuid,
+  org timeuuid,
+  role timeuuid,
   right text,
-  owner uuid,
+  owner timeuuid,
   noun text,
   verb text,
   blk boolean --blacklist
@@ -249,14 +249,14 @@ CREATE TABLE msec (
     secid timeuuid, --uuid for this record
     perm frozen<perm>, 
     pending boolean,
-    approver uuid,
+    approver timeuuid,
     approved timestamp,
     created timestamp,
-    org uuid,
-    owner uuid,
+    org timeuuid,
+    owner timeuuid,
     updatedms bigint, --participant updated CHECK
     updated timestamp,
-    updater uuid,
+    updater timeuuid,
     PRIMARY KEY ((tid), secid)
 )
 WITH CLUSTERING ORDER BY (secid DESC);
@@ -282,7 +282,7 @@ CREATE TABLE mthreads (
   --PERMISSIONS
     --Prioritized from most specific to most general >>>
     --Priority HIGH
-    admins set<uuid>, --approve new members etc.
+    admins set<timeuuid>, --approve new members etc.
     --Priority MEDIUM
     opens boolean, --publicly subscribable, still add uid to subs [Default: false]
     openp boolean, --publicly publishable, still add uid to pubs [Default: false]
@@ -304,16 +304,16 @@ CREATE TABLE mthreads (
     campaign text,
     term text, 
     promo text, --promo code to pass through
-    ref uuid, --referrer uid (Select)
+    ref timeuuid, --referrer uid (Select)
     aff text, --affiliate uname or code (Select)
   --RECIPIENTS
     broadcast boolean,
     derive boolean, --update subs based on cohorts/splits
-    sent set<uuid>, --outstanding uids left to publish to for this experiment
-    outs set<uuid>, --outstanding uids left to publish to for this experiment
-    subs set<uuid>, --admins+writers+subs=subs (only this index required to subscribe)
-    pubs set<uuid>, --uids who can publish to admins+pubs=pubs (only this index required to publish)
-    prefs map<uuid, frozen<set<text>>>, --msg preferences (user,mtypes) apn,~,wpn etc.  
+    sent set<timeuuid>, --outstanding uids left to publish to for this experiment
+    outs set<timeuuid>, --outstanding uids left to publish to for this experiment
+    subs set<timeuuid>, --admins+writers+subs=subs (only this index required to subscribe)
+    pubs set<timeuuid>, --uids who can publish to admins+pubs=pubs (only this index required to publish)
+    prefs map<timeuuid, frozen<set<text>>>, --msg preferences (user,mtypes) apn,~,wpn etc.  
     ftrack boolean, --track failed deliveries
     strack boolean, --track successful deliveries
   --INTEREST
@@ -322,11 +322,11 @@ CREATE TABLE mthreads (
   --OWNER
     deleted timestamp,
     created timestamp,
-    org uuid,
-    owner uuid,
+    org timeuuid,
+    owner timeuuid,
     updatedms bigint, --participant updated CHECK
     updated timestamp,
-    updater uuid,
+    updater timeuuid,
     PRIMARY KEY ((tid))
 );
 
@@ -349,7 +349,7 @@ create table mtriage (
   --SCHEDULE
   svc text, --Ex. SES, 'message', 'sms, 'action'
   qid timeuuid, --executing queue id -- IMPORTANT !!!!
-  rid uuid, --Relation id id Ex. message-id
+  rid timeuuid, --Relation id id Ex. message-id
   relation text, --Relation source audit id, inc. external Ex. xcs.mthread
   meta map<text,text>, --METADATA, SPLIT etc.
   scheduled timestamp,
@@ -357,9 +357,9 @@ create table mtriage (
   completed timestamp,
   --AUDITING
   mtypes set<text>, --attempted mtypes (update after actually sent)
-  users set<uuid>, --keep this here for pull mid > lastloggedin
-  deliveries set<uuid>, --uid delivered, update after ACK of wsocket
-  failures set<uuid>, --uid failures
+  users set<timeuuid>, --keep this here for pull mid > lastloggedin
+  deliveries set<timeuuid>, --uid delivered, update after ACK of wsocket
+  failures set<timeuuid>, --uid failures
   --TRACKING
   xid text,
   split text,
@@ -370,10 +370,10 @@ create table mtriage (
   keep boolean, --keep this message on the server
   createdms bigint, --INDEX and use this for last-seen & alerts ALONGWITH users
   created timestamp,
-  org uuid,
-  owner uuid,
+  org timeuuid,
+  owner timeuuid,
   updated timestamp,
-  updater uuid,
+  updater timeuuid,
   PRIMARY KEY ((tid), mid)
 )
 WITH CLUSTERING ORDER BY (mid DESC)
@@ -400,7 +400,7 @@ create table mstore (
   --SCHEDULE
   svc text, --Ex. SES, 'message', 'sms, 'action'
   qid timeuuid, --executing queue id -- IMPORTANT !!!!
-  rid uuid, --Relation id id Ex. message-id
+  rid timeuuid, --Relation id id Ex. message-id
   relation text, --Relation source audit id, inc. external Ex. xcs.mthread
   meta map<text,text>, --METADATA etc.
   planned timestamp,
@@ -409,9 +409,9 @@ create table mstore (
   completed timestamp,
   --AUDITING
   mtypes set<text>, --attempted mtypes (update after actually sent)
-  users set<uuid>, --keep this here for pull mid > lastloggedin
-  deliveries set<uuid>, --uid delivered, update after ACK of wsocket
-  failures set<uuid>, --uid failures
+  users set<timeuuid>, --keep this here for pull mid > lastloggedin
+  deliveries set<timeuuid>, --uid delivered, update after ACK of wsocket
+  failures set<timeuuid>, --uid failures
   --TRACKING
   xid text,
   split text,
@@ -422,10 +422,10 @@ create table mstore (
   keep boolean, --keep this message on the server
   createdms bigint, --INDEX and use this for last-seen & alerts ALONGWITH users
   created timestamp,
-  org uuid,
-  owner uuid,
+  org timeuuid,
+  owner timeuuid,
   updated timestamp,
-  updater uuid, 
+  updater timeuuid, 
   --ADDITIONAL FIELDS
   interest map<text, int>, -- Ex. { attempted: 542, sent: 500, hearts : 44 , views : 55, clicks etc.} 
   perf map<text,double>, --Performance. {sink : score}
@@ -445,17 +445,17 @@ create type mdevice (
 create table mfailures (
  tid timeuuid,
  mid timeuuid, --mtriageid
- uid uuid,
+ uid timeuuid,
  mtype text,
  mdevice frozen<mdevice>,
  failure text, --failure type (Ex. nopened, noack)
  retries int, 
  died timestamp, --stop retries
  created timestamp,
- org uuid,
- owner uuid,
+ org timeuuid,
+ owner timeuuid,
  updated timestamp,
- updater uuid,
+ updater timeuuid,
  PRIMARY KEY ((tid), mid, uid, mtype, mdevice)
 )
 WITH CLUSTERING ORDER BY (mid DESC);
