@@ -1,11 +1,4 @@
-### &#x1F534; Important &#x1F534;
-```diff
-- This project is a work in progress. Please come back shortly.
-```
-
 # Messaging Exchange (MSGXC)
-
-**Essentially this is Optimizely for messaging**
 
 Multi-modal messaging inc. native push, websockets, web push, fcm, gcm, apn, sms, email with reports in Python & PySpark. Subsystem of the SFPL growth and experimentation framework.
 
