@@ -3,7 +3,7 @@
 # rsync -racv . root@51.15.211.219:/app/xcs --exclude 'keys' --exclude '.git' --exclude 'node_modules'
 ####################################################################################
 
-FROM node:10.16.0-stretch
+FROM node:12.16.2-stretch
 WORKDIR /app/xcs
 ADD . /app/xcs
 EXPOSE 9001
@@ -40,7 +40,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
 #RUN pip install awscli --upgrade
 
 # build nodejs app in production mode
-RUN npm install --production
+RUN npm install --production && npm install -g forever
 
 ####################################################################################
 
