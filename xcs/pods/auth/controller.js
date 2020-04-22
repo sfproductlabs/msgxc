@@ -69,7 +69,7 @@ class AuthController {
                 AuthController.checkUserLevel(comms, R.defaultTo([])(R.path(['pub', 'roles'], jwt)), level)
                 comms.user = R.path(['pub'], jwt)
             } catch (ex) {
-                debugAuth(ex);
+                debugAuth(ex, jwt);
                 if (!comms.error) { 
                     comms.error = {
                         code: httpCodes.UNAUTHORIZED,

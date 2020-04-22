@@ -36,7 +36,7 @@ const req2ip = function(comms) {
             for (const header of CLIENT_HEADERS) {
                 ip = comms.headers[header];
                 if (!!ip) {
-                    return ip;
+                    return cleanip(ip);
                 } 
             }
         } catch (ex) {
@@ -45,13 +45,18 @@ const req2ip = function(comms) {
     }
     if (comms && comms.res) {
         try {
-            return ab2ip6(comms.res.getRemoteAddress());
+            return cleanip(ab2ip6(comms.res.getRemoteAddress()));
         } catch (ex) {
             console.warn(ex);
             return null;
         }
     }
     return null;
+}
+
+const cleanip = function(ipstring) {
+    const ip = (ipstring || "").split(",").reverse()[0].trim();
+    if (ip) return ip; else return null;
 }
 
 
