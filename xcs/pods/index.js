@@ -80,6 +80,7 @@ class Route {
                         this.comms.res.cork(() => {
                             nats.natsLogger.error(this.comms);
                             this.comms.res.writeStatus(this.comms.error.code || httpCodes.INTERNAL_SERVER_ERROR);
+                            this.comms.res.writeHeader('Access-Control-Allow-Origin', '*'); //TODO: Update CORS           
                             this.comms.res.end(JSON.stringify(this.comms.error));
                         });
                     } else {
