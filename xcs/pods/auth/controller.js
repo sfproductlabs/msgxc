@@ -8,6 +8,7 @@ const R = require('ramda');
 const httpCodes = require('../../utils/httpStatusCodes')
 const clientKey = process.env.CLIENT_SECRET || 'secret';
 const ojwt = require('jsonwebtoken'); // JSON Web Token implementation
+const debugAuth = require('debug')('auth')
 
 class AuthController {
 
@@ -67,7 +68,8 @@ class AuthController {
                 }
                 AuthController.checkUserLevel(comms, R.defaultTo([])(R.path(['pub', 'roles'], jwt)), level)
                 comms.user = R.path(['pub'], jwt)
-            } catch {
+            } catch (ex) {
+                debugAuth(ex);
                 if (!comms.error) { 
                     comms.error = {
                         code: httpCodes.UNAUTHORIZED,
