@@ -465,6 +465,14 @@ class Threading {
         })
 
         nats.natsLogger.info({ ...comms, msg: `User ${comms.user.uid} subscribed to ${comms.obj.tid}` });
+        track({
+          ename : "thread_sub",
+          etyp: "thread",
+          ptyp: "mthread",
+          uid: comms.user.uid,
+          vid: comms.user.uid,
+          rid: comms.obj.tid
+        })
         return true;
       } else {
         nats.natsLogger.error({ ...comms, error: { code: '200', msg: `[FAILED] User ${comms.user.uid} not subscribed to ${comms.obj.tid}. Permission error.` } });
@@ -500,7 +508,14 @@ class Threading {
       })
 
       nats.natsLogger.info({ ...comms, msg: `User ${comms.user.uid} unsubscribed to ${comms.obj.tid}` });
-
+      track({
+        ename : "thread_unsub",
+        etyp: "thread",
+        ptyp: "mthread",
+        uid: comms.user.uid,
+        vid: comms.user.uid,
+        rid: comms.obj.tid
+      })
       return true;
 
     } catch (ex) {
