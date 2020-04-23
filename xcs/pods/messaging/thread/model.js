@@ -263,7 +263,7 @@ class Threading {
         }
       }
 
-      debugThread(`Successfully sent message ${tid}.${mid}`,deliveries,failures)
+      debugThread(`Successfully sent message ${tid}.${mid}`)
 
       const completed = Date.now();
 
