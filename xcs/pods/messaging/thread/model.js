@@ -102,15 +102,16 @@ class Threading {
       //TODO: AG Manage ACK, Failures, Triage
     }
 
+    const deliveries = [];
+    const failures = [];
     if (thread.broadcast) {
       throw { code: httpCodes.NOT_IMPLEMENTED, msg: 'Not Implemented' }
     } else if (thread.subs) {
-      const notified = [];
       //Send to subscribers (subs)
       for (let i = 0; i < thread.subs.length; i++) {
+        let sent = false;
         try {
-          let sent = false;
-
+          
           //First check thread.prefs and user.mtypes and thread.mtypes
           let sendTypes = thread.mtypes ? thread.mtypes.slice() : null; //null means sendall
 
@@ -149,8 +150,7 @@ class Threading {
           //SEND OTHERS
           //TODO: Triage!
           //TODO: Add retries for realtime
-          //TODO: ScheduleDegraded() and include nearline messaging emd, emm , emw (email summaries)
-          notified.push(thread.subs[i]);
+          //TODO: ScheduleDegraded() and include nearline messaging emd, emm , emw (email summaries)          
           if (user.mdevices) {
             //APN
             if (!sendTypes || sendTypes.includes('apn')) {
@@ -167,6 +167,7 @@ class Threading {
                     vid: user.uid,
                     rid: message.mid
                   })
+                  sent = true;
                 } else {
                     const reason = R.path(['failed', '0', 'response', 'reason'], results || {});
                     track({
@@ -197,6 +198,7 @@ class Threading {
                     vid: user.uid,
                     rid: message.mid
                   })
+                  sent = true;
                 } else {                      
                   const reason = R.path(['results', '0', 'error'], results || {});                
                   track({
@@ -228,8 +230,10 @@ class Threading {
                   }).catch(error => {
                     console.error(error);
                   })
-                }
-                //TODO: AG Manage Failures, Triage            
+                } else {
+                  //TODO: AG Manage Failures, Triage   
+                  sent = true;
+                }         
               });
             }
           }
@@ -237,7 +241,8 @@ class Threading {
           //SMS
           if (user.cell && (!sendTypes || sendTypes.includes('sms'))) {
             const result = await SMS.send(user.cell, message.msg);
-            //TODO: AG Manage Failures, Triage 
+            //TODO: AG Manage Failures, Triage
+            sent = true; 
             if (process.env.NODE_ENV == 'dev') debugThread(`[SMS RESULT] ${result}`)
           }
 
@@ -245,25 +250,33 @@ class Threading {
           if (user.email && (!sendTypes || sendTypes.includes('em'))) {
             const result = await EMAIL.send({ to: user.email, subject: `New message in thread ${thread.name || thread.alias}`, text: message.msg });
             //TODO: AG Manage Failures, Triage 
+            sent = true;
             if (process.env.NODE_ENV == 'dev') debugThread(`[EMAIL RESULT] ${JSON.stringify(result)}`)
           }
         } catch (ex) {
           nats.natsLogger.info({ ...comms, error: { code: '500', msg: `[FAILED] Message sent to user ${thread.subs[i]}. Ex: ${JSON.stringify(ex)}` } });
         }
+        if (sent) {
+          deliveries.push(thread.subs[i]);
+        } else {
+          failures.push(thread.subs[i]);
+        }
       }
 
-      debugThread(`Successfully sent message ${tid}.${mid}`)
+      debugThread(`Successfully sent message ${tid}.${mid}`,deliveries,failures)
 
       const completed = Date.now();
 
       //CLOSE MESSAGE      
       await db.client.execute(
-        `update mstore set scheduled=?, started=?, completed=?,updated=?,qid=? where tid=? and mid=?`, [
+        `update mstore set scheduled=?, started=?, completed=?,updated=?,qid=?,deliveries=?,failures=? where tid=? and mid=?`, [
         null,
         now,
         completed,
         completed,
         null,
+        deliveries,
+        failures,
         tid,
         mid
       ], {
