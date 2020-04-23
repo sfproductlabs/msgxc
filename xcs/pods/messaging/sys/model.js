@@ -152,6 +152,8 @@ class SysMessaging {
       if (comms.obj.os === "android") user.mdevices.splice(0, 0, { mtype: 'fcm', did: comms.obj.token, updated: Date.now() })
       if (comms.obj.endpoint && comms.obj.keys) user.mdevices.splice(0, 0, { mtype: 'wpn', did: JSON.stringify(comms.obj), updated: Date.now() })
 
+      if (!user.mdevices[0].did) throw { code : httpCodes.BAD_REQUEST, msg : 'Enlisting requires a real device.'}
+      
       await db.client.execute(
         `update users set mdevices=? where uid=?`, [
         user.mdevices,
