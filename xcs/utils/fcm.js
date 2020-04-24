@@ -12,7 +12,7 @@ class FCM {
 			priority: 'high',
 			contentAvailable: true,
 			delayWhileIdle: true,
-			timeToLive: 15,
+			timeToLive: 3600*24, //Expires in 24 hours
 			//restrictedPackageName: "somePackageName",
 			dryRun: false,
 			data: options.data || options.payload || {},
