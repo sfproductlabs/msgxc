@@ -32,7 +32,7 @@ class Threading {
     const svc = R.path(['svc'], message);
 
     if (!tid || !mid) {
-      nats.natsLogger.info({ ...comms, error: { code: '200', msg: 'Missing tid/mid' } });
+      nats.natsLogger.warn({ ...comms, error: { code: '200', msg: 'Missing tid/mid' } });
       return false;
     }
 
@@ -254,7 +254,7 @@ class Threading {
             if (process.env.NODE_ENV == 'dev') debugThread(`[EMAIL RESULT] ${JSON.stringify(result)}`)
           }
         } catch (ex) {
-          nats.natsLogger.info({ ...comms, error: { code: '500', msg: `[FAILED] Message sent to user ${thread.subs[i]}. Ex: ${JSON.stringify(ex)}` } });
+          nats.natsLogger.warn({ ...comms, error: { code: '500', msg: `[FAILED] Message sent to user ${thread.subs[i]}. Ex: ${JSON.stringify(ex)}` } });
         }
         if (sent) {
           deliveries.push(thread.subs[i]);
@@ -288,7 +288,7 @@ class Threading {
       return true;
 
     } else {
-      nats.natsLogger.info({ ...comms, msg: 'No subscribers for message' });
+      nats.natsLogger.info(`No subscribers for message ${tid}.${mid}`);
       return false;
     }
   }
@@ -421,7 +421,7 @@ class Threading {
 
       //Check if scheduled for later
       if (comms.obj.scheduled && new Date(comms.obj.scheduled).getTime() > now) {
-        nats.natsLogger.info({ ...comms, msg: `Postponing message via schedule` });
+        nats.natsLogger.info(`Postponing message ${comms.obj.tid}.${comms.obj.mid} via schedule`);
         return true;
       }
 
@@ -477,7 +477,7 @@ class Threading {
           prepare: true
         })
 
-        nats.natsLogger.info({ ...comms, msg: `User ${comms.user.uid} subscribed to ${comms.obj.tid}` });
+        nats.natsLogger.info(`User ${comms.user.uid} subscribed to ${comms.obj.tid}`);
         track({
           ename : "thread_sub",
           etyp: "thread",
@@ -520,7 +520,7 @@ class Threading {
         prepare: true
       })
 
-      nats.natsLogger.info({ ...comms, msg: `User ${comms.user.uid} unsubscribed to ${comms.obj.tid}` });
+      nats.natsLogger.info(`User ${comms.user.uid} unsubscribed to ${comms.obj.tid}`);
       track({
         ename : "thread_unsub",
         etyp: "thread",
@@ -548,7 +548,7 @@ class Threading {
 
       //TODO: cancel only supports messages (mid) atm
       if (!comms.user || !comms.user.uid || !comms.obj.tid || !comms.obj.mid) {
-        nats.natsLogger.info({ ...comms, error: { code: '200', msg: `Missing parameters in request` } });
+        nats.natsLogger.warn({ ...comms, error: { code: '200', msg: `Missing parameters in request` } });
         return false;
       }
 
@@ -564,7 +564,7 @@ class Threading {
         prepare: true
       })
 
-      nats.natsLogger.info({ ...comms, msg: `User ${comms.user.uid} canceled ${comms.obj.mid} to ${comms.obj.tid}` });
+      nats.natsLogger.info(`User ${comms.user.uid} canceled ${comms.obj.mid} to ${comms.obj.tid}`);
 
       return true;
 
