@@ -107,7 +107,7 @@ class Route {
         let token = null;
         switch (this.comms.protocol) {
             case "ws":
-                token = this.comms.obj.jwt || this.comms.ws.authorization;
+                token = this.comms.jwt || this.comms.ws.jwt;
                 break;
             default:
                 token = this.comms.authorization || R.path(['headers', 'authorization'], this.comms);
