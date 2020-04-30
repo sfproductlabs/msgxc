@@ -47,7 +47,10 @@ const app = uApp({
     open: (ws, req) => {
       debugWS('A WebSocket connected via URL: ' + req.getUrl() + '!');
       const ck = cookie.parse(req.getHeader("cookie"));
-      if (!ck || !ck.vid || validateUuid(ck.vid)) return ws.end(httpCodes.UNAUTHORIZED, "Not a valid connection request.")
+      if (!ck || !ck.vid || validateUuid(ck.vid))  {
+        debugWS("[WS Invalid]", !ck , !ck.vid , validateUuid(ck.vid));
+        return ws.end(httpCodes.UNAUTHORIZED, "Not a valid connection request.");
+      }
       ws.vid = ck.vid;
       ws.subscribe('broadcast/system');
       debugWS("[WS Connected]");
