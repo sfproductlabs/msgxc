@@ -11,3 +11,7 @@ pyhive[hive]
 thrift
 pandas
 sasl
+
+#Ex.
+#-e editableproject
+#-e git+git@github.com:psytron/keycache.git#egg=keycache

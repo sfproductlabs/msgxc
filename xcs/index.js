@@ -26,7 +26,7 @@ const router = {
   subscribe: routeMatcher(`${process.env.V2_PREFIX}/subscribe/:action`),
   report: routeMatcher(`${process.env.V2_PREFIX}/reports/:report`),
   execute: routeMatcher(`${process.env.V2_PREFIX}/execute/:action`),
-  subscribe: routeMatcher(`${process.env.V2_PREFIX}/subscribe/:action`),
+  publish: routeMatcher(`${process.env.V2_PREFIX}/publish/:action`),  
 }
 
 //APPLICATION START
@@ -70,7 +70,10 @@ const app = uApp({
         ///////////////////////////////////PUBLIC METHODS
         case /^\/api\/v2\/subscribe\/public-ephemeral/.test(comms.obj.slug):
           try {
-            comms.ws.subscribe(`/thread/public-ephemeral`)
+            comms.params = router.subscribe.parse(comms.obj.slug);
+            if (comms.params.action && comms.params.action.length && comms.params.action.length > 15 && comms.params.action.length < 60) {
+              comms.ws.subscribe(`/thread/${comms.params.action}`)
+            }
           } catch (ex) {
             debugWS(ex)
             nats.natsLogger.error({ ...comms, error: ex });
@@ -78,8 +81,11 @@ const app = uApp({
           }
           return;
         case /^\/api\/v2\/publish\/public-ephemeral/.test(comms.obj.slug):
-          try {
-            ThreadRealtime.broadcast('public-ephemeral', comms.obj)
+          try {            
+            comms.params = router.publish.parse(comms.obj.slug);
+            if (comms.params.action && comms.params.action.length && comms.params.action.length > 15 && comms.params.action.length < 60) {
+              ThreadRealtime.broadcast(comms.params.action, comms.obj)
+            }
           } catch (ex) {
             debugWS('[ERROR] Publishing to ephemeral', ex)
           }
