@@ -63,7 +63,7 @@ const app = uApp({
       if (!comms.obj || !comms.obj.slug) {
         debugWS("Bad request...")
         ws.send(`{ "error" : "${httpCodes.NOT_FOUND}" }`, isBinary);
-        nats.natsLogger.error({ ...comms, error: "Bad client request (slug missing, potential hack attempt)" });
+        nats.natsLogger.error({ ...comms, error: "Bad client request (slug missing)" });
         return;
       }
       comms.ws = ws;
