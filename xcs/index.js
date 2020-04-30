@@ -27,7 +27,7 @@ const router = {
   subscribe: routeMatcher(`${process.env.V2_PREFIX}/subscribe/:action`),
   report: routeMatcher(`${process.env.V2_PREFIX}/reports/:report`),
   execute: routeMatcher(`${process.env.V2_PREFIX}/execute/:action`),
-  publish: routeMatcher(`${process.env.V2_PREFIX}/publish/:action`),  
+  publish: routeMatcher(`${process.env.V2_PREFIX}/publish/:action`),
   session: routeMatcher(`${process.env.V2_PREFIX}/connect/:vid/:sid`)
 }
 
@@ -47,22 +47,28 @@ const app = uApp({
     //idleTimeout: 15,
     /* Handlers */
     open: (ws, req) => {
-      debugWS('A WebSocket connected via URL: ' + req.getUrl() + '!');      
-      const params = router.session.parse(req.getUrl());
-      if (!params.vid || validateUuid(params.vid) || validateUuid(params.sid) || !uuidWithin(params.sid, 3600*48*1000)) { //Check sid within 48 hours
-        debugWS("[WARNING] Invalid connection parameters:",  params);
-        ws.send(`{ "ok" : false, "error" : { "code": "${httpCodes.UNAUTHORIZED}", "msg": "Not a valid connection request." } }`);
-        return ws.end(httpCodes.UNAUTHORIZED, "Not a valid connection request.");
+      debugWS('A WebSocket connected via URL: ' + req.getUrl() + '!');
+      try {
+        const params = router.session.parse(req.getUrl());
+        if (!params.vid || validateUuid(params.vid) || validateUuid(params.sid) || !uuidWithin(params.sid, 3600 * 48 * 1000)) { //Check sid within 48 hours
+          debugWS("[WARNING] Invalid connection parameters:", params);
+          ws.send(`{ "ok" : false, "error" : { "code": "${httpCodes.UNAUTHORIZED}", "msg": "Not a valid connection request." } }`);
+          return ws.end(httpCodes.UNAUTHORIZED, "Not a valid connection request.");
+        }
+        ws.vid = params.vid;
+        ws.sid = params.sid;
+        ws.subscribe('/broadcast/system');
+        debugWS("[WS Connected]");
+        const ck = cookie.parse(req.getHeader("cookie"));
+        if (ck) {
+          ws.jwt = ck[process.env.CLIENT_AUTH_COOKIE];
+        }
+        sockets.add(ws)
+      } catch (ex) {
+        const error = `UNAUTHORIZED Connect (ws) ${req.getUrl()} from IP ${str2ip(req.getHeader('x-forwarded-for'))} or ${ab2ip6(res.getRemoteAddress())}`;        
+        debugWS(error);
+        nats.natsLogger.error({ ...req, error, ex });
       }
-      ws.vid = params.vid;
-      ws.sid = params.sid;
-      ws.subscribe('/broadcast/system');
-      debugWS("[WS Connected]");
-      const ck = cookie.parse(req.getHeader("cookie"));
-      if (ck) {
-        ws.jwt = ck[process.env.CLIENT_AUTH_COOKIE];
-      }
-      sockets.add(ws)
     },
     message: (ws, msg, isBinary) => {
       let comms = {};
@@ -91,7 +97,7 @@ const app = uApp({
           }
           return;
         case /^\/api\/v2\/publish\/public-ephemeral/.test(comms.obj.slug):
-          try {            
+          try {
             comms.params = router.publish.parse(comms.obj.slug);
             if (comms.params.action && comms.params.action.length && comms.params.action.length > 15 && comms.params.action.length < 60) {
               ThreadRealtime.broadcast(comms.params.action, comms.obj)
@@ -289,7 +295,7 @@ const app = uApp({
   //CATCH ALL
   .any(`${process.env.V2_PREFIX}/*`, (res, req) => {
     let comms = { res, req };
-    const ex = `UNAUTHORIZED ${req.getMethod()}  ${req.getUrl()} from IP ${str2ip(req.getHeader('x-forwarded-for'))} to ${ab2ip6(res.getRemoteAddress())}`;
+    const ex = `UNAUTHORIZED ${req.getMethod()}  ${req.getUrl()} from IP ${str2ip(req.getHeader('x-forwarded-for'))} or ${ab2ip6(res.getRemoteAddress())}`;
     debugHTTP(ex)
     nats.natsLogger.error({ ...comms, error: ex });
     res.writeStatus(httpCodes.NOT_IMPLEMENTED);
@@ -301,7 +307,7 @@ const app = uApp({
   })
   .any('/*', (res, req) => {
     let comms = { res, req };
-    const ex = `UNAUTHORIZED ${req.getMethod()}  ${req.getUrl()} from IP ${str2ip(req.getHeader('x-forwarded-for'))} to ${ab2ip6(res.getRemoteAddress())}`;
+    const ex = `UNAUTHORIZED ${req.getMethod()}  ${req.getUrl()} from IP ${str2ip(req.getHeader('x-forwarded-for'))} or ${ab2ip6(res.getRemoteAddress())}`;
     debugHTTP(ex)
     nats.natsLogger.error({ ...comms, error: ex });
     res.writeStatus(httpCodes.NOT_FOUND);
