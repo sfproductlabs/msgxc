@@ -12,6 +12,7 @@ const ThreadRealtime = require('./pods/messaging/thread/realtime');
 const { Route, RestRoute, WSRoute } = require('./pods');
 const nats = require('./utils/nats')
 const { validateUuid } = require('./utils/validations')
+const { uuidWithin } = require('./utils/uuid')
 const cookie = require('cookie');
 const port = Number(process.env.PORT || 9001);
 const sockets = new Set();
@@ -27,6 +28,7 @@ const router = {
   report: routeMatcher(`${process.env.V2_PREFIX}/reports/:report`),
   execute: routeMatcher(`${process.env.V2_PREFIX}/execute/:action`),
   publish: routeMatcher(`${process.env.V2_PREFIX}/publish/:action`),  
+  session: routeMatcher(`${process.env.V2_PREFIX}/connect/:vid/:sid`)
 }
 
 //APPLICATION START
@@ -45,16 +47,21 @@ const app = uApp({
     //idleTimeout: 15,
     /* Handlers */
     open: (ws, req) => {
-      debugWS('A WebSocket connected via URL: ' + req.getUrl() + '!');
-      const ck = cookie.parse(req.getHeader("cookie"));
-      if (!ck || !ck.vid || validateUuid(ck.vid))  {
-        debugWS("[WS Invalid] cookie:", ck );
+      debugWS('A WebSocket connected via URL: ' + req.getUrl() + '!');      
+      const params = router.session.parse(req.getUrl());
+      if (!params.vid || validateUuid(params.vid) || validateUuid(params.sid) || !uuidWithin(params.sid, 3600*48*1000)) { //Check sid within 48 hours
+        debugWS("[WARNING] Invalid connection parameters:",  params);
+        ws.send(`{ "ok" : false, "error" : { "code": "${httpCodes.UNAUTHORIZED}", "msg": "Not a valid connection request." } }`);
         return ws.end(httpCodes.UNAUTHORIZED, "Not a valid connection request.");
       }
-      ws.vid = ck.vid;
-      ws.subscribe('broadcast/system');
+      ws.vid = params.vid;
+      ws.sid = params.sid;
+      ws.subscribe('/broadcast/system');
       debugWS("[WS Connected]");
-      ws.jwt = ck[process.env.CLIENT_AUTH_COOKIE];
+      const ck = cookie.parse(req.getHeader("cookie"));
+      if (ck) {
+        ws.jwt = ck[process.env.CLIENT_AUTH_COOKIE];
+      }
       sockets.add(ws)
     },
     message: (ws, msg, isBinary) => {
@@ -108,10 +115,10 @@ const app = uApp({
           return;
         case /^\/api\/v2\/publish/.test(comms.obj.slug):
           //TODO, only allow trusted publish to friends 
-          ws.send(`{ "error" : "${httpCodes.NOT_IMPLEMENTED} ...Yet" }`, isBinary);
+          ws.send(`{ "ok" : false, "error" : { "code": "${httpCodes.NOT_IMPLEMENTED}", "msg": "${comms.obj.slug} not implemented" } }`, isBinary);
           return;
         case /^\/api\/v2\/unsubscribe/.test(comms.obj.slug):
-          ws.send(`{ "error" : "${httpCodes.NOT_IMPLEMENTED}" }`, isBinary);
+          ws.send(`{ "ok" : false, "error" : { "code": "${httpCodes.NOT_IMPLEMENTED}", "msg": "${comms.obj.slug} not implemented" } }`, isBinary);
           return;
         case /^\/ping$/.test(comms.obj.slug):
           ws.send(`{ "slug" : "${comms.obj.slug}", "data" : "pong" }`, isBinary);
