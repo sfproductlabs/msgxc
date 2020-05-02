@@ -292,6 +292,11 @@ const app = uApp({
     res.writeHeader("Author", "SFPL")
     res.end();
   })
+  //HEALTH CHECK
+  .get(`/ping`, (res) => {
+    res.writeStatus(httpCodes.OK);
+    res.end(httpCodes.OK);
+  })
   //CATCH ALL
   .any(`${process.env.V2_PREFIX}/*`, (res, req) => {
     let comms = { res, req };
@@ -300,10 +305,6 @@ const app = uApp({
     nats.natsLogger.error({ ...comms, error: ex });
     res.writeStatus(httpCodes.NOT_IMPLEMENTED);
     res.end(httpCodes.NOT_IMPLEMENTED);
-  })
-  .get(`/ping`, (res) => {
-    res.writeStatus(httpCodes.OK);
-    res.end(httpCodes.OK);
   })
   .any('/*', (res, req) => {
     let comms = { res, req };
