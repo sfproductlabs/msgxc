@@ -87,7 +87,7 @@ const app = uApp({
         case /^\/api\/v2\/subscribe\/public-ephemeral/.test(comms.obj.slug):
           try {
             comms.params = router.subscribe.parse(comms.obj.slug);
-            if (comms.params.action && comms.params.action.length && comms.params.action.length > 15 && comms.params.action.length < 60) {
+            if (comms.params.action && comms.params.action.length && comms.params.action.length > 15 && comms.params.action.length < 128) {
               comms.ws.subscribe(`/thread/${comms.params.action}`)
             }
           } catch (ex) {
@@ -99,7 +99,7 @@ const app = uApp({
         case /^\/api\/v2\/publish\/public-ephemeral/.test(comms.obj.slug):
           try {
             comms.params = router.publish.parse(comms.obj.slug);
-            if (comms.params.action && comms.params.action.length && comms.params.action.length > 15 && comms.params.action.length < 60) {
+            if (comms.params.action && comms.params.action.length && comms.params.action.length > 15 && comms.params.action.length < 128) {
               ThreadRealtime.broadcast(comms.params.action, comms.obj)
             }
           } catch (ex) {
