@@ -84,6 +84,7 @@ const app = uApp({
       debugWS(`Request (ws) ${comms.obj.slug}`);
       switch (true) {
         ///////////////////////////////////PUBLIC METHODS
+        //TODO: AG use a session expiry/hmac to prevent DDoS
         case /^\/api\/v2\/subscribe\/public-ephemeral/.test(comms.obj.slug):
           try {
             comms.params = router.subscribe.parse(comms.obj.slug);
