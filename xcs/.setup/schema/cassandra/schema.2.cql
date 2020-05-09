@@ -8,7 +8,7 @@ use sfpl;
 --Describe the splits
 create table splits (
   cohort text, --Ex. males, * = special case, all users by default
-  family text, --Split family (we can have multiple representations of the same cohort), this is a grouping element only and in a lot of instances cohort=family. Ex. (for cohort->family), Males->males or Males->males2020 or another better example might be *->AB
+  sfam text, --Split family (we can have multiple representations of the same cohort), this is a grouping element only and in a lot of instances cohort=family. Ex. (for cohort->family), Males->males or Males->males2020 or another better example might be *->AB
   split text, --Ex. A
   seq int, --Ex. 1 for first split
   users set<timeuuid>, --set of users in this split
