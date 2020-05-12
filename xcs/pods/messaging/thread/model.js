@@ -20,6 +20,7 @@ const httpCodes = require('../../../utils/httpStatusCodes')
 const AuthController = require('../../auth/controller');
 const debugThread = require('debug')('thread')
 const nats = require('../../../utils/nats')
+const SysMessaging = require('../sys/model')
 
 class Threading {
 
@@ -179,6 +180,7 @@ class Threading {
                       rid: message.mid,
                       error: reason
                     })
+                    SysMessaging.prune(user.uid, mdevice);
                 }
                 if (process.env.NODE_ENV == 'dev') debugThread(`[APN RESULT] ${JSON.stringify(results)}`)
               });
@@ -210,6 +212,7 @@ class Threading {
                     rid: message.mid,
                     error: reason
                   })
+                  SysMessaging.prune(user.uid, mdevice);
                 }           
                 if (process.env.NODE_ENV == 'dev') debugThread(`[FCM RESULT] ${JSON.stringify(results)}`)
               });
@@ -221,15 +224,7 @@ class Threading {
                 const result = await WPN.send(mdevice.did, { ...message.opts, msg: message.msg, ok: true, slug: `/thread/${message.tid}` });
                 if (process.env.NODE_ENV == 'dev') debugThread(`[WPN RESULT] ${typeof result === 'object' ? JSON.stringify(result) : result}`)
                 if (!result) {
-                  db.client.execute(
-                    `update users set mdevices = mdevices - ? where uid = ? ;`, [
-                    [mdevice],
-                    thread.subs[i]
-                  ], {
-                    prepare: true
-                  }).catch(error => {
-                    console.error(error);
-                  })
+                  SysMessaging.prune(user.uid, mdevice);
                 } else {
                   //TODO: AG Manage Failures, Triage   
                   sent = true;

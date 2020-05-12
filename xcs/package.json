@@ -1,6 +1,6 @@
 {
   "name": "msgxc",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Messaging exchange for real communications. SMS, Websockets, Email, Native-Messaging etc.",
   "main": "index.js",
   "repository": {
@@ -57,7 +57,7 @@
     "ramda": "^0.26.0",
     "route-matcher": "^0.1.0",
     "twilio": "^3.36.0",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v17.0.0",
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v17.4.0",
     "uuid": "^3.3.3",
     "web-push": "^3.4.3"
   },
