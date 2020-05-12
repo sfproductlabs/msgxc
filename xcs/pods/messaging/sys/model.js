@@ -40,6 +40,7 @@ class SysMessaging {
         await SysMessaging.send(comms, user);
       }
       nats.natsLogger.info(`[MULTICASTED] ${comms.obj.msg} to ${comms.obj.uids}`);
+      debugSysMessage(`[MULTICASTED] ${comms.obj.msg} to ${comms.obj.uids}`);
     } catch {
       try {
         nats.natsLogger.error({...comms, error: { code : '500', msg : 'Unknown error multicasting', ex}});
@@ -72,6 +73,7 @@ class SysMessaging {
           .on('end', function () {
             // Stream ended, there aren't any more rows
             nats.natsLogger.info(`[BROADCASTED] ${comms.obj.msg}`);
+            debugSysMessage(`[BROADCASTED] ${comms.obj.msg}`);
             resolve(true);
           })
           .on('error', function (err) {
