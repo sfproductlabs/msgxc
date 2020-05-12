@@ -9,7 +9,7 @@ const nano = require('nano-seconds');
 const R = require('ramda');
 const Nats = require("nats");
 const { req2ip } = require('./networking'); 
-const debugGeneral = require('debug')('general')
+const debugNats = require('debug')('nats')
 
 const hostname = os.hostname();
 let hostip = null;
@@ -120,7 +120,7 @@ const logNats = (obj, levelType, level, ip, name='generic') => {
                 params : parsed.params,
                 owner: parsed.owner
             });
-            debugGeneral(log)
+            debugNats(log)
             nats.publish(
                 topic, 
                 log
