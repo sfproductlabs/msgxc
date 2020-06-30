@@ -166,7 +166,8 @@ class Threading {
                     ptyp: "mstore",
                     uid: user.uid,
                     vid: user.uid,
-                    rid: message.mid
+                    rid: message.mid,
+                    mdid: mdevice.did,
                   })
                   sent = true;
                 } else {
@@ -178,7 +179,8 @@ class Threading {
                       uid: user.uid,
                       vid: user.uid,
                       rid: message.mid,
-                      error: reason
+                      mdid: mdevice.did,
+                      error: reason,
                     })
                     SysMessaging.prune(user.uid, mdevice);
                 }
@@ -198,7 +200,8 @@ class Threading {
                     ptyp: "mstore",
                     uid: user.uid,
                     vid: user.uid,
-                    rid: message.mid
+                    rid: message.mid,
+                    mdid: mdevice.did,
                   })
                   sent = true;
                 } else {                      
@@ -210,7 +213,8 @@ class Threading {
                     uid: user.uid,
                     vid: user.uid,
                     rid: message.mid,
-                    error: reason
+                    mdid: mdevice.did,
+                    error: reason,
                   })
                   SysMessaging.prune(user.uid, mdevice);
                 }           

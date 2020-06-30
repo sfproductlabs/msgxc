@@ -7,7 +7,7 @@ const track = function(event) {
     const keyvals = Object.keys(event).map(function (key) { return `${key}=${encodeURIComponent(event[key] + '')}`; });
     if (keyvals.length == 0) return;
     const url = new URL(`${process.env.TRACK_URL}?${keyvals.join("&")}`);
-    https.request({
+    var request = https.request({
         hostname: url.hostname,
         port: url.port,
         path: url.pathname + url.search,
@@ -16,7 +16,11 @@ const track = function(event) {
         checkServerIdentity: function(host, cert) {
           return undefined;
         }
-    }).end();
+    });
+    request.on('error', function(err) {
+      // Ignore errors
+    });
+    request.end();
 }
 
 module.exports = track

@@ -1,6 +1,6 @@
 {
   "name": "msgxc",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Messaging exchange for real communications. SMS, Websockets, Email, Native-Messaging etc.",
   "main": "index.js",
   "repository": {
@@ -30,7 +30,7 @@
     "apidoc": "apidoc -i app-api -o app-api/apidoc/apidoc",
     "gencerts": "openssl req -x509 -newkey rsa:2048 -keyout .setup/keys/key.pem -out .setup/keys/cert.pem -days 999 -nodes",
     "debug": "DEBUG=* node --trace-warnings index.js ",
-    "adebug": "PROJECT=sfpl DEBUG=* LD_PRELOAD=/usr/lib/llvm-7/lib/clang/7.0.1/lib/linux/libclang_rt.asan-x86_64.so npm run debug",
+    "adebug": "PROJECT=sfpl DEBUG=* LD_PRELOAD=/usr/lib/llvm-7/lib/clang/7.0.1/lib/linux/libclang_rt.asan-x86_64.so nodemon -e js,json,html index.js",
     "cdebug": "LD_PRELOAD=/usr/lib/llvm-7/lib/clang/7.0.1/lib/linux/libclang_rt.asan-x86_64.so gdb node",
     "vapid": "web-push generate-vapid-keys"
   },
@@ -53,11 +53,12 @@
     "nano-seconds": "^1.2.2",
     "nats": "^1.3.2",
     "node-gcm": "^1.0.2",
+    "node-linkedin": "^0.5.6",
     "node-machine-id": "^1.1.10",
     "ramda": "^0.26.0",
     "route-matcher": "^0.1.0",
     "twilio": "^3.36.0",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v17.4.0",
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v18.3.0",
     "uuid": "^3.3.3",
     "web-push": "^3.4.3"
   },

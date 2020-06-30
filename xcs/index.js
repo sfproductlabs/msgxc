@@ -13,6 +13,7 @@ const { Route, RestRoute, WSRoute } = require('./pods');
 const nats = require('./utils/nats')
 const { validateUuid } = require('./utils/validations')
 const { uuidWithin } = require('./utils/uuid')
+const LinkedIn = require('./utils/linkedin')
 const cookie = require('cookie');
 const port = Number(process.env.PORT || 9001);
 const sockets = new Set();
@@ -149,6 +150,22 @@ const app = uApp({
       sockets.delete(ws);
       idle.delete(ws);
       debugWS('WebSocket closed, sockets open:', sockets.size);
+    }
+  })
+  //LinkedIn Callback
+  .get(`${process.env.V2_PREFIX}/linkedin`, async (res, req) => {
+    let comms = { res, req };
+    try {
+      const li = new LinkedIn(comms);
+      const rurl = await li.startAuth();
+      res.writeStatus(httpCodes.OK);
+      res.writeHeader("Content-Type", "application/json")
+      res.write(JSON.stringify({url: rurl}))
+      res.end();
+    } catch (ex) {
+      debugHTTP(ex)
+      nats.natsLogger.error({ ...comms, error: ex });
+      Route.abort(res, ex);
     }
   })
   //SYSTEM MESSAGING
