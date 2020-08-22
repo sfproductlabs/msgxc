@@ -149,7 +149,7 @@ CREATE INDEX queues_started_idx ON queues ( started );
 --should never be updated
 create table cohorts (
   cohort text,
-  uids_url text,
+  uids_url text, --uids_url
   imported int, --successful imports (count)
   started timestamp,
   completed timestamp,
