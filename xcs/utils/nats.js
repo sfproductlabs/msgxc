@@ -31,20 +31,32 @@ const prefixLog = process.env.NATS_PREFIX_LOG || ''; //Should be api.log.
 const prefixCount = process.env.NATS_PREFIX_COUNT || ''; //Should be api.count.
 const prefixUpdate = process.env.NATS_PREFIX_UPDATE || ''; ////Should be api.update.
 
-const nats = Nats.connect({
-    //"pubsub$" : true,
-    "servers": (process.env.NATS_HOSTS || "nats://localhost:4222").split(","),
-    "maxReconnectAttempts": -1,
-    "reconnectTimeWait": 250,
-    "yieldTime": 4,
-    "tls": {
-        rejectUnauthorized: false,
-        key: fs.readFileSync(process.env.NATS_KEY),
-        cert: fs.readFileSync(process.env.NATS_CERT),
-        ca: [fs.readFileSync(process.env.NATS_CACERT)]
-    }
-});
-console.log("Connected to NATS");
+let nats = null;
+try {
+    nats = Nats.connect({
+        //"pubsub$" : true,
+        "servers": (process.env.NATS_HOSTS || "nats://localhost:4222").split(","),
+        "maxReconnectAttempts": -1,
+        "reconnectTimeWait": 250,
+        "yieldTime": 4,
+        "tls": {
+            rejectUnauthorized: false,
+            key: fs.readFileSync(process.env.NATS_KEY),
+            cert: fs.readFileSync(process.env.NATS_CERT),
+            ca: [fs.readFileSync(process.env.NATS_CACERT)]
+        }
+    });
+    nats.on('connect', () => {
+        console.log("Connected to NATS");        
+    });
+    nats.on('error', (err) => {
+        console.log("[ERROR]", err)
+    });
+    
+} catch {
+    console.error("[ERROR] Connecting to NATS");
+}
+
 const parseObj = (obj) => {
     if (typeof obj === 'string')
         return {msg : obj};
