@@ -23,6 +23,7 @@ const claims = {
 			by : null, //service name or user
 			ip : null, 
 			email : null,
+			rights: [], //permission, capability
 			roles : [],
 			dt : Date.now(),
 		},
