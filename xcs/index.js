@@ -20,7 +20,6 @@ const sockets = new Set();
 const idle = new Set();
 
 var env = process.env.NODE_ENV || 'dev';
-console.log(`Running app in ${env} mode`)
 
 require('./pods/realtime/scheduler')
 
@@ -66,7 +65,7 @@ const app = uApp({
         }
         sockets.add(ws)
       } catch (ex) {
-        const error = `UNAUTHORIZED Connect (ws) ${req.getUrl()} from IP ${str2ip(req.getHeader('x-forwarded-for'))} or ${ab2ip6(res.getRemoteAddress())}`;        
+        const error = `UNAUTHORIZED Connect (ws) ${req.getUrl()} from IP ${str2ip(req.getHeader('x-forwarded-for'))} or ${ab2ip6(res.getRemoteAddress())}`;
         debugWS(error);
         nats.natsLogger.error({ ...req, error, ex });
       }
@@ -160,7 +159,7 @@ const app = uApp({
       const rurl = await li.startAuth();
       res.writeStatus(httpCodes.OK);
       res.writeHeader("Content-Type", "application/json")
-      res.write(JSON.stringify({url: rurl}))
+      res.write(JSON.stringify({ url: rurl }))
       res.end();
     } catch (ex) {
       debugHTTP(ex)
@@ -348,3 +347,7 @@ module.exports = {
   wsIdle,
   appInstance
 }
+
+setTimeout(() => {
+  console.log(`Running app in ${env} mode`)
+}, 12000)
